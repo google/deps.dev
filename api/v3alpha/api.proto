@@ -130,6 +130,15 @@ message Link {
   string url = 2;
 }
 
+// DependencyRelation describes the relation of a node within a dependency
+// graph.
+enum DependencyRelation {
+  DEPENDENCY_RELATION_UNSPECIFIED = 0;
+  SELF = 1;
+  DIRECT = 2;
+  INDIRECT = 3;
+}
+
 // GetPackageRequest identifies a package for which to return information.
 message GetPackageRequest {
   PackageKey package_key = 1;
@@ -234,6 +243,11 @@ message Dependencies {
     // the local name "c". It may or may not be the same as a package with the
     // global name "c".
     bool bundled = 2;
+
+    // Whether this node represents a direct or indirect dependency within this
+    // dependency graph. Note that it's possible for a dependency to be both
+    // direct and indirect; if so, it is marked as direct.
+    DependencyRelation relation = 4;
 
     // Errors associated with this node of the graph, such as an unresolved
     // dependency requirement. An error on a node may imply the graph as a
