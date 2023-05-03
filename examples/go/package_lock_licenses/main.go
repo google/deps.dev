@@ -36,7 +36,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	pb "github.com/google/deps.dev/examples/go/package_lock_licenses/internal/api/v3alpha"
+	pb "deps.dev/api/v3alpha"
 )
 
 // NPMPackageLock represents a package-lock.json file used by the npm package
