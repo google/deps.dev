@@ -18,6 +18,8 @@ package deps_dev.v3alpha;
 
 import "google/protobuf/timestamp.proto";
 
+option go_package = "deps.dev/api/v3alpha";
+
 // The Deps.dev Insights API provides information about open source software
 // packages, projects, and security advisories. The information is gathered
 // from upstream services like npm, GitHub, and OSV, and augmented by computing
