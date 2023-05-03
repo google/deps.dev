@@ -31,8 +31,19 @@ service Insights {
   // its licenses and any security advisories known to affect it.
   rpc GetVersion(GetVersionRequest) returns (Version) {}
 
+  // GetRequirements returns the requirements for a given version in a
+  // system-specific format. Requirements are currently only available for
+  // NuGet.
+  //
+  // Requirements are the dependency constraints specified by the version.
+  rpc GetRequirements(GetRequirementsRequest) returns (Requirements) {}
+
   // GetDependencies returns a resolved dependency graph for the given package
-  // version.
+  // version. Dependencies are currently available for Go, npm, Cargo, Maven
+  // and PyPI.
+  //
+  // Dependencies are the resolution of the requirements (dependency
+  // constraints) specified by a version.
   //
   // The dependency graph should be similar to one produced by installing the
   // package version on a generic 64-bit Linux system, with no other
@@ -211,6 +222,42 @@ message Version {
   // web resources such as a homepage or source code repository. Note that
   // these links are not verified for correctness.
   repeated Link links = 5;
+}
+
+// GetRequirementsRequest identifies a version for which to return
+// requirements.
+message GetRequirementsRequest {
+  VersionKey version_key = 1;
+}
+
+// Requirements contains a system-specific representation of the requirements
+// specified by a package version. Only one of its fields will be set.
+message Requirements {
+  message NuGet {
+     message DependencyGroup {
+      // The target framework that this dependency group is for.
+      string target_framework = 1;
+
+      message Dependency {
+        // The name of the package.
+        string name = 1;
+
+        // The requirement on the package.
+        string requirement = 2;
+      }
+      // The requirements belonging to this dependency group.
+      repeated Dependency dependencies = 2;
+    }
+    // The requirements grouped by target framework.
+    repeated DependencyGroup dependency_groups = 1;
+  }
+  // The NuGet-specific representation of the version's requirements.
+  //
+  // Note that the term "dependency" is used here to mean "a single unresolved
+  // requirement" to be consistent with how the term is used in the NuGet
+  // ecosystem. This is different to how it is used elsewhere in the deps.dev
+  // API.
+  NuGet nuget = 1;
 }
 
 // GetDependenciesRequest identifies a package version for which to return

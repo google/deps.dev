@@ -28,8 +28,18 @@ type InsightsClient interface {
 	// GetVersion returns information about a specific package version, including
 	// its licenses and any security advisories known to affect it.
 	GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*Version, error)
+	// GetRequirements returns the requirements for a given version in a
+	// system-specific format. Requirements are currently only available for
+	// NuGet.
+	//
+	// Requirements are the dependency constraints specified by the version.
+	GetRequirements(ctx context.Context, in *GetRequirementsRequest, opts ...grpc.CallOption) (*Requirements, error)
 	// GetDependencies returns a resolved dependency graph for the given package
-	// version.
+	// version. Dependencies are currently available for Go, npm, Cargo, Maven
+	// and PyPI.
+	//
+	// Dependencies are the resolution of the requirements (dependency
+	// constraints) specified by a version.
 	//
 	// The dependency graph should be similar to one produced by installing the
 	// package version on a generic 64-bit Linux system, with no other
@@ -70,6 +80,15 @@ func (c *insightsClient) GetPackage(ctx context.Context, in *GetPackageRequest, 
 func (c *insightsClient) GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*Version, error) {
 	out := new(Version)
 	err := c.cc.Invoke(ctx, "/deps_dev.v3alpha.Insights/GetVersion", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *insightsClient) GetRequirements(ctx context.Context, in *GetRequirementsRequest, opts ...grpc.CallOption) (*Requirements, error) {
+	out := new(Requirements)
+	err := c.cc.Invoke(ctx, "/deps_dev.v3alpha.Insights/GetRequirements", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +141,18 @@ type InsightsServer interface {
 	// GetVersion returns information about a specific package version, including
 	// its licenses and any security advisories known to affect it.
 	GetVersion(context.Context, *GetVersionRequest) (*Version, error)
+	// GetRequirements returns the requirements for a given version in a
+	// system-specific format. Requirements are currently only available for
+	// NuGet.
+	//
+	// Requirements are the dependency constraints specified by the version.
+	GetRequirements(context.Context, *GetRequirementsRequest) (*Requirements, error)
 	// GetDependencies returns a resolved dependency graph for the given package
-	// version.
+	// version. Dependencies are currently available for Go, npm, Cargo, Maven
+	// and PyPI.
+	//
+	// Dependencies are the resolution of the requirements (dependency
+	// constraints) specified by a version.
 	//
 	// The dependency graph should be similar to one produced by installing the
 	// package version on a generic 64-bit Linux system, with no other
@@ -154,6 +183,9 @@ func (UnimplementedInsightsServer) GetPackage(context.Context, *GetPackageReques
 }
 func (UnimplementedInsightsServer) GetVersion(context.Context, *GetVersionRequest) (*Version, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
+}
+func (UnimplementedInsightsServer) GetRequirements(context.Context, *GetRequirementsRequest) (*Requirements, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRequirements not implemented")
 }
 func (UnimplementedInsightsServer) GetDependencies(context.Context, *GetDependenciesRequest) (*Dependencies, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDependencies not implemented")
@@ -212,6 +244,24 @@ func _Insights_GetVersion_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(InsightsServer).GetVersion(ctx, req.(*GetVersionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Insights_GetRequirements_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRequirementsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InsightsServer).GetRequirements(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/deps_dev.v3alpha.Insights/GetRequirements",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InsightsServer).GetRequirements(ctx, req.(*GetRequirementsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -302,6 +352,10 @@ var Insights_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetVersion",
 			Handler:    _Insights_GetVersion_Handler,
+		},
+		{
+			MethodName: "GetRequirements",
+			Handler:    _Insights_GetRequirements_Handler,
 		},
 		{
 			MethodName: "GetDependencies",
