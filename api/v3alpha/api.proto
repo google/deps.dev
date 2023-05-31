@@ -169,6 +169,10 @@ message Package {
     // name in the request, due to canonicalization.
     VersionKey version_key = 1;
 
+    // The time when this package version was published, if available, as
+    // reported by the package management authority.
+    google.protobuf.Timestamp published_at = 3;
+
     // If true, this is the default version of the package: the version that is
     // installed when no version is specified. The precise meaning of this is
     // system-specific, but it is commonly the version with the greatest
@@ -191,6 +195,10 @@ message Version {
   // may differ from names specified in requests, if applicable, due to
   // canonicalization.
   VersionKey version_key = 1;
+
+  // The time when this package version was published, if available, as
+  // reported by the package management authority.
+  google.protobuf.Timestamp published_at = 6;
 
   // If true, this is the default version of the package: the version that is
   // installed when no version is specified. The precise meaning of this is
