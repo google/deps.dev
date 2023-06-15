@@ -64,8 +64,9 @@ service Insights {
   // specified by name, content hash, or both.
   //
   // It is typical for hash queries to return many results; hashes are matched
-  // against multiple artifacts that comprise package versions, and any given
-  // artifact may appear in many package versions.
+  // against multiple release artifacts (such as JAR files) that comprise
+  // package versions, and any given artifact may appear in many package
+  // versions.
   rpc Query(QueryRequest) returns (QueryResult) {}
 }
 
