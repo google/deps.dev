@@ -51,6 +51,11 @@ Example applications written in Go:
 - [`examples/package_lock_licenses`](./examples/go/package_lock_licenses) reads
   dependencies from an npm package-lock.json file and fetches their licenses
   from the deps.dev gRPC API.
+
+## Third party tools and integrations
+
+Note that these are community built tools and unsupported by the core deps.dev maintainers.
+
 - [`edoardottt/depsdev`](https://github.com/edoardottt/depsdev) CLI client (and Golang module) for deps.dev API.
 
 ## Contact us
