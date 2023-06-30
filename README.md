@@ -41,14 +41,14 @@ grpcurl \
 
 ## Example applications
 
-Example applications written in Go:
+Example applications written in Go can be found in the `examples` directory:
 
-- [`examples/artifact_query`](./examples/go/artifact_query) shows how to query the
+- [`artifact_query`](./examples/go/artifact_query) shows how to query the
   deps.dev HTTP API by file content hash.
-- [`examples/dependencies_dot`](./examples/go/dependencies_dot) fetches a resolved
+- [`dependencies_dot`](./examples/go/dependencies_dot) fetches a resolved
   dependency graph from the deps.dev HTTP API and renders it in the DOT
   language used by Graphviz.
-- [`examples/package_lock_licenses`](./examples/go/package_lock_licenses) reads
+- [`package_lock_licenses`](./examples/go/package_lock_licenses) reads
   dependencies from an npm package-lock.json file and fetches their licenses
   from the deps.dev gRPC API.
 
@@ -61,7 +61,7 @@ Note that these are community built tools and unsupported by the core deps.dev m
 ## Contact us
 
 If you have questions about the API, or want to report a problem, please create
-an issue or contact us at <open-source-insights@google.com>.
+an issue or contact us at open-source-insights@google.com.
 
 ## Terms
 
