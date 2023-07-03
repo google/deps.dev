@@ -13,7 +13,7 @@ the gRPC API, along with example applications for both APIs.
 The HTTP API can be accessed using any HTTP client. To quickly get started, you
 can use the `curl` command-line tool. Example:
 
-```
+```console
 curl 'https://api.deps.dev/v3alpha/systems/npm/packages/%40colors%2Fcolors'
 ```
 
@@ -32,7 +32,7 @@ To quickly get started exploring the API, you can use the
 [`grpcurl`](https://github.com/fullstorydev/grpcurl) command-line tool.
 Example:
 
-```
+```console
 grpcurl \
   -d '{"package_key":{"system":"NPM","name":"@colors/colors"}}' \
   api.deps.dev:443 \
@@ -51,6 +51,12 @@ Example applications written in Go can be found in the `examples` directory:
 - [`package_lock_licenses`](./examples/go/package_lock_licenses) reads
   dependencies from an npm package-lock.json file and fetches their licenses
   from the deps.dev gRPC API.
+
+## Third party tools and integrations
+
+Note that these are community built tools and unsupported by the core deps.dev maintainers.
+
+- [`edoardottt/depsdev`](https://github.com/edoardottt/depsdev) CLI client (and Golang module) for deps.dev API.
 
 ## Contact us
 
