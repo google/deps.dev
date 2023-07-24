@@ -57,6 +57,11 @@ service Insights {
   // BitBucket, when known to us.
   rpc GetProject(GetProjectRequest) returns (Project) {}
 
+  // GetProjectPackageVersions returns the package versions which attest to
+  // being created from the specified source code repository.
+  // At most 1500 package versions are returned.
+  rpc GetProjectPackageVersions(GetProjectPackageVersionsRequest) returns (ProjectPackageVersions) {}
+
   // GetAdvisory returns information about security advisories hosted by OSV.
   rpc GetAdvisory(GetAdvisoryRequest) returns (Advisory) {}
 
@@ -153,6 +158,17 @@ enum DependencyRelation {
   INDIRECT = 3;
 }
 
+// SLSAProvenance contains provenance information extracted from a SLSA
+// provenance statement.
+message SLSAProvenance {
+  // The source code repository used to build the version.
+  string source_repository = 1;
+  // The commit of the source code repository the version was built from.
+  string commit = 2;
+  // The URL of the provenance statement if there is one.
+  string url = 3;
+}
+
 // GetPackageRequest identifies a package for which to return information.
 message GetPackageRequest {
   PackageKey package_key = 1;
@@ -233,6 +249,9 @@ message Version {
   // web resources such as a homepage or source code repository. Note that
   // these links are not verified for correctness.
   repeated Link links = 5;
+
+  // SLSA provenances for this version if they are available.
+  repeated SLSAProvenance slsa_provenances = 7;
 }
 
 // GetRequirementsRequest identifies a version for which to return
@@ -443,6 +462,23 @@ message Project {
   // An [OpenSSF Scorecard](https://github.com/ossf/scorecard) for the project,
   // if one is available.
   Scorecard scorecard = 8;
+}
+
+message GetProjectPackageVersionsRequest {
+  ProjectKey project_key = 1;
+}
+
+message ProjectPackageVersions {
+  message Version {
+    // The identifier for the version.
+    VersionKey version_key = 1;
+    // The SLSA provenance statements that link the version to the project.
+    repeated SLSAProvenance slsa_provenances = 2;
+  }
+
+  // The versions that were built from the source code contained in this
+  // project.
+  repeated Version versions = 1;
 }
 
 // GetAdvisoryRequest identifies a security advisory for which to return

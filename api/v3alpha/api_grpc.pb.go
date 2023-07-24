@@ -49,6 +49,10 @@ type InsightsClient interface {
 	// GetProject returns information about projects hosted by GitHub, GitLab, or
 	// BitBucket, when known to us.
 	GetProject(ctx context.Context, in *GetProjectRequest, opts ...grpc.CallOption) (*Project, error)
+	// GetProjectPackageVersions returns the package versions which attest to
+	// being created from the specified source code repository.
+	// At most 1500 package versions are returned.
+	GetProjectPackageVersions(ctx context.Context, in *GetProjectPackageVersionsRequest, opts ...grpc.CallOption) (*ProjectPackageVersions, error)
 	// GetAdvisory returns information about security advisories hosted by OSV.
 	GetAdvisory(ctx context.Context, in *GetAdvisoryRequest, opts ...grpc.CallOption) (*Advisory, error)
 	// Query returns information about multiple package versions, which can be
@@ -114,6 +118,15 @@ func (c *insightsClient) GetProject(ctx context.Context, in *GetProjectRequest, 
 	return out, nil
 }
 
+func (c *insightsClient) GetProjectPackageVersions(ctx context.Context, in *GetProjectPackageVersionsRequest, opts ...grpc.CallOption) (*ProjectPackageVersions, error) {
+	out := new(ProjectPackageVersions)
+	err := c.cc.Invoke(ctx, "/deps_dev.v3alpha.Insights/GetProjectPackageVersions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *insightsClient) GetAdvisory(ctx context.Context, in *GetAdvisoryRequest, opts ...grpc.CallOption) (*Advisory, error) {
 	out := new(Advisory)
 	err := c.cc.Invoke(ctx, "/deps_dev.v3alpha.Insights/GetAdvisory", in, out, opts...)
@@ -163,6 +176,10 @@ type InsightsServer interface {
 	// GetProject returns information about projects hosted by GitHub, GitLab, or
 	// BitBucket, when known to us.
 	GetProject(context.Context, *GetProjectRequest) (*Project, error)
+	// GetProjectPackageVersions returns the package versions which attest to
+	// being created from the specified source code repository.
+	// At most 1500 package versions are returned.
+	GetProjectPackageVersions(context.Context, *GetProjectPackageVersionsRequest) (*ProjectPackageVersions, error)
 	// GetAdvisory returns information about security advisories hosted by OSV.
 	GetAdvisory(context.Context, *GetAdvisoryRequest) (*Advisory, error)
 	// Query returns information about multiple package versions, which can be
@@ -194,6 +211,9 @@ func (UnimplementedInsightsServer) GetDependencies(context.Context, *GetDependen
 }
 func (UnimplementedInsightsServer) GetProject(context.Context, *GetProjectRequest) (*Project, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProject not implemented")
+}
+func (UnimplementedInsightsServer) GetProjectPackageVersions(context.Context, *GetProjectPackageVersionsRequest) (*ProjectPackageVersions, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProjectPackageVersions not implemented")
 }
 func (UnimplementedInsightsServer) GetAdvisory(context.Context, *GetAdvisoryRequest) (*Advisory, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAdvisory not implemented")
@@ -304,6 +324,24 @@ func _Insights_GetProject_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Insights_GetProjectPackageVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProjectPackageVersionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InsightsServer).GetProjectPackageVersions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/deps_dev.v3alpha.Insights/GetProjectPackageVersions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InsightsServer).GetProjectPackageVersions(ctx, req.(*GetProjectPackageVersionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Insights_GetAdvisory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetAdvisoryRequest)
 	if err := dec(in); err != nil {
@@ -366,6 +404,10 @@ var Insights_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProject",
 			Handler:    _Insights_GetProject_Handler,
+		},
+		{
+			MethodName: "GetProjectPackageVersions",
+			Handler:    _Insights_GetProjectPackageVersions_Handler,
 		},
 		{
 			MethodName: "GetAdvisory",
