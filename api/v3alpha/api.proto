@@ -68,10 +68,11 @@ service Insights {
   // Query returns information about multiple package versions, which can be
   // specified by name, content hash, or both.
   //
-  // It is typical for hash queries to return many results; hashes are matched
-  // against multiple release artifacts (such as JAR files) that comprise
-  // package versions, and any given artifact may appear in many package
-  // versions.
+  // Querying by content hash is currently supported for npm, Cargo, Maven, and
+  // NuGet. It is typical for hash queries to return many results; hashes are
+  // matched against multiple release artifacts (such as JAR files) that
+  // comprise package versions, and any given artifact may appear in many
+  // package versions.
   rpc Query(QueryRequest) returns (QueryResult) {}
 }
 
@@ -373,7 +374,7 @@ message Project {
   // identifier in the request, due to canonicalization.
   ProjectKey project_key = 1;
 
-  // The number of stars reported by the project host.
+  // The number of open issues reported by the project host.
   // Only available for GitHub and GitLab.
   int64 open_issues_count = 2;
 
