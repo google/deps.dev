@@ -58,12 +58,43 @@ Note that these are community built tools and unsupported by the core deps.dev m
 
 - [`edoardottt/depsdev`](https://github.com/edoardottt/depsdev) CLI client (and Golang module) for deps.dev API.
 
-## Contact us
+## Data
 
-If you have questions about the API, or want to report a problem, please create
-an issue or contact us at open-source-insights@google.com.
+deps.dev aggregates data from a number of sources:
+
+- Package data (including package and version names, descriptions, dependency requirements, etc)
+  - [Crates.io](https://crates.io/)
+  - [Go Module Mirror, Index, and Checksum Database](https://index.golang.org/)
+  - [Maven Central Repository](https://repo.maven.apache.org/maven2/)
+  - [Google's Maven Repository](https://maven.google.com/)
+  - [Jenkins' Maven Repository](https://repo.jenkins-ci.org/releases/)
+  - [npm Registry](https://registry.npmjs.org/)
+  - [NuGet](https://www.nuget.org/)
+  - [PyPI](https://pypi.org/)
+- Project data (including project names, descriptions, forks and stars, etc)
+  - [GitHub](https://github.com/)
+  - [GitLab](https://gitlab.com/)
+  - [Bitbucket](https://bitbucket.org/)
+- Security advisories
+  - [OSV.dev](https://osv.dev/)
+- Associated data
+  - [OpenSSF Scorecard](https://github.com/ossf/scorecard)
+  - [OSS-Fuzz](https://google.github.io/oss-fuzz/)
+
+For details on using the data from these sources, please consult their
+documentation.
+
+As well as aggregating data, deps.dev generates additional data, including
+resolved dependencies, advisory statistics, associations between entities, etc.
+This generated data is available under a
+[CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/) license.
 
 ## Terms
 
 Use of the deps.dev API is subject to the
 [Google API Terms of Service](https://developers.google.com/terms).
+
+## Contact us
+
+If you have questions about the API, or want to report a problem, please create
+an issue or contact us at depsdev@google.com.
