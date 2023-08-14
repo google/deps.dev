@@ -35,7 +35,7 @@ service Insights {
 
   // GetRequirements returns the requirements for a given version in a
   // system-specific format. Requirements are currently only available for
-  // NuGet.
+  // npm and NuGet.
   //
   // Requirements are the dependency constraints specified by the version.
   rpc GetRequirements(GetRequirementsRequest) returns (Requirements) {}
@@ -289,6 +289,61 @@ message Requirements {
   // ecosystem. This is different to how it is used elsewhere in the deps.dev
   // API.
   NuGet nuget = 1;
+
+  message NPM {
+    message Dependencies {
+      message Dependency {
+        // The name of the package, the key in the original object.
+        string name = 1;
+        // The requirement, the corresponding value from the original object.
+        string requirement = 2;
+      }
+      // The "dependencies" field of a package.json, represented as a list of
+      // name, requirement pairs.
+      repeated Dependency dependencies = 1;
+      // The "devDependencies" field of a package.json. The format is the
+      // same as "dependencies".
+      repeated Dependency dev_dependencies = 2;
+      // The "optionalDependencies" field of a package.json. The format is
+      // the same as "dependencies".
+      repeated Dependency optional_dependencies = 3;
+      // The "peerDependencies" field of a package.json. The format is the
+      // same as "dependencies".
+      repeated Dependency peer_dependencies = 4;
+      // The "bundleDependencies" field of a package.json: a list of package
+      // names. In the package.json this may also just be the boolean value
+      // "true", in which case this field will contain the names of all the
+      // dependencies from the "dependencies" field.
+      repeated string bundle_dependencies = 5;
+    }
+    message Bundle {
+      // The path inside the tarball where this dependency was found.
+      string path = 1;
+      // The name of the bundled package, as declared inside the bundled
+      // package.json.
+      string name = 2;
+      // The version of this package, as declared inside the bundled
+      // package.json.
+      string version = 3;
+      // The dependency-related fields from the bundled package.json.
+      Dependencies dependencies = 4;
+    }
+
+    // The dependency-related fields declared in the requested package version's
+    // package.json.
+    Dependencies dependencies = 1;
+    // Contents of any additional package.json files found inside the
+    // "node_modules" folder of the version's tarball, including nested
+    // "node_modules".
+    repeated Bundle bundled = 2;
+  }
+  // The npm-specific representation of the version's requirements.
+  //
+  // Note that the term "dependency" is used here to mean "a single unresolved
+  // requirement" to be consistent with how the term is used in the npm
+  // ecosystem. This is different to how it is used elsewhere in the deps.dev
+  // API.
+  NPM npm = 2;
 }
 
 // GetDependenciesRequest identifies a package version for which to return

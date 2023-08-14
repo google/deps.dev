@@ -30,7 +30,7 @@ type InsightsClient interface {
 	GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*Version, error)
 	// GetRequirements returns the requirements for a given version in a
 	// system-specific format. Requirements are currently only available for
-	// NuGet.
+	// npm and NuGet.
 	//
 	// Requirements are the dependency constraints specified by the version.
 	GetRequirements(ctx context.Context, in *GetRequirementsRequest, opts ...grpc.CallOption) (*Requirements, error)
@@ -158,7 +158,7 @@ type InsightsServer interface {
 	GetVersion(context.Context, *GetVersionRequest) (*Version, error)
 	// GetRequirements returns the requirements for a given version in a
 	// system-specific format. Requirements are currently only available for
-	// NuGet.
+	// npm and NuGet.
 	//
 	// Requirements are the dependency constraints specified by the version.
 	GetRequirements(context.Context, *GetRequirementsRequest) (*Requirements, error)
