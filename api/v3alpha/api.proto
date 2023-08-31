@@ -34,8 +34,8 @@ service Insights {
   rpc GetVersion(GetVersionRequest) returns (Version) {}
 
   // GetRequirements returns the requirements for a given version in a
-  // system-specific format. Requirements are currently only available for
-  // npm and NuGet.
+  // system-specific format. Requirements are currently available for
+  // Maven, npm and NuGet.
   //
   // Requirements are the dependency constraints specified by the version.
   rpc GetRequirements(GetRequirementsRequest) returns (Requirements) {}
@@ -344,6 +344,123 @@ message Requirements {
   // ecosystem. This is different to how it is used elsewhere in the deps.dev
   // API.
   NPM npm = 2;
+
+  message Maven {
+    message Dependency {
+      // The name of the package.
+      string name = 1;
+      // The version requirement of the dependency.
+      string version = 2;
+      // The classifier of the dependency, which distinguishes artifacts that
+      // differ in content.
+      string classifier = 3;
+      // The type of the dependency, defaults to jar.
+      string type = 4;
+      // The scope of the dependency, specifies how to limit the transitivity
+      // of a dependency.
+      string scope = 5;
+      // Whether the dependency is optional or not.
+      string optional = 6;
+      // The dependencies to be excluded, in the form of a list of package
+      // names.
+      // Exclusions may contain wildcards in both groupID and artifactID.
+      repeated string exclusions = 7;
+    }
+    message Property {
+      // The name of the property.
+      string name = 1;
+      // The value of the property.
+      string value = 2;
+    }
+    message Repository {
+      // The ID of the repository.
+      string id = 1;
+      // The URL of the repository.
+      string url = 2;
+      // Whether the description of the repository follows a common layout.
+      string layout = 3;
+      // Whether the repository is enabled for release downloads.
+      string releases_enabled = 4;
+      // Whether the repository is enabled for snapshot downloads.
+      string snapshots_enabled = 5;
+    }
+    message Profile {
+      message Activation {
+        message JDK {
+          // The JDK requirement to activate the profile.
+          string jdk = 1;
+        }
+        message OS {
+          // The name of the operating system.
+          string name = 1;
+          // The family of the operating system.
+          string family = 2;
+          // The CPU architecture of the operating system,
+          string arch = 3;
+          // The version of the operating system.
+          string version = 4;
+        }
+        message Property {
+          // The property requirement to activate the profile.
+          // This can be a system property or CLI user property.
+          Maven.Property property = 1;
+        }
+        message File {
+          // The name of the file that its existence activates the profile.
+          string exists = 1;
+          // The name of the file, activate the profile if the file is missing.
+          string missing = 2;
+        }
+        // Whether the profile is active by default.
+        string active_by_default = 1;
+        // The JDK requirement of the activation.
+        JDK jdk = 2;
+        // The operating system requirement of the activation.
+        OS os = 3;
+        // The property requirement of the activation.
+        Property property = 4;
+        // The file requirement of the activation.
+        File file = 5;
+      }
+      // The ID of the profile.
+      string id = 1;
+      // The activation requirement of the profile.
+      Activation activation = 2;
+      // The dependencies specified in the profile.
+      repeated Dependency dependencies = 3;
+      // The dependency management specified in the profile.
+      repeated Dependency dependency_management = 4;
+      // The properties specified in the profile.
+      repeated Property properties = 5;
+      // The repositories specified in the profile.
+      repeated Repository repositories = 6;
+    }
+    // The direct parent of a package version.
+    VersionKey parent = 1;
+    // The list of dependencies.
+    repeated Dependency dependencies = 2;
+    // The list of dependency management.
+    // The format is the same as dependencies.
+    repeated Dependency dependency_management = 3;
+    // The list of properties, used to resolve placeholders.
+    repeated Property properties = 4;
+    // The list of repositories.
+    repeated Repository repositories = 5;
+    // The list of profiles.
+    repeated Profile profiles = 6;
+  }
+  // The Maven-specific representation of the version's requirements.
+  //
+  // Note that the term "dependency" is used here to mean "a single unresolved
+  // requirement" to be consistent with how the term is used in the Maven
+  // ecosystem. This is different to how it is used elsewhere in the deps.dev
+  // API.
+  //
+  // This data is as it is declared in a version POM file. The data in parent
+  // POMs are not merged.
+  // Any string field may contain references to properties, and the properties
+  // are not interpolated.
+  Maven maven = 3;
 }
 
 // GetDependenciesRequest identifies a package version for which to return
