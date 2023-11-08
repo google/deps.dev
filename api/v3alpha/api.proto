@@ -635,6 +635,24 @@ message Project {
   // An [OpenSSF Scorecard](https://github.com/ossf/scorecard) for the project,
   // if one is available.
   Scorecard scorecard = 8;
+
+  message OSSFuzzDetails {
+    // The number of lines of code in the project.
+    int64 line_count = 1;
+    // How many lines of code are covered by fuzzing.
+    int64 line_cover_count = 2;
+    // The date the fuzz test that produced the coverage information was run
+    // against this project.
+    google.protobuf.Timestamp date = 3;
+    // The URL containing the configuration for the project in the
+    //  OSS-Fuzz repository.
+    string config_url = 4;
+  }
+
+  // Details of this project's testing by the
+  // [OSS-Fuzz service](https://google.github.io/oss-fuzz/).
+  // Only set if the project is tested by OSS-Fuzz.
+  OSSFuzzDetails oss_fuzz = 9;
 }
 
 message GetProjectPackageVersionsRequest {
