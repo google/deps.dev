@@ -253,6 +253,12 @@ message Version {
 
   // SLSA provenances for this version if they are available.
   repeated SLSAProvenance slsa_provenances = 7;
+
+  // URLs for the package management registries this package version is
+  // available from.
+  // Only set for systems that use a central repository for package
+  // distribution: Cargo, Maven, npm, NuGet, and PyPI.
+  repeated string registries = 8;
 }
 
 // GetRequirementsRequest identifies a version for which to return
