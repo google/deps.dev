@@ -1241,9 +1241,9 @@ type Project struct {
 	// An [OpenSSF Scorecard](https://github.com/ossf/scorecard) for the project,
 	// if one is available.
 	Scorecard *Project_Scorecard `protobuf:"bytes,8,opt,name=scorecard,proto3" json:"scorecard,omitempty"`
-	// Details of this project's testing by the [OSS-Fuzz
-	// service](https://google.github.io/oss-fuzz/). Only set if the project is
-	// tested by OSS-Fuzz.
+	// Details of this project's testing by the
+	// [OSS-Fuzz service](https://google.github.io/oss-fuzz/).
+	// Only set if the project is tested by OSS-Fuzz.
 	OssFuzz *Project_OSSFuzzDetails `protobuf:"bytes,9,opt,name=oss_fuzz,json=ossFuzz,proto3" json:"oss_fuzz,omitempty"`
 }
 
