@@ -17,6 +17,10 @@ package_lock_licenses is a simple example application that reads dependencies
 from an npm package-lock.json file and fetches their licenses from the deps.dev
 gRPC API.
 
+The output from this application is the same as
+examples/go/package_lock_licences_batch, but it retrieves licenses by making
+concurrent calls to GetVersion rather than by making calls to GetVersionBatch.
+
 It assumes well-formed input and is not meant as an example of how to write a
 robust lockfile parser.
 */
