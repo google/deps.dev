@@ -1,0 +1,90 @@
+<!--
+ Copyright 2024 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<project>
+    <profiles>
+        <profile>
+            <id>my-profile-1</id>
+            <activation>
+                <activeByDefault>False</activeByDefault>
+                <jdk>1.8</jdk>
+                <os>
+                    <name>linux</name>
+                    <family>unix</family>
+                    <arch>amd64</arch>
+                    <version>5.10.0-26-cloud-amd64</version>
+                </os>
+                <property>
+                    <name>debug</name>
+                    <value>true</value>
+                </property>
+                <file>
+                    <missing>/missing/file/path</missing>
+                </file>
+            </activation>
+            <properties>
+                <abc.version>1.0.0</abc.version>
+                <def.version>2.0.0</def.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.profile</groupId>
+                    <artifactId>abc</artifactId>
+                    <version>${abc.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.profile</groupId>
+                    <artifactId>def</artifactId>
+                    <version>${def.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>my-profile-2</id>
+            <activation>
+                <activeByDefault>TRUE</activeByDefault>
+                <file>
+                    <exists>/exists/file/path</exists>
+                </file>
+            </activation>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.import</groupId>
+                        <artifactId>xyz</artifactId>
+                        <version>3.0.0</version>
+                        <scope>import</scope>
+                        <type>pom</type>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.dep</groupId>
+                        <artifactId>management</artifactId>
+                        <version>4.0.0</version>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+            <repositories>
+                <repository>
+                    <id>profile-repo</id>
+                    <url>https://www.profile-repo.example.com</url>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+</project>
