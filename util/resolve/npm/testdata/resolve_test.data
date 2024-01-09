@@ -1,0 +1,602 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+The resolver selects the highest available version that matches a constraint.
+Highest is defined by semver ordering, but if there is a "latest" tag,it is
+taken.
+-- Universe highest
+alice
+	1.0.0
+		bob@*
+	2.0.0
+		chuck@*
+bob
+	1.0.0
+	2.0.0
+chuck
+	Tags latest|1.0.0
+	2.0.0
+-- END
+
+-- Test highestSemver
+Resolve alice 1.0.0
+Universe highest
+Graph highestSemver
+-- END
+
+-- Test highestLatest
+Resolve alice 2.0.0
+Universe highest
+Graph highestLatest
+-- END
+
+
+The resolver generates an error if no versions match a constraint.
+-- Universe unresolved
+alice
+	1.0.0
+		bob@2
+	2.0.0
+		chuck@*
+bob
+	1.0.0
+-- END
+
+-- Test unresolvedConstraint
+Resolve alice 1.0.0
+Universe unresolved
+Graph unresolvedConstraint
+Flag loose_errors
+-- END
+
+-- Test unresolvedConstraintError
+Resolve alice 1.0.0
+Universe unresolved
+Graph unresolvedConstraintError
+-- END
+
+-- Graph unresolvedConstraintError
+alice 1.0.0
+└─ bob@2 ERROR: could not find a version that satisfies requirement 2 for package bob
+-- END
+
+-- Test unresolvedPackage
+Resolve alice 2.0.0
+Universe unresolved
+Graph unresolvedPackage
+Flag loose_errors
+-- END
+
+-- Test unresolvedPackageError
+Resolve alice 2.0.0
+Universe unresolved
+Graph unresolvedPackageError
+-- END
+
+-- Graph unresolvedPackageError
+alice 2.0.0
+└─ chuck@* ERROR: could not find a version that satisfies requirement * for package chuck
+-- END
+
+
+The resolver resolves its direct dependencies in a case insensitive
+lexicographic order. The order of resolutions impacts the deduplication of
+installed versions: depending on which one is installed first, it may or may not
+satisfy latter constraints.
+-- Universe lexicographic
+alice
+	1.1.0
+		bob@*
+		chuck@*
+	1.2.0
+		dave@*
+		chuck@*
+	2.1.0
+		BOB@*
+		chuck@*
+	2.2.0
+		DAVE@*
+		chuck@*
+	2.3.0
+		eve@*
+		EVE@*
+bob
+	1.0.0
+		franck@1.0.0
+BOB
+	1.0.0
+		franck@1.0.0
+dave
+	1.0.0
+		franck@1.0.0
+DAVE
+	1.0.0
+		franck@1.0.0
+chuck
+	1.0.0
+		franck@*
+eve
+	1.0.0
+		franck@*
+EVE
+	1.0.0
+		franck@1.0.0
+franck
+	1.0.0
+	2.0.0
+-- END
+
+The resolver resolves bob before chuck.
+-- Test lexicographic1
+Resolve alice 1.1.0
+Universe lexicographic
+Graph lexicographic1
+-- END
+
+The resolver resolves chuck before dave.
+-- Test lexicographic2
+Resolve alice 1.2.0
+Universe lexicographic
+Graph lexicographic2
+-- END
+
+The resolver resolves BOB before chuck, because direct dependencies ordering is
+case insensitive.
+-- Test lexicographicCaseInsensitive1
+Resolve alice 2.1.0
+Universe lexicographic
+Graph lexicographicCaseInsensitive1
+-- END
+
+The resolver resolves chuck before DAVE, because direct dependencies ordering is
+case insensitive.
+-- Test lexicographicCaseInsensitive2
+Resolve alice 2.2.0
+Universe lexicographic
+Graph lexicographicCaseInsensitive2
+-- END
+
+The resolver resolves eve before EVE, because direct dependencies ordering is
+case insensitive.
+-- Test lexicographicCaseInsensitive3
+Resolve alice 2.3.0
+Universe lexicographic
+Graph lexicographicCaseInsensitive3
+-- END
+
+
+The resolver reuses previously installed versions if there is an already
+resolved version higher in the tree that is compatible.
+-- Universe deduplicate1
+alice
+	1.0.0
+		bob@1.0.0
+		chuck@1.0.0
+bob
+	1.0.0
+	2.0.0
+chuck
+	1.0.0
+		bob@*
+-- END
+
+The resolver reuses bob@1.0.0 to satisfy bob@*.
+-- Test deduplicate1
+Resolve alice 1.0.0
+Universe deduplicate1
+Graph deduplicate1
+-- END
+
+
+The resolver dedups if it finds a matching version already resolved.
+When no version matches, a satisfying version is installed.
+-- Universe deduplicate2
+alice
+	1.0.0
+		bob@1.0.0
+		chuck@1.0.0
+bob
+	1.0.0
+		chuck@2.0.0
+chuck
+	1.0.0
+		dave@*
+	2.0.0
+		dave@1.0.0
+dave
+	1.0.0
+	2.0.0
+-- END
+
+The resolver installs a new version of chuck and dave, as the first installed
+is not compatible with the latter resolved constraints.
+-- Test deduplicate2
+Resolve alice 1.0.0
+Universe deduplicate2
+Graph deduplicate2
+-- END
+
+
+The resolver alters the order of resolutions when it reuses a version that
+was installed but not yet resolved: the reused version is resolved next.
+-- Universe deduplicate3
+alice
+	1.0.0
+		bob@1.0.0
+		chuck@1.0.0
+		dave@1.0.0
+bob
+	1.0.0
+		dave@*
+		franck@*
+chuck
+	1.0.0
+		eve@*
+dave
+	1.0.0
+		eve@1.0.0
+		franck@1.0.0
+	2.0.0
+eve
+	1.0.0
+	2.0.0
+franck
+	1.0.0
+	2.0.0
+-- END
+
+The resolver resolves dave before chuck because it is reused by bob
+dependencies. But bob is fully resolved before the resolution of dave
+starts.
+-- Test deduplicate3
+Resolve alice 1.0.0
+Universe deduplicate3
+Graph deduplicate3
+-- END
+
+The resolver installs versions as high in the tree as possible so they can
+be reused by latter constraints. But it makes sure that it doesn't shadow an
+already reused version.
+-- Universe deduplicate4
+alice
+	1.0.0
+		bob@1.0.0
+		chuck@1.0.0
+		dave@1.0.0
+		eve@1.0.0
+		franck@1.0.0
+bob
+	1.0.0
+		chuck@2.0.0
+		dave@2.0.0
+		eve@2.0.0
+chuck
+	1.0.0
+	2.0.0
+		franck@1.0.0
+		george@1.0.0
+dave
+	1.0.0
+		franck@*
+		george@*
+	2.0.0
+		franck@2.0.0
+		george@2.0.0
+eve
+	1.0.0
+		franck@*
+		george@*
+	2.0.0
+		franck@2.0.0
+		george@2.0.0
+franck
+	1.0.0
+	2.0.0
+george
+	1.0.0
+	2.0.0
+-- END
+
+The resolver cannot dedup the franck's and george's versions installed for dave
+and eve when resolving bob, as it would shadow the version installed and/or used
+by chuck.
+-- Test deduplicate4
+Resolve alice 1.0.0
+Universe deduplicate4
+Graph deduplicate4
+-- END
+
+The resolver allows to install previously installed versions that are
+higher in the tree, as long as they are not under the installation node of
+the same package, otherwise that would create an extraneous.
+-- Universe duplicate
+alice
+	1.0.0
+		bob@1.0.0
+		chuck@1.0.0
+		dave@1.0.0
+		eve@1.0.0
+bob
+	1.0.0
+	2.0.0
+chuck
+	1.0.0
+		bob@2.0.0
+		dave@2.0.0
+		eve@2.0.0
+dave
+	1.0.0
+	2.0.0
+		bob@1.0.0
+		eve@3.0.0
+eve
+	1.0.0
+	2.0.0
+	3.0.0
+		bob@2.0.0
+-- END
+
+-- Test duplicate
+Resolve alice 1.0.0
+Universe duplicate
+Graph duplicate
+-- END
+
+
+The resolver refuses to install another version of a package that is under
+resolution. That would create an extraneous version. This regardless of how
+deep the request from the other version occurs.
+-- Universe extraneous1
+alice
+	1.0.0
+		bob@1.0.0
+		chuck@1.0.0
+bob
+	1.0.0
+		chuck@2.0.0
+	2.0.0
+chuck
+	1.0.0
+	2.0.0
+		bob@2.0.0
+-- END
+
+-- Test extraneous1
+Resolve alice 1.0.0
+Universe extraneous1
+Graph extraneous1
+Flag loose_errors
+-- END
+
+-- Test extraneousError
+Resolve alice 1.0.0
+Universe extraneous1
+Graph extraneousError
+-- END
+
+-- Graph extraneousError
+alice 1.0.0
+├─ selector|bob@1.0.0 1.0.0
+│  └─ selector|chuck@2.0.0 2.0.0
+│     └─ selector|bob@2.0.0 ERROR: unreachable version bob 2.0.0 installed under bob 1.0.0
+└─ selector|chuck@1.0.0 1.0.0
+-- END
+
+-- Universe extraneous2
+alice
+	1.0.0
+		bob@1.0.0
+		chuck@1.0.0
+		dave@1.0.0
+bob
+	1.0.0
+		chuck@2.0.0
+		dave@2.0.0
+	2.0.0
+chuck
+	1.0.0
+	2.0.0
+		dave@3.0.0
+dave
+	1.0.0
+	2.0.0
+	3.0.0
+		bob@2.0.0
+-- END
+
+-- Test extraneous2
+Resolve alice 1.0.0
+Universe extraneous2
+Graph extraneous2
+Flag loose_errors
+-- END
+
+-- Test extraneous2Error
+Resolve alice 1.0.0
+Universe extraneous2
+Graph extraneous2Error
+-- END
+
+-- Graph extraneous2Error
+alice 1.0.0
+├─ selector|bob@1.0.0 1.0.0
+│  ├─ selector|chuck@2.0.0 2.0.0
+│  │  └─ selector|dave@3.0.0 3.0.0
+│  │     └─ selector|bob@2.0.0 ERROR: unreachable version bob 2.0.0 installed under bob 1.0.0
+│  └─ selector|dave@2.0.0 2.0.0
+├─ selector|chuck@1.0.0 1.0.0
+└─ selector|dave@1.0.0 1.0.0
+-- END
+
+
+The resolver tolerate cycles if it can reuse the version that is at the origin
+of the cycle.
+-- Universe cycle
+alice
+	1.0.0
+		dave@1.0.0
+		eve@2.0.0
+dave
+	1.0.0
+		eve@1.0.0
+		dave@1.0.0
+	1.0.1
+eve
+	1.0.0
+		dave@1.0.*
+	2.0.0
+-- END
+
+-- Test cycle
+Resolve alice 1.0.0
+Universe cycle
+Graph cycle
+-- END
+
+
+The resolver can install a version of the root package.
+-- Universe cycleOnRoot
+alice
+	1.0.0
+		bob@1.0.0
+	2.0.0
+		bob@1.0.0
+bob
+	1.0.0
+		alice@1.0.0
+-- END
+
+-- Test cycleOnRoot1
+Resolve alice 1.0.0
+Universe cycleOnRoot
+Graph cycleOnRoot1
+-- END
+
+-- Test cycleOnRoot2
+Resolve alice 2.0.0
+Universe cycleOnRoot
+Graph cycleOnRoot2
+-- END
+
+
+The resolver matches using the concrete, regardless of the name of the tag.
+-- Universe matchSymbolic
+alice
+	1.0.0
+		bob@1.0.0
+		chuck@1.0.0
+		dave@theone
+bob
+	1.0.0
+		dave@latest
+chuck
+	1.0.0
+		dave@default
+dave
+	1.0.0
+		ATTR: Tags latest,default,theone
+-- END
+
+-- Test matchSymbolic
+Resolve alice 1.0.0
+Universe matchSymbolic
+Graph matchSymbolic
+-- END
+
+
+This is an edge case where the matching is based on tags and there is
+a cycle. If the tagged version is not deduped, this can yield to an
+infinite cycle as new versions are installed.
+-- Universe cycleSymbolic
+alice
+	1.0.0
+		bob@latest
+		chuck@latest
+bob
+
+	1.0.0
+		ATTR: Tags latest
+		chuck@latest
+		dave@latest
+chuck
+	1.0.0
+		ATTR: Tags latest
+		bob@latest
+		dave@latest
+dave
+	1.0.0
+		ATTR: Tags latest
+		bob@latest
+		chuck@latest
+-- END
+
+-- Test cycleSymbolic
+Resolve alice 1.0.0
+Universe cycleSymbolic
+Graph cycleSymbolic
+-- END
+
+
+The resolver prefers releases over pre-releases when the selection is *.
+-- Universe release
+alice
+	1.0.0
+		bob@*
+	2.0.0
+		chuck@*
+	3.0.0
+		dave@*
+	4.0.0
+		eve@*
+bob
+	1.0.0
+	2.0.0-alpha
+chuck
+	1.0.0-alpha
+	2.0.0-alpha
+dave
+	1.0.0
+	2.0.0-alpha
+		ATTR: Tags latest
+eve
+	1.0.0
+		ATTR: Tags latest
+	2.0.0
+	2.0.0-alpha
+-- END
+
+-- Test release1
+Resolve alice 1.0.0
+Universe release
+Graph release1
+-- END
+
+-- Test release2
+Resolve alice 2.0.0
+Universe release
+Graph release2
+Flag loose_errors
+-- END
+
+-- Test release3
+Resolve alice 3.0.0
+Universe release
+Graph release3
+-- END
+
+-- Test release4
+Resolve alice 4.0.0
+Universe release
+Graph release4
+-- END

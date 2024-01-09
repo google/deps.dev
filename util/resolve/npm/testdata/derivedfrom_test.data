@@ -1,0 +1,236 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+If a version is bundled and matches the requirement, it is used during the
+resolution.
+-- Universe derivedFromBasic
+alice
+	1.0.0
+		bob@1.0.0
+bob
+	1.0.0
+		Scope bundled|chuck@1.0.0
+		bob>1.0.0>chuck@1.0.0
+bob>1.0.0>chuck
+	DerivedFrom chuck|1.0.0
+chuck
+	1.0.0
+-- END
+
+-- Test derivedFromBasic
+Resolve alice 1.0.0
+Universe derivedFromBasic
+Graph derivedFromBasic
+-- END
+
+-- Graph derivedFromBasic
+alice 1.0.0
+└─ selector|bob@1.0.0 1.0.0
+   └─ selector scope bundled|bob>1.0.0>chuck@1.0.0 1.0.0
+-- END
+
+
+The root can contain a bundle.
+-- Test derivedFromBasicAtRoot
+Resolve bob 1.0.0
+Universe derivedFromBasic
+Graph derivedFromBasicAtRoot
+-- END
+
+-- Graph derivedFromBasicAtRoot
+bob@1.0.0 1.0.0
+└─ selector scope bundled|bob>1.0.0>chuck@1.0.0 1.0.0
+-- END
+
+
+If a version is bundled and matches the requirement, it is used during the
+resolution, even if this version doesn't exist in the graph and only in the
+bundle.
+-- Universe derivedFromMissingVersion
+alice
+	1.0.0
+		bob@1.0.0
+bob
+	1.0.0
+		Scope bundled|chuck@1.0.0
+		bob>1.0.0>chuck@1.0.0
+bob>1.0.0>chuck
+	DerivedFrom chuck|1.0.0
+chuck
+	0.0.0
+-- END
+
+-- Test derivedFromMissingVersion
+Resolve alice 1.0.0
+Universe derivedFromMissingVersion
+Graph derivedFromMissingVersion
+-- END
+
+-- Graph derivedFromMissingVersion
+alice 1.0.0
+└─ selector|bob@1.0.0 1.0.0
+   └─ selector scope bundled|bob>1.0.0>chuck@1.0.0 1.0.0
+-- END
+
+
+If a bundled version does not match the requirement, it is replaced by one that
+matches. The replacement occurs at the installation level of the bundle, thus
+is not dedup from above in the tree.
+-- Universe derivedFromMismatchVersion
+alice
+	1.0.0
+		bob@1.0.0
+		dave@1.0.0
+bob
+	1.0.0
+		Scope bundled|chuck@2.0.0
+		bob>1.0.0>chuck@1.0.0
+bob>1.0.0>chuck
+	DerivedFrom chuck|1.0.0
+chuck
+	2.0.0
+dave
+	1.0.0
+		chuck@2.0.0
+-- END
+
+-- Test derivedFromMismatchVersion
+Resolve alice 1.0.0
+Universe derivedFromMismatchVersion
+Graph derivedFromMismatchVersion
+-- END
+
+-- Graph derivedFromMismatchVersion
+alice 1.0.0
+├─ selector|bob@1.0.0 1.0.0
+│  └─ selector scope bundled|chuck@2.0.0 2.0.0
+└─ selector|dave@1.0.0 1.0.0
+   └─ selector|chuck@2.0.0 2.0.0
+-- END
+
+
+-- Universe derivedFromFull
+alice
+	1.0.0
+		bob@1.0.0
+		eve@*
+bob
+	1.0.0
+		Scope bundled|chuck@*
+		george@*
+		bob>1.0.0>chuck@1.0.0
+		bob>1.0.0>dave@1.0.0
+		bob>1.0.0>eve@1.0.0
+		bob>1.0.0>franck@1.0.0
+bob>1.0.0>chuck
+	DerivedFrom chuck|1.0.0
+		eve@1.0.0
+		franck@1.0.0
+		dave@1.0.0
+bob>1.0.0>dave
+	DerivedFrom dave|1.0.0
+bob>1.0.0>eve
+	DerivedFrom eve|1.0.0
+		dave@2.0.0
+bob>1.0.0>franck
+	DerivedFrom franck|1.0.0
+		dave@1.0.0
+		eve@2.0.0
+		george@1.0.0
+		bob>1.0.0>franck>george@1.0.0
+		bob>1.0.0>franck>dave@1.0.0
+bob>1.0.0>franck>dave
+	DerivedFrom dave|1.0.0
+bob>1.0.0>franck>george
+	DerivedFrom george|1.0.0
+		dave@*
+dave
+	2.0.0
+	3.0.0
+eve
+	2.0.0
+		dave@*
+george
+	1.0.0
+	2.0.0
+
+chuck
+	0.0.0
+franck
+	0.0.0
+-- END
+
+
+-- Test derivedFrom01
+Resolve alice 1.0.0
+Universe derivedFromFull
+Graph derivedFrom01
+-- END
+
+-- Test derivedFrom02
+Resolve alice 1.0.0
+Universe derivedFromFull
+Graph derivedFrom02
+Flag demangle_names
+-- END
+
+
+-- Graph derivedFrom01
+alice 1.0.0
+├─ selector|bob@1.0.0 1.0.0
+│  ├─ selector scope bundled|bob>1.0.0>chuck@* 1.0.0
+│  │  ├─ selector|bob>1.0.0>dave@1.0.0 1.0.0
+│  │  ├─ selector|bob>1.0.0>eve@1.0.0 1.0.0
+│  │  │  └─ selector|dave@2.0.0 2.0.0
+│  │  └─ selector|bob>1.0.0>franck@1.0.0 1.0.0
+│  │     ├─ 1: selector|bob>1.0.0>franck>dave@1.0.0 1.0.0
+│  │     ├─ selector|eve@2.0.0 2.0.0
+│  │     │  └─ $1@*
+│  │     └─ selector|bob>1.0.0>franck>george@1.0.0 1.0.0
+│  │        └─ $1@*
+│  └─ selector|george@* 2.0.0
+└─ selector|eve@* 2.0.0
+   └─ selector|dave@* 3.0.0
+-- END
+
+Bundled versions that are not used should be reported as extraneous.
+-- Universe derivedFromExtraneous
+alice
+	1.0.0
+		bob@1.0.0
+bob
+	1.0.0
+		Scope bundled|chuck@1.0.0
+		bob>1.0.0>chuck@1.0.0
+bob>1.0.0>chuck
+	DerivedFrom chuck|1.0.0
+		bob>1.0.0>chuck-1.0.0>dave@1.0.0
+bob>1.0.0>chuck-1.0.0>dave
+	DerivedFrom dave|1.0.0
+chuck
+	1.0.0
+dave
+	2.0.0
+-- END
+
+-- Test derivedFromExtraneous
+Resolve alice 1.0.0
+Universe derivedFromExtraneous
+Graph derivedFromExtraneous
+Flag loose_errors
+-- END
+
+-- Graph derivedFromExtraneous
+ERROR: extraneous version NPM:bob>1.0.0>chuck-1.0.0>dave[Concrete:1.0.0]
+-- END

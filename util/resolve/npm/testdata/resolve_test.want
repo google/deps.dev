@@ -1,0 +1,240 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+-- Graph highestSemver
+alice 1.0.0
+└─ selector|bob@* 2.0.0
+-- END
+
+-- Graph highestLatest
+alice 2.0.0
+└─ selector|chuck@* 1.0.0
+-- END
+
+-- Graph unresolvedConstraint
+ERROR: npm ERR! code ETARGET
+ERROR: npm ERR! notarget No matching version found for bob@2.
+ERROR: npm ERR! notarget In most cases you or one of your dependencies are requesting
+ERROR: npm ERR! notarget a package version that doesn't exist.
+ERROR: npm ERR! notarget
+ERROR: npm ERR! notarget It was specified as a dependency of 'resolve665017188'
+ERROR: npm ERR! notarget
+ERROR:
+ERROR: npm ERR! A complete log of this run can be found in:
+ERROR: npm ERR!     /root/resolve/resolve665017188/cache/_logs/2020-09-17T23_26_34_261Z-debug.log
+ERROR:
+alice 1.0.0
+-- END
+
+-- Graph unresolvedPackage
+ERROR: npm ERR! code ENOVERSIONS
+ERROR: npm ERR! No valid versions available for chuck
+ERROR:
+ERROR: npm ERR! A complete log of this run can be found in:
+ERROR: npm ERR!     /root/resolve/resolve957029747/cache/_logs/2020-09-17T23_26_34_775Z-debug.log
+ERROR:
+alice 2.0.0
+-- END
+
+-- Graph lexicographic1
+alice 1.1.0
+├─ selector|bob@* 1.0.0
+│  └─ 1: selector|franck@1.0.0 1.0.0
+└─ selector|chuck@* 1.0.0
+   └─ $1@*
+-- END
+
+-- Graph lexicographic2
+alice 1.2.0
+├─ selector|chuck@* 1.0.0
+│  └─ selector|franck@* 2.0.0
+└─ selector|dave@* 1.0.0
+   └─ selector|franck@1.0.0 1.0.0
+-- END
+
+-- Graph lexicographicCaseInsensitive1
+alice 2.1.0
+├─ selector|BOB@* 1.0.0
+│  └─ 1: selector|franck@1.0.0 1.0.0
+└─ selector|chuck@* 1.0.0
+   └─ $1@*
+-- END
+
+-- Graph lexicographicCaseInsensitive2
+alice 2.2.0
+├─ selector|DAVE@* 1.0.0
+│  └─ selector|franck@1.0.0 1.0.0
+└─ selector|chuck@* 1.0.0
+   └─ selector|franck@* 2.0.0
+-- END
+
+-- Graph lexicographicCaseInsensitive3
+alice 2.3.0
+├─ selector|EVE@* 1.0.0
+│  └─ selector|franck@1.0.0 1.0.0
+└─ selector|eve@* 1.0.0
+   └─ selector|franck@* 2.0.0
+-- END
+
+-- Graph deduplicate1
+alice 1.0.0
+├─ 1: selector|bob@1.0.0 1.0.0
+└─ selector|chuck@1.0.0 1.0.0
+   └─ $1@*
+-- END
+
+-- Graph deduplicate2
+alice 1.0.0
+├─ selector|bob@1.0.0 1.0.0
+│  └─ selector|chuck@2.0.0 2.0.0
+│     └─ selector|$1@1.0.0
+└─ selector|chuck@1.0.0 1.0.0
+   └─ 1: dave@* 1.0.0
+-- END
+
+-- Graph deduplicate3
+alice 1.0.0
+├─ selector|bob@1.0.0 1.0.0
+│  ├─ $1@*
+│  └─ selector|franck@* 2.0.0
+├─ selector|chuck@1.0.0 1.0.0
+│  └─ 2: eve@* 1.0.0
+└─ 1: selector|dave@1.0.0 1.0.0
+   ├─ selector|$2@1.0.0
+   └─ selector|franck@1.0.0 1.0.0
+-- END
+
+-- Graph deduplicate4
+alice 1.0.0
+├─ selector|bob@1.0.0 1.0.0
+│  ├─ selector|chuck@2.0.0 2.0.0
+│  │  ├─ $1@1.0.0
+│  │  └─ selector|$2@1.0.0
+│  ├─ selector|dave@2.0.0 2.0.0
+│  │  ├─ selector|franck@2.0.0 2.0.0
+│  │  └─ selector|george@2.0.0 2.0.0
+│  └─ selector|eve@2.0.0 2.0.0
+│     ├─ selector|franck@2.0.0 2.0.0
+│     └─ selector|george@2.0.0 2.0.0
+├─ selector|chuck@1.0.0 1.0.0
+├─ selector|dave@1.0.0 1.0.0
+│  ├─ $1@*
+│  └─ 2: george@* 1.0.0
+├─ selector|eve@1.0.0 1.0.0
+│  ├─ $1@*
+│  └─ $2@*
+└─ 1: selector|franck@1.0.0 1.0.0
+-- END
+
+-- Graph duplicate
+alice 1.0.0
+├─ selector|bob@1.0.0 1.0.0
+├─ selector|chuck@1.0.0 1.0.0
+│  ├─ selector|bob@2.0.0 2.0.0
+│  ├─ selector|dave@2.0.0 2.0.0
+│  │  ├─ selector|bob@1.0.0 1.0.0
+│  │  └─ selector|eve@3.0.0 3.0.0
+│  │     └─ selector|bob@2.0.0 2.0.0
+│  └─ selector|eve@2.0.0 2.0.0
+├─ selector|dave@1.0.0 1.0.0
+└─ selector|eve@1.0.0 1.0.0
+-- END
+
+-- Graph extraneous1
+ERROR: npm ERR! extraneous: bob@2.0.0 /root/resolve/resolve228297277/node_modules/bob/node_modules/bob
+ERROR: npm ERR! missing: bob@2.0.0, required by chuck@2.0.0
+ERROR:
+alice 1.0.0
+-- END
+
+-- Graph extraneous2
+ERROR: npm ERR! extraneous: bob@2.0.0 /root/resolve/resolve091488376/node_modules/bob/node_modules/bob
+ERROR: npm ERR! missing: bob@2.0.0, required by dave@3.0.0
+ERROR:
+alice 1.0.0
+-- END
+
+-- Graph cycle
+alice 1.0.0
+├─ 1: selector|dave@1.0.0 1.0.0
+│  ├─ $1@1.0.0
+│  └─ selector|eve@1.0.0 1.0.0
+│     └─ $1@1.0.*
+└─ selector|eve@2.0.0 2.0.0
+-- END
+
+-- Graph cycleOnRoot1
+alice 1.0.0
+└─ 1: selector|bob@1.0.0 1.0.0
+   └─ selector|alice@1.0.0 1.0.0
+      └─ $1@1.0.0
+-- END
+
+-- Graph cycleOnRoot2
+alice 2.0.0
+└─ 1: selector|bob@1.0.0 1.0.0
+   └─ selector|alice@1.0.0 1.0.0
+      └─ $1@1.0.0
+-- END
+
+-- Graph matchSymbolic
+alice 1.0.0
+├─ selector|bob@1.0.0 1.0.0
+│  └─ $1@latest
+├─ selector|chuck@1.0.0 1.0.0
+│  └─ $1@default
+└─ 1: selector|dave@theone 1.0.0
+-- END
+
+-- Graph cycleSymbolic
+alice 1.0.0
+├─ 1: selector|bob@latest 1.0.0
+│  ├─ $2@latest
+│  └─ 3: selector|dave@latest 1.0.0
+│     ├─ $1@latest
+│     └─ $2@latest
+└─ 2: selector|chuck@latest 1.0.0
+   ├─ $1@latest
+   └─ $3@latest
+-- END
+
+-- Graph release1
+alice 1.0.0
+└─ selector|bob@* 1.0.0
+-- END
+
+-- Graph release2
+ERROR: npm ERR! code ETARGET
+ERROR: npm ERR! notarget No matching version found for chuck@*.
+ERROR: npm ERR! notarget In most cases you or one of your dependencies are requesting
+ERROR: npm ERR! notarget a package version that doesn't exist.
+ERROR: npm ERR! notarget
+ERROR: npm ERR! notarget It was specified as a dependency of 'resolve892695454'
+ERROR: npm ERR! notarget
+ERROR:
+ERROR: npm ERR! A complete log of this run can be found in:
+ERROR: npm ERR!     /root/resolve/resolve892695454/cache/_logs/2020-10-01T09_35_52_838Z-debug.log
+ERROR:
+alice 2.0.0
+-- END
+
+-- Graph release3
+alice 3.0.0
+└─ selector|dave@* 1.0.0
+-- END
+
+-- Graph release4
+alice 4.0.0
+└─ selector|eve@* 1.0.0
+-- END

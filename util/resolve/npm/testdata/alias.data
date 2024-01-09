@@ -1,0 +1,219 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+npm allows aliases for package names.
+-- Universe alias
+alice
+	1.0.0
+		chuck@*
+		KnownAs bob|chuck@1
+	2.0.0
+		chuck@1
+		KnownAs bob|chuck@*
+	3.0.0
+		dave@1
+		chuck@3
+chuck
+	1.0.0
+	2.0.0
+	3.0.0
+		KnownAs dave|eve@*
+dave
+	1.0.0
+		franck@1
+eve
+	1.0.0
+franck
+	1.0.0
+-- END
+
+chuck is installed twice, once under bob @2.0.0, and another time under chuck
+@ 1.0.0
+-- Test alias1
+Resolve alice 1.0.0
+Universe alias
+Graph alias1
+-- END
+
+chuck@1.0.0 is installed twice, once under bob, and another time under chuck
+-- Test alias2
+Resolve alice 2.0.0
+Universe alias
+Graph alias2
+-- END
+
+The concrete dave is used, even though it is an alias for eve.
+-- Test alias3
+Resolve alice 3.0.0
+Universe alias
+Graph alias3
+-- END
+
+
+The resolution order follows the lexicographic order of the aliases.
+-- Universe aliasOrder
+alice
+	1.0.0
+		chuck@1
+		KnownAs bob|chuck@*
+	2.0.0
+		chuck@1
+		KnownAs eve|chuck@*
+bob
+	1.0.0
+chuck
+	1.0.0
+		dave@*
+	2.0.0
+		dave@1
+dave
+	1.0.0
+	2.0.0
+-- END
+
+-- Test aliasOrder1
+Resolve alice 1.0.0
+Universe aliasOrder
+Graph aliasOrder1
+-- END
+
+-- Test aliasOrder2
+Resolve alice 2.0.0
+Universe aliasOrder
+Graph aliasOrder2
+-- END
+
+-- Universe aliasCollision1
+alice
+	1.0.0
+		KnownAs bob|chuck@*
+bob
+	1.0.0
+chuck
+	1.0.0
+		bob@*
+-- END
+
+-- Test aliasCollision1
+Resolve alice 1.0.0
+Universe aliasCollision1
+Graph aliasCollision1
+-- END
+
+-- Universe aliasCollision2
+alice
+	1.0.0
+		bob@1
+		chuck@1
+	2.0.0
+		bob@1
+		chuck@1
+		dave@3
+	3.0.0
+		bob@1
+		chuck@1
+		franck@1
+bob
+	1.0.0
+		KnownAs dave|eve@1
+chuck
+	1.0.0
+		KnownAs dave|eve@2
+eve
+	1.0.0
+	2.0.0
+dave
+	3.0.0
+franck
+	1.0.0
+		dave@*
+-- END
+
+-- Test aliasCollision2
+Resolve alice 1.0.0
+Universe aliasCollision2
+Graph aliasCollision2
+-- END
+
+-- Test aliasCollision3
+Resolve alice 2.0.0
+Universe aliasCollision2
+Graph aliasCollision3
+-- END
+
+-- Test aliasCollision4
+Resolve alice 3.0.0
+Universe aliasCollision2
+Graph aliasCollision4
+-- END
+
+-- Universe aliasDepth
+alice
+	1.0.0
+		bob@1
+		chuck@1
+		george@1
+	2.0.0
+		bob@1
+		chuck@1
+		george@2
+bob
+	1.0.0
+		dave@1
+chuck
+	1.0.0
+		dave@2
+dave
+	1.0.0
+	2.0.0
+		KnownAs eve|franck@1
+eve
+	2.0.0
+franck
+	1.0.0
+george
+	1.0.0
+		eve@1.0.0
+	2.0.0
+		eve@2.0.0
+-- END
+
+-- Test aliasDepth1
+Resolve alice 1.0.0
+Universe aliasDepth
+Graph aliasDepth1
+-- END
+
+-- Test aliasDepth2
+Resolve alice 2.0.0
+Universe aliasDepth
+Graph aliasDepth2
+-- END
+
+-- Universe aliasBundle
+alice
+	1.0.0
+		alice>1.0.0>spy@0.0.0
+		spy@*
+alice>1.0.0>spy
+	DerivedFrom test|0.0.0
+test
+	1.0.0
+-- END
+
+-- Test aliasBundle
+Resolve alice 1.0.0
+Universe aliasBundle
+Graph aliasBundle
+-- END

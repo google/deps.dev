@@ -1,0 +1,111 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+-- Graph alias1
+alice 1.0.0
+├─ Selector KnownAs "bob" | chuck@1 1.0.0
+└─ Selector | chuck@* 3.0.0
+   └─ Selector KnownAs "dave"| eve@* 1.0.0
+-- END
+
+-- Graph alias2
+alice 2.0.0
+├─ Selector | chuck@1 1.0.0
+└─ Selector KnownAs "bob" | chuck@* 3.0.0
+   └─ Selector KnownAs "dave" | eve@* 1.0.0
+-- END
+
+-- Graph alias3
+alice 3.0.0
+├─ Selector | chuck@3 3.0.0
+│  └─ KnownAs "dave" | $1@*
+└─ 1: Selector | dave@1 1.0.0
+   └─ Selector | franck@1 1.0.0
+-- END
+
+-- Graph aliasOrder1
+alice 1.0.0
+├─ Selector | chuck@1 1.0.0
+│  └─ 1: dave@* 1.0.0
+└─ Selector KnownAs "bob" | chuck@* 2.0.0
+   └─ Selector | $1@1
+-- END
+
+-- Graph aliasOrder2
+alice 2.0.0
+├─ Selector | chuck@1 1.0.0
+│  └─ Selector | dave@* 2.0.0
+└─ Selector KnownAs "eve" | chuck@* 2.0.0
+   └─ Selector | dave@1 1.0.0
+-- END
+
+-- Graph aliasCollision1
+alice 1.0.0
+└─ 1: Selector KnownAs "bob" | chuck@* 1.0.0
+   └─ $1@*
+-- END
+
+-- Graph aliasCollision2
+alice 1.0.0
+├─ Selector |bob@1 1.0.0
+│  └─ Selector KnownAs "dave" | eve@1 1.0.0
+└─ Selector |chuck@1 1.0.0
+   └─ Selector KnownAs "dave" | eve@2 2.0.0
+-- END
+
+-- Graph aliasCollision3
+alice 2.0.0
+├─ Selector |bob@1 1.0.0
+│  └─ Selector KnownAs "dave" | eve@1 1.0.0
+├─ Selector |chuck@1 1.0.0
+│  └─ Selector KnownAs "dave" | eve@2 2.0.0
+└─ Selector |dave@3 3.0.0
+-- END
+
+-- Graph aliasCollision4
+alice 3.0.0
+├─ Selector |bob@1 1.0.0
+│  └─ 1: Selector KnownAs "dave" | eve@1 1.0.0
+├─ Selector |chuck@1 1.0.0
+│  └─ Selector KnownAs "dave" | eve@2 2.0.0
+└─ Selector |franck@1 1.0.0
+   └─ $1@*
+-- END
+
+-- Graph aliasDepth1
+alice 1.0.0
+├─ Selector |bob@1 1.0.0
+│  └─ Selector |dave@1 1.0.0
+├─ Selector |chuck@1 1.0.0
+│  └─ Selector |dave@2 2.0.0
+│     └─ 1: Selector KnownAs "eve" | franck@1 1.0.0
+└─ Selector |george@1 1.0.0
+   └─ $1@1.0.0
+-- END
+
+-- Graph aliasDepth2
+alice 2.0.0
+├─ Selector |bob@1 1.0.0
+│  └─ Selector |dave@1 1.0.0
+├─ Selector |chuck@1 1.0.0
+│  └─ Selector |dave@2 2.0.0
+│     └─ Selector KnownAs "eve" | franck@1 1.0.0
+└─ Selector |george@2 2.0.0
+   └─ Selector |eve@2.0.0 2.0.0
+-- END
+
+-- Graph aliasBundle
+alice 1.0.0
+    Selector |alice>1.0.0>spy@* 0.0.0
+-- END
