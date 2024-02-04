@@ -57,8 +57,10 @@ service Insights {
   // BitBucket, when known to us.
   rpc GetProject(GetProjectRequest) returns (Project) {}
 
-  // GetProjectPackageVersions returns the package versions which attest to
-  // being created from the specified source code repository.
+  // GetProjectPackageVersions returns the package versions that have a
+  // published
+  // [SLSA provenance attestation](https://slsa.dev/spec/v1.0/provenance)
+  // attesting that the version was built from the specified project.
   // At most 1500 package versions are returned.
   rpc GetProjectPackageVersions(GetProjectPackageVersionsRequest) returns (ProjectPackageVersions) {}
 
@@ -575,6 +577,7 @@ message Project {
 
   message Scorecard {
     // The date at which the scorecard was produced.
+    // The time portion of this field is midnight UTC.
     google.protobuf.Timestamp date = 1;
 
     message Repository {
@@ -649,9 +652,10 @@ message Project {
     int64 line_cover_count = 2;
     // The date the fuzz test that produced the coverage information was run
     // against this project.
+    // The time portion of this field is midnight UTC.
     google.protobuf.Timestamp date = 3;
     // The URL containing the configuration for the project in the
-    //  OSS-Fuzz repository.
+    // OSS-Fuzz repository.
     string config_url = 4;
   }
 
