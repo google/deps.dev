@@ -170,6 +170,9 @@ message SLSAProvenance {
   string commit = 2;
   // The URL of the provenance statement if there is one.
   string url = 3;
+  // The Sigstore bundle containing this attestation was verified using the
+  // [sigstore-go](https://github.com/sigstore/sigstore-go) library.
+  bool verified = 4;
 }
 
 // GetPackageRequest identifies a package for which to return information.
