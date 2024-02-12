@@ -57,11 +57,11 @@ service Insights {
   // BitBucket, when known to us.
   rpc GetProject(GetProjectRequest) returns (Project) {}
 
-  // GetProjectPackageVersions returns the package versions that have a
-  // published
-  // [SLSA provenance attestation](https://slsa.dev/spec/v1.0/provenance)
-  // attesting that the version was built from the specified project.
-  // At most 1500 package versions are returned.
+  // GetProjectPackageVersions returns known mappings between the requested
+  // project and package versions.
+  // At most 1500 package versions are returned. Mappings which were derived from
+  // a [SLSA provenance attestation](https://slsa.dev/spec/v1.0/provenance)
+  // attestation are served first.
   rpc GetProjectPackageVersions(GetProjectPackageVersionsRequest) returns (ProjectPackageVersions) {}
 
   // GetAdvisory returns information about security advisories hosted by OSV.
@@ -264,6 +264,18 @@ message Version {
   // Only set for systems that use a central repository for package
   // distribution: Cargo, Maven, npm, NuGet, and PyPI.
   repeated string registries = 8;
+
+  message Project {
+    // The identifier for the project.
+    ProjectKey project_key = 1;
+    // How the mapping between project and package version was discovered.
+    ProjectRelationProvenance relation_provenance = 2;
+    // What the relationship between the project and the package version is.
+    ProjectRelationType relation_type = 3;
+  }
+
+  // Projects that are related to this package version.
+  repeated Project related_projects = 10;
 }
 
 // GetRequirementsRequest identifies a version for which to return
@@ -668,6 +680,31 @@ message Project {
   OSSFuzzDetails oss_fuzz = 9;
 }
 
+// What the relationship between the project and the package version is.
+enum ProjectRelationType {
+  UNKNOWN_PROJECT_RELATION_TYPE = 0;
+
+  // This project is this package version's source code repository.
+  SOURCE_REPO = 1;
+
+  // This project is the package version's issue tracker.
+  ISSUE_TRACKER = 2;
+}
+
+// How the mapping between project and package version was discovered.
+enum ProjectRelationProvenance {
+  UNKNOWN_PROJECT_RELATION_PROVENANCE = 0;
+
+  // There is a SLSA attestation that links this package version to this project.
+  SLSA_ATTESTATION = 1;
+
+  // This project contains the package version (Go specific).
+  GO_ORIGIN = 2;
+
+  // The package version's metadata contains an unverified link to this project.
+  UNVERIFIED_METADATA = 10;
+}
+
 message GetProjectPackageVersionsRequest {
   ProjectKey project_key = 1;
 }
@@ -678,6 +715,10 @@ message ProjectPackageVersions {
     VersionKey version_key = 1;
     // The SLSA provenance statements that link the version to the project.
     repeated SLSAProvenance slsa_provenances = 2;
+    // What the relationship between the project and the package version is.
+    ProjectRelationType relation_type = 3;
+    // How the mapping between project and package version was discovered.
+    ProjectRelationProvenance relation_provenance = 4;
   }
 
   // The versions that were built from the source code contained in this

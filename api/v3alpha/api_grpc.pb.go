@@ -74,11 +74,11 @@ type InsightsClient interface {
 	// GetProject returns information about projects hosted by GitHub, GitLab, or
 	// BitBucket, when known to us.
 	GetProject(ctx context.Context, in *GetProjectRequest, opts ...grpc.CallOption) (*Project, error)
-	// GetProjectPackageVersions returns the package versions that have a
-	// published
-	// [SLSA provenance attestation](https://slsa.dev/spec/v1.0/provenance)
-	// attesting that the version was built from the specified project.
-	// At most 1500 package versions are returned.
+	// GetProjectPackageVersions returns known mappings between the requested
+	// project and package versions.
+	// At most 1500 package versions are returned. Mappings which were derived from
+	// a [SLSA provenance attestation](https://slsa.dev/spec/v1.0/provenance)
+	// attestation are served first.
 	GetProjectPackageVersions(ctx context.Context, in *GetProjectPackageVersionsRequest, opts ...grpc.CallOption) (*ProjectPackageVersions, error)
 	// GetAdvisory returns information about security advisories hosted by OSV.
 	GetAdvisory(ctx context.Context, in *GetAdvisoryRequest, opts ...grpc.CallOption) (*Advisory, error)
@@ -204,11 +204,11 @@ type InsightsServer interface {
 	// GetProject returns information about projects hosted by GitHub, GitLab, or
 	// BitBucket, when known to us.
 	GetProject(context.Context, *GetProjectRequest) (*Project, error)
-	// GetProjectPackageVersions returns the package versions that have a
-	// published
-	// [SLSA provenance attestation](https://slsa.dev/spec/v1.0/provenance)
-	// attesting that the version was built from the specified project.
-	// At most 1500 package versions are returned.
+	// GetProjectPackageVersions returns known mappings between the requested
+	// project and package versions.
+	// At most 1500 package versions are returned. Mappings which were derived from
+	// a [SLSA provenance attestation](https://slsa.dev/spec/v1.0/provenance)
+	// attestation are served first.
 	GetProjectPackageVersions(context.Context, *GetProjectPackageVersionsRequest) (*ProjectPackageVersions, error)
 	// GetAdvisory returns information about security advisories hosted by OSV.
 	GetAdvisory(context.Context, *GetAdvisoryRequest) (*Advisory, error)
