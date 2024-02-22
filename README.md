@@ -94,6 +94,8 @@ This generated data is available under a
 Use of the deps.dev API is subject to the
 [Google API Terms of Service](https://developers.google.com/terms).
 
+Clients are expressly permitted to cache data served by the API.
+
 ## Contact us
 
 If you have questions about the API, or want to report a problem, please create
