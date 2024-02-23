@@ -16,6 +16,7 @@ syntax = "proto3";
 
 package deps_dev.v3alpha;
 
+import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "deps.dev/api/v3alpha";
@@ -27,18 +28,30 @@ option go_package = "deps.dev/api/v3alpha";
 service Insights {
   // GetPackage returns information about a package, including a list of its
   // available versions, with the default version marked if known.
-  rpc GetPackage(GetPackageRequest) returns (Package) {}
+  rpc GetPackage(GetPackageRequest) returns (Package) {
+    option (google.api.http) = {
+      get: "/v3alpha/systems/{package_key.system}/packages/{package_key.name}"
+    };
+  }
 
   // GetVersion returns information about a specific package version, including
   // its licenses and any security advisories known to affect it.
-  rpc GetVersion(GetVersionRequest) returns (Version) {}
+  rpc GetVersion(GetVersionRequest) returns (Version) {
+    option (google.api.http) = {
+      get: "/v3alpha/systems/{version_key.system}/packages/{version_key.name}/versions/{version_key.version}"
+    };
+  }
 
   // GetRequirements returns the requirements for a given version in a
   // system-specific format. Requirements are currently available for
   // Maven, npm and NuGet.
   //
   // Requirements are the dependency constraints specified by the version.
-  rpc GetRequirements(GetRequirementsRequest) returns (Requirements) {}
+  rpc GetRequirements(GetRequirementsRequest) returns (Requirements) {
+    option (google.api.http) = {
+      get: "/v3alpha/systems/{version_key.system}/packages/{version_key.name}/versions/{version_key.version}:requirements"
+    };
+  }
 
   // GetDependencies returns a resolved dependency graph for the given package
   // version. Dependencies are currently available for Go, npm, Cargo, Maven
@@ -51,21 +64,37 @@ service Insights {
   // package version on a generic 64-bit Linux system, with no other
   // dependencies present. The precise meaning of this varies from system to
   // system.
-  rpc GetDependencies(GetDependenciesRequest) returns (Dependencies) {}
+  rpc GetDependencies(GetDependenciesRequest) returns (Dependencies) {
+    option (google.api.http) = {
+      get: "/v3alpha/systems/{version_key.system}/packages/{version_key.name}/versions/{version_key.version}:dependencies"
+    };
+  }
 
   // GetProject returns information about projects hosted by GitHub, GitLab, or
   // BitBucket, when known to us.
-  rpc GetProject(GetProjectRequest) returns (Project) {}
+  rpc GetProject(GetProjectRequest) returns (Project) {
+    option (google.api.http) = {
+      get: "/v3alpha/projects/{project_key.id}"
+    };
+  }
 
   // GetProjectPackageVersions returns known mappings between the requested
   // project and package versions.
   // At most 1500 package versions are returned. Mappings which were derived from
   // a [SLSA provenance attestation](https://slsa.dev/spec/v1.0/provenance)
   // attestation are served first.
-  rpc GetProjectPackageVersions(GetProjectPackageVersionsRequest) returns (ProjectPackageVersions) {}
+  rpc GetProjectPackageVersions(GetProjectPackageVersionsRequest) returns (ProjectPackageVersions) {
+    option (google.api.http) = {
+      get: "/v3alpha/projects/{project_key.id}:packageversions"
+    };
+  }
 
   // GetAdvisory returns information about security advisories hosted by OSV.
-  rpc GetAdvisory(GetAdvisoryRequest) returns (Advisory) {}
+  rpc GetAdvisory(GetAdvisoryRequest) returns (Advisory) {
+    option (google.api.http) = {
+      get: "/v3alpha/advisories/{advisory_key.id}"
+    };
+  }
 
   // Query returns information about multiple package versions, which can be
   // specified by name, content hash, or both.
@@ -75,7 +104,12 @@ service Insights {
   // matched against multiple release artifacts (such as JAR files) that
   // comprise package versions, and any given artifact may appear in many
   // package versions.
-  rpc Query(QueryRequest) returns (QueryResult) {}
+  rpc Query(QueryRequest) returns (QueryResult) {
+    option (google.api.http) = {
+      // Request fields are passed as query parameters.
+      get: "/v3alpha/query"
+    };
+  }
 }
 
 // System identifies a package management system.
