@@ -48,9 +48,11 @@ Example applications written in Go can be found in the `examples` directory:
 - [`dependencies_dot`](./examples/go/dependencies_dot) fetches a resolved
   dependency graph from the deps.dev HTTP API and renders it in the DOT
   language used by Graphviz.
-- [`package_lock_licenses`](./examples/go/package_lock_licenses) reads
-  dependencies from an npm package-lock.json file and fetches their licenses
-  from the deps.dev gRPC API.
+- [`package_lock_licenses`](./examples/go/package_lock_licenses) and
+  [`package_lock_licenses_batch`](./examples/go/package_lock_licenses_batch)
+  read dependencies from an npm package-lock.json file and fetch their licenses
+  from deps.dev, using concurrent requests to the gRPC API or batch requests to
+  the HTTP API, respectively.
 
 ## Third party tools and integrations
 
