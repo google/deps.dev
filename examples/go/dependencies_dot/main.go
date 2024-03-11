@@ -78,7 +78,7 @@ func main() {
 	// Fetch a resolved dependency graph from the deps.dev API.
 	// Request parameters passed as path segments must be escaped,
 	// as they may contain characters like '/'.
-	url := "https://api.deps.dev/v3alpha/systems/" + url.PathEscape(system) + "/packages/" + url.PathEscape(name) + "/versions/" + url.PathEscape(version) + ":dependencies"
+	url := "https://api.deps.dev/v3/systems/" + url.PathEscape(system) + "/packages/" + url.PathEscape(name) + "/versions/" + url.PathEscape(version) + ":dependencies"
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatalf("Request: %v", err)

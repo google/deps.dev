@@ -1,5 +1,5 @@
-deps.dev/api/v3alpha v0.0.0-20230503063720-1aa8eedc402e h1:qYSmeg58Jt6hwiSiZz9D4D+qGRSTWR0eNZCELULBv+k=
-deps.dev/api/v3alpha v0.0.0-20230503063720-1aa8eedc402e/go.mod h1:69Mvmw3jh/42Ci9wYemDIid4hXXAEJGHI6oUAWaZnqA=
+deps.dev/api/v3 v3.0.0-20240311053741-8694636601c8 h1:5eZBX3SZk7AeytFo1MkEJzVCiTOI59ED/rpFuSLr/6o=
+deps.dev/api/v3 v3.0.0-20240311053741-8694636601c8/go.mod h1:k3RHZwAw7ijqoXmVDvcO7ikeTwTC4jtmhCDathV+IKE=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
 github.com/golang/protobuf v1.5.3 h1:KhyjKVUg7Usr/dYsdSqoFveMYd5ko72D+zANwlG1mmg=
 github.com/golang/protobuf v1.5.3/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=
@@ -18,5 +18,5 @@ google.golang.org/grpc v1.56.3 h1:8I4C0Yq1EjstUzUJzpcRVbuYA2mODtEmpWiQoN/b2nc=
 google.golang.org/grpc v1.56.3/go.mod h1:I9bI3vqKfayGqPUAwGdOSu7kt6oIJLixfffKrpXqQ9s=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
 google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
-google.golang.org/protobuf v1.30.0 h1:kPPoIgf3TsEvrm0PFe15JQ+570QVxYzEvvHqChK+cng=
-google.golang.org/protobuf v1.30.0/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
+google.golang.org/protobuf v1.33.0 h1:uNO2rsAINq/JlFpSdYEKIZ0uKD/R9cpdv0T+yoGwGmI=
+google.golang.org/protobuf v1.33.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=

@@ -31,7 +31,11 @@ import (
 )
 
 type QueryResult struct {
-	Versions []Version
+	Results []Result
+}
+
+type Result struct {
+	Version Version
 }
 
 type Version struct {
@@ -71,7 +75,7 @@ func main() {
 	hash64 := base64.StdEncoding.EncodeToString(hash[:])
 
 	// Query the deps.dev API for package versions associated with artifacts matching the hash.
-	url := "https://api.deps.dev/v3alpha/query?hash.type=SHA1&hash.value=" + url.QueryEscape(hash64)
+	url := "https://api.deps.dev/v3/query?hash.type=SHA1&hash.value=" + url.QueryEscape(hash64)
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatalf("Request: %v", err)
@@ -87,7 +91,8 @@ func main() {
 	}
 
 	// Print all matching package versions.
-	for _, v := range result.Versions {
-		fmt.Printf("%s: %s@%s\n", v.VersionKey.System, v.VersionKey.Name, v.VersionKey.Version)
+	for _, r := range result.Results {
+		vk := r.Version.VersionKey
+		fmt.Printf("%s: %s@%s\n", vk.System, vk.Name, vk.Version)
 	}
 }
