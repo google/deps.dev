@@ -42,6 +42,15 @@ service Insights {
     };
   }
 
+  // GetVersionBatch performs GetVersion requests for a batch of versions.
+  // Large result sets may be paginated.
+  rpc GetVersionBatch(GetVersionBatchRequest) returns (VersionBatch) {
+    option (google.api.http) = {
+      post: "/v3alpha/versionbatch"
+      body: "*"
+    };
+  }
+
   // GetRequirements returns the requirements for a given version in a
   // system-specific format. Requirements are currently available for
   // Maven, npm and NuGet.
@@ -78,11 +87,20 @@ service Insights {
     };
   }
 
+  // GetProjectBatch performs GetProjectBatch requests for a batch of projects.
+  // Large result sets may be paginated.
+  rpc GetProjectBatch(GetProjectBatchRequest) returns (ProjectBatch) {
+    option (google.api.http) = {
+      post: "/v3alpha/projectbatch"
+      body: "*"
+    };
+  }
+
   // GetProjectPackageVersions returns known mappings between the requested
   // project and package versions.
   // At most 1500 package versions are returned. Mappings which were derived from
   // a [SLSA provenance attestation](https://slsa.dev/spec/v1.0/provenance)
-  // attestation are served first.
+  // are served first.
   rpc GetProjectPackageVersions(GetProjectPackageVersionsRequest) returns (ProjectPackageVersions) {
     option (google.api.http) = {
       get: "/v3alpha/projects/{project_key.id}:packageversions"
@@ -93,6 +111,14 @@ service Insights {
   rpc GetAdvisory(GetAdvisoryRequest) returns (Advisory) {
     option (google.api.http) = {
       get: "/v3alpha/advisories/{advisory_key.id}"
+    };
+  }
+
+  // GetSimilarlyNamedPackages returns packages with names that are similar to
+  // the requested package. This similarity relation is computed by deps.dev.
+  rpc GetSimilarlyNamedPackages(GetSimilarlyNamedPackagesRequest) returns (SimilarlyNamedPackages) {
+    option (google.api.http) = {
+      get: "/v3alpha/systems/{package_key.system}/packages/{package_key.name}:similarlyNamedPackages"
     };
   }
 
@@ -108,6 +134,54 @@ service Insights {
     option (google.api.http) = {
       // Request fields are passed as query parameters.
       get: "/v3alpha/query"
+    };
+  }
+
+  // PurlLookup searches for a package or package version specified via
+  // [purl](https://github.com/package-url/purl-spec),
+  // and returns the corresponding result from GetPackage or GetVersion as appropriate.
+  //
+  // For a package lookup, the purl should be in the form
+  //   `pkg:type/namespace/name`   for a namespaced package name, or
+  //   `pkg:type/name`             for a non-namespaced package name.
+  //
+  // For a package version lookup, the purl should be in the form
+  //   `pkg:type/namespace/name@version`, or
+  //   `pkg:type/name@version`.
+  //
+  // Extra fields in the purl must be empty, otherwise the request will fail.
+  // In particular, there must be no subpath or qualifiers.
+  //
+  // Supported values for `type` are `cargo`, `golang`, `maven`, `npm`, `nuget`
+  // and `pypi`. Further details on types, and how to form purls of each type,
+  // can be found in the
+  // [purl spec](https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst).
+  //
+  // Special characters in purls must be percent-encoded. This is described in
+  // detail by the
+  // [purl spec](https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst).
+  rpc PurlLookup(PurlLookupRequest) returns (PurlLookupResult) {
+    option (google.api.http) = {
+      get: "/v3alpha/purl/{purl}"
+    };
+  }
+
+  // PurlLookupBatch performs PurlLookup requests for a batch of purls.
+  // This endpoint only supports version lookups. Purls in requests
+  // must include a version field.
+  //
+  // Supported purl forms are
+  //   `pkg:type/namespace/name@version` for a namespaced package name, or
+  //   `pkg:type/name@version`           for a non-namespaced package name.
+  //
+  // Extra fields in the purl must be empty, otherwise the request will fail.
+  // In particular, there must be no subpath or qualifiers.
+  //
+  // Large result sets may be paginated.
+  rpc PurlLookupBatch(PurlLookupBatchRequest) returns (PurlLookupBatchResult) {
+    option (google.api.http) = {
+      post: "/v3alpha/purlbatch"
+      body: "*"
     };
   }
 }
@@ -221,10 +295,19 @@ message Package {
   // request, due to canonicalization.
   PackageKey package_key = 1;
 
+  // The purl that identifies this package. Note that the package name
+  // may differ from the name in the request, due to canonicalization.
+  string purl = 3;
+
   message Version {
     // The name of the version. Note that the package name may differ from the
     // name in the request, due to canonicalization.
     VersionKey version_key = 1;
+
+    // The purl that identifies this version of the package.
+    // Note that the package and version name in the purl may differ from the
+    // names in the request, due to canonicalization.
+    string purl = 4;
 
     // The time when this package version was published, if available, as
     // reported by the package management authority.
@@ -252,6 +335,11 @@ message Version {
   // may differ from names specified in requests, if applicable, due to
   // canonicalization.
   VersionKey version_key = 1;
+
+  // The purl that identifies this package version.
+  // Note that the package and version name in the purl may differ from the
+  // names specified in the request, if applicable, due to canonicalization.
+  string purl = 9;
 
   // The time when this package version was published, if available, as
   // reported by the package management authority.
@@ -310,6 +398,35 @@ message Version {
 
   // Projects that are related to this package version.
   repeated Project related_projects = 10;
+}
+
+// GetVersionBatchRequest identifies a batch of versions for which to return
+// Version information.
+message GetVersionBatchRequest {
+  // The batch list of versions to return Version information for.
+  repeated GetVersionRequest requests = 1;
+  // If set, request the next page of the result set. It must be set to the
+  // page token provided by the previous version batch response. All other
+  // request fields must be the same as in the initial request.
+  string page_token = 2;
+}
+
+// VersionBatch contains a batch of version information. If there is more
+// version information to be returned, a page token is included in the
+// response.
+message VersionBatch  {
+  message Response {
+     // The uncanonicalized request.
+     GetVersionRequest request = 1;
+     // The version information for the request. If the version was not found,
+     // this field is empty.
+     Version version = 2;
+  }
+  // The Version information for this page.
+  repeated Response responses = 1;
+  // If set, this batch is not the full result set. This page token
+  // may be used to fetch more results in a subsequent request.
+  string next_page_token = 2;
 }
 
 // GetRequirementsRequest identifies a version for which to return
@@ -538,17 +655,17 @@ message Dependencies {
     // version name may differ from the names in the request, if provided, due
     // to canonicalization.
     //
-    // For some systems, a graph may contain multiple nodes for the same
-    // package version.
+    // In some systems, a graph may contain multiple nodes for the same package
+    // version.
     VersionKey version_key = 1;
 
-    // If true, this is a bundled dependency. For bundled dependencies, the
-    // package name in the version key encodes how the dependency is bundled.
+    // If true, this is a bundled dependency.
     //
-    // As an example, a bundled dependency with a name like "a>1.2.3>b>c" is
-    // part of the dependency graph of package "a" at version "1.2.3", and has
-    // the local name "c". It may or may not be the same as a package with the
-    // global name "c".
+    // For bundled dependencies, the package name in the version key encodes
+    // how the dependency is bundled. As an example, a bundled dependency with
+    // a name like "a>1.2.3>b>c" is part of the dependency graph of package "a"
+    // at version "1.2.3", and has the local name "c". It may or may not be the
+    // same as a package with the global name "c".
     bool bundled = 2;
 
     // Whether this node represents a direct or indirect dependency within this
@@ -695,9 +812,9 @@ message Project {
   Scorecard scorecard = 8;
 
   message OSSFuzzDetails {
-    // The number of lines of code in the project.
+    // The total number of lines of code in the project.
     int64 line_count = 1;
-    // How many lines of code are covered by fuzzing.
+    // The number of lines of code covered by fuzzing.
     int64 line_cover_count = 2;
     // The date the fuzz test that produced the coverage information was run
     // against this project.
@@ -714,7 +831,36 @@ message Project {
   OSSFuzzDetails oss_fuzz = 9;
 }
 
-// What the relationship between the project and the package version is.
+// GetProjectBatchRequest identifies a batch of projects for which to return
+// Project information.
+message GetProjectBatchRequest {
+  // The batch list of projects to return Project information for.
+  repeated GetProjectRequest requests = 1;
+  // If set, request the next page of the result set. It must be set to the
+  // page token provided by the previous project batch response. All other
+  // request fields must be the same as in the initial request.
+  string page_token = 2;
+}
+
+// ProjectBatch contains a batch of project information. If there is more
+// project information to be returned, a page token is included in the
+// response.
+message ProjectBatch  {
+  message Response {
+     // The uncanonicalized request.
+     GetProjectRequest request = 1;
+     // The project information for the request. If the project was not found,
+     // this field is empty.
+     Project project = 2;
+  }
+  // The Project information for this page.
+  repeated Response responses = 1;
+  // If set, this batch is not the full result set. This page token
+  // may be used to fetch more results in a subsequent request.
+  string next_page_token = 2;
+}
+
+// ProjectRelationType specifies a relationship between a project and a package version.
 enum ProjectRelationType {
   UNKNOWN_PROJECT_RELATION_TYPE = 0;
 
@@ -789,6 +935,29 @@ message Advisory {
   string cvss3_vector = 6;
 }
 
+// GetSimilarlyNamedPackagesRequest identifies a package for which to return
+// similarly-named packages.
+message GetSimilarlyNamedPackagesRequest{
+  PackageKey package_key = 1;
+}
+
+// SimilarlyNamedPackages contains packages with similar names.
+message SimilarlyNamedPackages {
+  // The name of the package. Note that the package name may differ from the
+  // name in the request, due to canonicalization.
+  PackageKey package_key = 1;
+
+  message Package {
+    //  A package with a name similar to the requested package.
+    PackageKey package_key = 1;
+  }
+  // Packages with names that deps.dev has calculated are similar to the name
+  // of the requested package. Note that this is not necessarily a symmetric
+  // relation, as we take into account popularity when calculating similar
+  // names.
+  repeated Package packages = 2;
+}
+
 // QueryRequest identifies package versions for which to return information.
 // At least one of its fields must be set, and both fields may be set to narrow
 // the results.
@@ -806,4 +975,47 @@ message QueryRequest {
 message QueryResult {
   // Package versions matching the query. At most 1000 versions are returned.
   repeated Version versions = 1;
+}
+
+// PurlLookupRequest identifies a purl to search for.
+message PurlLookupRequest {
+  // The purl to search for.
+  string purl = 1;
+}
+
+// PurlLookupResult holds information corresponding to the queried purl,
+// which may be either package, or package version.
+// Only one field will be populated, which depends on the form of the queried purl.
+message PurlLookupResult {
+  // Package result (as from GetPackage) for purls that do not include a version.
+  Package package = 1;
+  // Version result (as from GetVersion), for purls that include a version.
+  Version version = 2;
+}
+
+// PurlLookupBatchRequest identifies a batch of purls to search for.
+message PurlLookupBatchRequest {
+  // The batch list of purls to search for.
+  repeated PurlLookupRequest requests = 1;
+  // If set, request the next page of the result set. It must be set to the
+  // page token provided by the previous purl lookup batch response. All other
+  // request fields must be the same as in the initial request.
+  string page_token = 2;
+}
+
+// PurlLookupBatchResult contains a batch of PurlLookupResults. If there is more
+// information to be returned, a page token is included in the response.
+message PurlLookupBatchResult {
+  message Response {
+    // The uncanonicalized request.
+    PurlLookupRequest request = 1;
+    // The result corresponding to the request. If no result was found for the
+    // request, this field is empty.
+    PurlLookupResult result = 2;
+  }
+  // The purl lookup results for this page.
+  repeated Response responses = 1;
+  // If set, this batch is not the full result set. This page token
+  // may be used to fetch more results in a subsequent request.
+  string next_page_token = 2;
 }
