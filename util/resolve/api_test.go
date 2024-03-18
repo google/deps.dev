@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	pb "deps.dev/api/v3alpha"
+	pb "deps.dev/api/v3"
 	"deps.dev/util/resolve/internal/deptest"
 )
 

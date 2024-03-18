@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"sort"
 
-	apipb "deps.dev/api/v3alpha"
+	apipb "deps.dev/api/v3"
 	"deps.dev/util/resolve/dep"
 	"deps.dev/util/semver"
 )

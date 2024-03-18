@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "deps.dev/api/v3alpha"
+	pb "deps.dev/api/v3"
 	"deps.dev/util/resolve/dep"
 	"deps.dev/util/resolve/version"
 )
