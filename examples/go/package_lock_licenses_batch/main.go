@@ -36,8 +36,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
-	pb "deps.dev/api/v3alpha"
 )
 
 // NPMPackageLock represents a package-lock.json file used by the npm package
@@ -162,7 +160,7 @@ func main() {
 	for v := range versions {
 		req.Requests = append(req.Requests, GetVersionRequest{
 			VersionKey: VersionKey{
-				System:  pb.System_NPM.String(),
+				System:  "NPM",
 				Name:    v.Name,
 				Version: v.Version,
 			},
