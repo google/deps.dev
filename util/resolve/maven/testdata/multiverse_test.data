@@ -1,0 +1,168 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+Versions are searched in alternate repositories.
+-- Universe mvBasicAlice
+group:alice
+	1.0
+		group:bob@1.0
+	2.0
+		group:bob@1.0
+		ATTR: Registries dep:bob
+-- END
+
+-- Universe mvBasicBob
+group:bob
+	1.0
+-- END
+
+alice 1.0 does not define alternate repositories, and thus cannot resolve bob@1.0
+-- Test mvBasic1
+Resolve group:alice 1.0
+Universe mvBasicAlice, bob:mvBasicBob
+Graph mvBasic1
+Flag loose_errors
+-- END
+
+alice 2.0 defines an alternate repository that contains bob, and thus can
+resolve bob@1.0
+-- Test mvBasic2
+Resolve group:alice 2.0
+Universe mvBasicAlice, bob:mvBasicBob
+Graph mvBasic2
+-- END
+
+
+Resolution can happen cross repositories.
+-- Universe mvCrossAlice
+group:alice
+	1.0
+		group:bob@1.0
+		ATTR: Registries dep:bob
+group:eve
+	1.0
+-- END
+
+-- Universe mvCrossBob
+group:bob
+	1.0
+		group:eve@1.0
+-- END
+
+alice 1.0 defines an alternate repository that contains bob, and thus can
+resolve bob@1.0, and bob will use the default registry to resolve eve.
+-- Test mvCross1
+Resolve group:alice 1.0
+Universe mvCrossAlice, bob:mvCrossBob
+Graph mvCross1
+-- END
+
+bob 1.0 is in an alternate repository, but will use the default registry
+(that would come from the "super pom") to resolve eve.
+-- Test mvCross2
+Resolve group:bob 1.0
+Universe mvCrossAlice, bob:mvCrossBob
+Graph mvCross2
+-- END
+
+
+Repository information is transitive and cumulative, not only limited to the
+direct resolution.
+-- Universe mvTransitiveAlice
+group:alice
+	1.0
+		group:bob@1.0
+		ATTR: Registries dep:franck
+group:bob
+	1.0
+		group:chuck@1.0
+		ATTR: Registries dep:george
+group:chuck
+	1.0
+		group:dave@1.0
+group:dave
+	1.0
+		group:eve@1.0
+group:eve
+	1.0
+		group:franck@1.0
+		group:george@1.0
+-- END
+
+-- Universe mvTransitiveFranck
+group:franck
+	1.0
+-- END
+
+-- Universe mvTransitiveGeorge
+group:george
+	1.0
+-- END
+
+-- Test mvTransitive1
+Resolve group:alice 1.0
+Universe mvTransitiveAlice, franck:mvTransitiveFranck, george:mvTransitiveGeorge
+Graph mvTransitive1
+-- END
+
+
+If a branch does not define a repository that contains the desired version,
+the resolution succeeds if the version was selected from another
+repository along another branch.
+-- Universe mvBasicMatch
+group:alice
+	1.0
+		group:bob@1.0
+		group:chuck@1.0
+	2.0
+		group:bob@1.0
+		group:dave@1.0
+	3.0
+		group:bob@1.0
+		group:eve@1.0
+group:bob
+	1.0
+		group:chuck@1.0
+		ATTR: Registries dep:chuck
+group:dave
+	1.0
+		group:chuck@1.0
+group:eve
+	1.0
+		group:dave@1.0
+-- END
+
+-- Universe mvBasicChuck
+group:chuck
+	1.0
+-- END
+
+Fails because alice does not see chuck and bob did not resolve yet.
+-- Test mvBasicMatch
+Resolve group:alice 1.0
+Universe mvBasicMatch, chuck:mvBasicChuck
+Graph mvBasicMatch
+-- END
+
+-- Test mvBasicMatch2
+Resolve group:alice 2.0
+Universe mvBasicMatch, chuck:mvBasicChuck
+Graph mvBasicMatch2
+-- END
+
+-- Test mvBasicMatch3
+Resolve group:alice 3.0
+Universe mvBasicMatch, chuck:mvBasicChuck
+Graph mvBasicMatch3
+-- END

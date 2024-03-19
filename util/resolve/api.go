@@ -16,6 +16,7 @@ package resolve
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -85,10 +86,32 @@ func (a *APIClient) Version(ctx context.Context, vk VersionKey) (Version, error)
 	if err != nil {
 		return Version{}, err
 	}
+
+	if vk.System == Maven {
+		// Fetch repositories and serve as dependency registries.
+		reqResp, err := a.c.GetRequirements(ctx, &pb.GetRequirementsRequest{
+			VersionKey: &pb.VersionKey{
+				System:  pb.System_MAVEN,
+				Name:    vk.Name,
+				Version: vk.Version,
+			},
+		})
+		if status.Code(err) == codes.NotFound {
+			return Version{}, fmt.Errorf("requirements %v: %w", vk, ErrNotFound)
+		}
+		if err != nil {
+			return Version{}, err
+		}
+		if reqResp.Maven != nil {
+			for _, repo := range reqResp.Maven.Repositories {
+				resp.Registries = append(resp.Registries, "dep:"+repo.Url)
+			}
+		}
+	}
 	// Use the VersionKey provided rather than the possibly canonicalized
 	// name and version returned by the API in case the resolver needs to do
 	// any direct comparisons.
-	return makeVersion(vk, resp), nil
+	return makeVersion(vk, resp, strings.Join(resp.Registries, "|")), nil
 }
 
 func (a *APIClient) Versions(ctx context.Context, pk PackageKey) ([]Version, error) {
@@ -119,7 +142,7 @@ func (a *APIClient) Versions(ctx context.Context, pk PackageKey) ([]Version, err
 			PackageKey:  pk,
 			VersionType: Concrete,
 			Version:     v.VersionKey.Version,
-		}, v)
+		}, v, "")
 	}
 	return vers, nil
 }
@@ -145,7 +168,14 @@ func (a *APIClient) Requirements(ctx context.Context, vk VersionKey) ([]Requirem
 	if err != nil {
 		return nil, err
 	}
-	return a.npmRequirements(vk, resp.Npm)
+
+	switch vk.System {
+	case Maven:
+		return a.mavenRequirements(ctx, resp.Maven)
+	case NPM:
+		return a.npmRequirements(vk, resp.Npm)
+	}
+	return nil, errors.New("unsupported system")
 }
 
 func (a *APIClient) MatchingVersions(ctx context.Context, vk VersionKey) ([]Version, error) {
@@ -319,12 +349,15 @@ type defaultGetter interface {
 	GetIsDefault() bool
 }
 
-func makeVersion(vk VersionKey, d defaultGetter) Version {
+func makeVersion(vk VersionKey, d defaultGetter, regs string) Version {
 	var attr version.AttrSet
 	if vk.System == NPM && d.GetIsDefault() {
 		// For NPM, the "default" version is either the highest by
 		// semver or the version with a "latest" dist-tag.
 		attr.SetAttr(version.Tags, "latest")
+	}
+	if regs != "" {
+		attr.SetAttr(version.Registries, regs)
 	}
 	return Version{VersionKey: vk, AttrSet: attr}
 }

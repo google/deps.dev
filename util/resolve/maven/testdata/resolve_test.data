@@ -1,0 +1,294 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+https://maven.apache.org/pom.html#dependency-version-requirement-specification
+https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#transitive-dependencies
+1.0: Soft requirement for 1.0. Use 1.0 if no other version appears earlier in the dependency tree.
+-- Universe softRequirement
+group:alice
+	1.0
+		group:bob@1.0
+	2.0
+		group:bob@1.0
+		group:chuck@1.0
+group:bob
+	0.1
+	1.0
+	2.0
+group:chuck
+	1.0
+		group:bob@2.0
+-- END
+
+-- Test softRequirementPreferred
+Resolve group:alice 1.0
+Universe softRequirement
+Graph softRequirementPreferred
+-- END
+
+-- Test softRequirementPreferredEarlier
+Resolve group:alice 2.0
+Universe softRequirement
+Graph softRequirementPreferredEarlier
+-- END
+
+
+The resolutions are made according to a BFS, so that the nearest appearance
+to the root is resolved first.
+-- Universe resolutionOrder
+group:alice
+	1.0
+		group:bob@1.0
+		group:chuck@1.0
+	2.0
+		group:bob@2.0
+		group:chuck@1.0
+group:bob
+	1.0
+		group:dave@1.0
+	2.0
+		group:eve@1.0
+group:chuck
+	1.0
+		group:dave@2.0
+		group:eve@2.0
+group:eve
+	1.0
+		group:dave@1.0
+	2.0
+group:dave
+	1.0
+	2.0
+-- END
+
+-- Test resolutionOrder1
+Resolve group:alice 1.0
+Universe resolutionOrder
+Graph resolutionOrder1
+-- END
+
+-- Test resolutionOrder2
+Resolve group:alice 2.0
+Universe resolutionOrder
+Graph resolutionOrder2
+-- END
+
+
+Transitive dependencies of a provided dependency are not resolved.
+-- Universe provided
+group:alice
+	1.0
+		scope provided|group:bob@1.0
+		group:eve@1.0
+group:bob
+	1.0
+		scope provided|group:chuck@1.0
+		group:dave@1.0
+group:chuck
+	1.0
+group:dave
+	1.0
+group:eve
+	1.0
+		scope provided|group:franck@1.0
+group:franck
+	1.0
+-- END
+
+-- Test provided
+Resolve group:alice 1.0
+Universe provided
+Graph provided
+-- END
+
+
+Optional dependencies are ignored.
+-- Universe optional01
+group:alice
+	1.0
+		opt|group:bob@1.0
+group:bob
+	1.0
+		group:chuck@1.0
+		opt|group:dave@1.0
+group:chuck
+	1.0
+group:dave
+	1.0
+-- END
+
+-- Test optional01
+Resolve group:alice 1.0
+Universe optional01
+Graph optional01
+-- END
+
+
+Test dependencies are ignored.
+-- Universe ignoreTest01
+group:alice
+	1.0
+		test|group:bob@1.0
+group:bob
+	1.0
+		group:chuck@1.0
+		test|group:dave@1.0
+group:chuck
+	1.0
+group:dave
+	1.0
+-- END
+
+-- Test ignoreTest01
+Resolve group:alice 1.0
+Universe ignoreTest01
+Graph ignoreTest01
+-- END
+
+Dependency management is for transitive, not for direct
+-- Universe management
+group:alice
+	1.0
+		mavendependencyorigin management|group:chuck@2.0
+		mavendependencyorigin management|group:dave@2.0
+		group:bob@1.0
+group:bob
+	1.0
+		mavendependencyorigin management|group:eve@2.0
+		group:chuck@1.0
+group:chuck
+	1.0
+	2.0
+		group:dave@1.0
+		group:eve@1.0
+group:dave
+	1.0
+	2.0
+group:eve
+	1.0
+	2.0
+-- END
+
+-- Test management
+Resolve group:alice 1.0
+Universe management
+Graph management
+-- END
+
+Dependency management and scope
+-- Universe managementScope
+group:alice
+	1.0
+		test mavendependencyorigin management|group:chuck@2.0
+		mavendependencyorigin management|group:dave@2.0
+		group:bob@1.0
+	2.0
+		test mavendependencyorigin management|group:chuck@2.0
+		mavendependencyorigin management|group:dave@2.0
+		group:bob@2.0
+group:bob
+	1.0
+		group:chuck@1.0
+		group:dave@1.0
+	2.0
+		test|group:chuck@1.0
+		test|group:dave@1.0
+group:chuck
+	1.0
+	2.0
+group:dave
+	1.0
+	2.0
+-- END
+
+-- Test managementScope01
+Resolve group:alice 1.0
+Universe managementScope
+Graph managementScope01
+-- END
+
+-- Test managementScope02
+Resolve group:alice 2.0
+Universe managementScope
+Graph managementScope02
+-- END
+
+
+-- Universe coordinate
+group:alice
+	1.0
+		group:bob@1.0
+		mavenclassifier two|group:bob@2.0
+		mavenclassifier three|group:bob@3.0
+		mavenclassifier two mavenartifacttype four|group:bob@4.0
+		mavenartifacttype five|group:bob@5.0
+group:bob
+	1.0
+	2.0
+	3.0
+	4.0
+	5.0
+-- END
+
+
+-- Test coordinate
+Resolve group:alice 1.0
+Universe coordinate
+Graph coordinate
+-- END
+
+
+-- Universe coordinateOverlap
+group:alice
+	1.0
+		group:bob@1.0
+		mavenclassifier one|group:bob@1.0
+group:bob
+	1.0
+-- END
+
+
+-- Test coordinateOverlap
+Resolve group:alice 1.0
+Universe coordinateOverlap
+Graph coordinateOverlap
+-- END
+
+
+When the dependency type includes its dependencies (ear war, rar), then
+no transitive resolution should occur.
+https://maven.apache.org/ref/3.6.3/maven-core/artifact-handlers.html
+-- Universe includesDependencies
+group:alice
+	1.0
+		mavenartifacttype ear|group:bob@1.0
+		mavenartifacttype war|group:chuck@1.0
+		mavenartifacttype rar|group:dave@1.0
+group:bob
+	1.0
+		group:eve@1.0
+group:chuck
+	1.0
+		group:eve@1.0
+group:dave
+	1.0
+		group:eve@1.0
+-- END
+
+
+-- Test includesDependencies
+Resolve group:alice 1.0
+Universe includesDependencies
+Graph includesDependencies
+-- END

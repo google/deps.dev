@@ -1,0 +1,62 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+-- Universe Exclusions
+alice:alice
+	1.0.0
+		bob:bob@1.0.0
+		MavenExclusions eve:eve,franck:*,*:george,*:lea,mick:*|chuck:chuck@1.0.0
+		MavenExclusions *:*|dave:dave@2.0.0
+bob:bob
+	1.0.0
+		jacob:jacob@1.0.0
+chuck:chuck
+	1.0.0
+		eve:eve@1.0.0
+		franck:franck@1.0.0
+		george:george@1.0.0
+		helen:helen@1.0.0
+		lea:lea@1.0.0
+		mick:mick@1.0.0
+		MavenExclusions oren:oren|noa:noa@1.0.0
+dave:dave
+	1.0.0
+		isabel:isabel@1.0.0
+		kelvin:kelvin@1.0.0
+eve:eve
+	1.0.0
+franck:franck
+	1.0.0
+george:george
+	1.0.0
+helen:helen
+	1.0.0
+jacob:jacob
+	1.0.0
+kelvin:kelvin
+	1.0.0
+noa:noa
+	1.0.0
+		oren:oren@1.0.0
+		george:george@1.0.0
+		paul:paul@2.0.0
+paul:paul
+	1.0.0
+-- END
+
+-- Test Exclusions
+Resolve alice:alice 1.0.0
+Universe Exclusions
+Graph Exclusions
+-- END
