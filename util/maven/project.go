@@ -14,10 +14,16 @@
 
 package maven
 
+import "fmt"
+
 type ProjectKey struct {
 	GroupID    String `xml:"groupId,omitempty"`
 	ArtifactID String `xml:"artifactId,omitempty"`
 	Version    String `xml:"version,omitempty"`
+}
+
+func (pk ProjectKey) Name() string {
+	return fmt.Sprintf("%s:%s", pk.GroupID, pk.ArtifactID)
 }
 
 type Parent struct {
@@ -173,43 +179,6 @@ func (r *Relocation) interpolate(properties map[string]string) bool {
 	return ok1 && ok2 && ok3
 }
 
-type DependencyManagement struct {
-	Dependencies []Dependency `xml:"dependencies>dependency,omitempty"`
-}
-
-func (dm *DependencyManagement) merge(parent DependencyManagement) {
-	dm.Dependencies = append(dm.Dependencies, parent.Dependencies...)
-}
-
-// Dependency contains relevant information about a Maven dependency.
-// https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
-type Dependency struct {
-	GroupID    String      `xml:"groupId,omitempty"`
-	ArtifactID String      `xml:"artifactId,omitempty"`
-	Version    String      `xml:"version,omitempty"`
-	Type       String      `xml:"type,omitempty"`
-	Classifier String      `xml:"classifier,omitempty"`
-	Scope      String      `xml:"scope,omitempty"`
-	Exclusions []Exclusion `xml:"exclusions>exclusion,omitempty"`
-	Optional   BoolString  `xml:"optional,omitempty"`
-}
-
-func (d *Dependency) interpolate(properties map[string]string) bool {
-	ok1 := d.GroupID.interpolate(properties)
-	ok2 := d.ArtifactID.interpolate(properties)
-	ok3 := d.Version.interpolate(properties)
-	ok4 := d.Scope.interpolate(properties)
-	ok5 := d.Type.interpolate(properties)
-	ok6 := d.Classifier.interpolate(properties)
-	ok7 := d.Optional.interpolate(properties)
-	return ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7
-}
-
-type Exclusion struct {
-	GroupID    String `xml:"groupId,omitempty"`
-	ArtifactID String `xml:"artifactId,omitempty"`
-}
-
 // Repository contains the information about a remote repository.
 // https://maven.apache.org/ref/3.9.3/maven-model/maven.html#repository-1
 type Repository struct {
@@ -321,121 +290,4 @@ func (p *Project) Interpolate() error {
 	p.Repositories = repos
 
 	return nil
-}
-
-// MaxImports defines the maximum number of dependency management imports allowed
-const MaxImports = 300
-
-// ProcessDependencies takes the following actions for Maven dependencies:
-//   - dedupe dependencies and dependency management
-//   - import dependency management (not yet transitively)
-//   - fill in missing dependency version requirement
-//
-// A function to get dependency management from another project is needed
-// since dependency management is imported transitively.
-func (p *Project) ProcessDependencies(getDependencyManagement func(String, String, String) (DependencyManagement, error)) {
-	// depKey uniquely identifies a Maven dependency.
-	type depKey struct {
-		groupID    String
-		artifactID String
-		typ        String
-		classifier String
-	}
-	makeDepKey := func(dep Dependency) depKey {
-		if dep.Type == "" {
-			dep.Type = "jar"
-		}
-		return depKey{
-			groupID:    dep.GroupID,
-			artifactID: dep.ArtifactID,
-			typ:        dep.Type,
-			classifier: dep.Classifier,
-		}
-	}
-	// addDepManagement adds dependency management in deps to m and returns:
-	//  - a slice of keys of dependency management in deps that have been added to m;
-	//  - a slice containing dependency management to be imported.
-	addDepManagement := func(deps []Dependency, m map[depKey]Dependency) (keys []depKey, depImports []Dependency) {
-		for _, dep := range deps {
-			if dep.Scope == "import" {
-				depImports = append(depImports, dep)
-				continue
-			}
-			dk := makeDepKey(dep)
-			if _, ok := m[dk]; !ok {
-				m[dk] = dep
-				keys = append(keys, dk)
-			}
-		}
-		return
-	}
-	deps := make(map[depKey]Dependency, len(p.Dependencies))
-	depKeys := make([]depKey, 0, len(p.Dependencies))
-	for _, dep := range p.Dependencies {
-		dk := makeDepKey(dep)
-		if _, ok := deps[dk]; !ok {
-			deps[dk] = dep
-			depKeys = append(depKeys, dk)
-		}
-	}
-	depManagement := make(map[depKey]Dependency, len(p.DependencyManagement.Dependencies))
-	depManagementKeys, depManagementImports := addDepManagement(p.DependencyManagement.Dependencies, depManagement)
-	// Append dependency management imports.
-	depImportKeys := make(map[depKey]bool, len(depManagementImports))
-	for _, dep := range depManagementImports {
-		dk := makeDepKey(dep)
-		if _, ok := depImportKeys[dk]; !ok {
-			depImportKeys[dk] = true
-		}
-	}
-	n := 0
-	imported := make(map[depKey]bool)
-	for ; n < MaxImports && len(depManagementImports) > 0; n++ {
-		dep := depManagementImports[0]
-		depManagementImports = depManagementImports[1:]
-		dk := makeDepKey(dep)
-		if imported[dk] {
-			continue
-		}
-		imported[dk] = true
-		if dep.Type != "pom" {
-			continue
-		}
-		dm, err := getDependencyManagement(dep.GroupID, dep.ArtifactID, dep.Version)
-		if err != nil {
-			// Failed to fetch dependency management to import.
-			continue
-		}
-		dependencyKeys, depImports := addDepManagement(dm.Dependencies, depManagement)
-		depManagementKeys = append(depManagementKeys, dependencyKeys...)
-		depManagementImports = append(depImports, depManagementImports...)
-	}
-
-	// There were dependencies and dependency management.
-	p.Dependencies = []Dependency{}
-	p.DependencyManagement.Dependencies = []Dependency{}
-	for _, dk := range depKeys {
-		dep := deps[dk]
-		// Copy dependency info from dependency management if available.
-		//  - Version: only copy when the field is empty;
-		//  - Scope: only copy when the field is empty;
-		//  - Exclusions: only copy when the field is empty;
-		//  - Optional: dep always takes precedence.
-		if dm, ok := depManagement[dk]; ok {
-			if dep.Version == "" {
-				dep.Version = dm.Version
-			}
-			if dep.Scope == "" {
-				dep.Scope = dm.Scope
-			}
-			if len(dep.Exclusions) == 0 {
-				dep.Exclusions = dm.Exclusions
-			}
-		}
-		p.Dependencies = append(p.Dependencies, dep)
-	}
-	for _, dk := range depManagementKeys {
-		dm := depManagement[dk]
-		p.DependencyManagement.Dependencies = append(p.DependencyManagement.Dependencies, dm)
-	}
 }

@@ -144,8 +144,7 @@ func (p *Profile) activated(jdk string, os ActivationOS) (bool, error) {
 
 const (
 	// JDKProfileActivation holds the JDK version used for profile activation.
-	// This is arbitrary but it intentionally matches the version used by the
-	// native-origin container to ease validations.
+	// This is arbitrary for now.
 	// TODO: this should be abstracted and set as an option.
 	JDKProfileActivation = "11.0.8"
 )

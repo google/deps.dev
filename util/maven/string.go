@@ -22,6 +22,12 @@ import (
 
 type String string
 
+func (s *String) ContainsProperty() bool {
+	str := string(*s)
+	i := strings.Index(str, "${")
+	return i >= 0 && strings.Contains(str[i+2:], "}")
+}
+
 // UnmarshalXML trims the whitespaces when unmarshalling a string.
 func (s *String) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	var str string
