@@ -35,10 +35,13 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 
 	pb "deps.dev/api/v3"
 )
@@ -135,12 +138,14 @@ func main() {
 		log.Fatalf("Dialing: %v", err)
 	}
 	client := pb.NewInsightsClient(conn)
-	ctx := context.Background()
 
-	// Fetch licenses from the deps.dev API. To speed things up, use a wait group
-	// to make many requests concurrently. Note that gRPC will multiplex multiple
-	// requests over a single HTTP/2 connection.
-	var wg sync.WaitGroup
+	// Fetch licenses from the deps.dev API.
+	// To speed things up, use an error group to make many requests
+	// concurrently, but limit the rate to 500 requests/second.
+	// Note that gRPC will multiplex multiple requests over a single HTTP/2
+	// connection.
+	g, ctx := errgroup.WithContext(context.Background())
+	limiter := rate.NewLimiter(500, 1)
 	for v := range versions {
 		r := versions[v]
 		req := pb.GetVersionRequest{
@@ -150,18 +155,25 @@ func main() {
 				Version: v.Version,
 			},
 		}
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			resp, err := client.GetVersion(ctx, &req)
-			if err != nil {
-				r.Error = err
-			} else {
-				r.Licenses = resp.Licenses
+		g.Go(func() error {
+			if err := limiter.Wait(ctx); err != nil {
+				return err
 			}
-		}()
+			resp, err := client.GetVersion(ctx, &req)
+			switch status.Code(err) {
+			case codes.OK:
+				r.Licenses = resp.Licenses
+			case codes.NotFound:
+				r.Error = err
+			default:
+				return err
+			}
+			return nil
+		})
 	}
-	wg.Wait()
+	if err := g.Wait(); err != nil {
+		log.Fatalf("Fetching licenses: %v", err)
+	}
 
 	// Print each package version and its license on stdout.
 	for v, r := range versions {
