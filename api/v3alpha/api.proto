@@ -123,12 +123,13 @@ service Insights {
   }
 
   // Query returns information about multiple package versions, which can be
-  // specified by name, content hash, or both.
+  // specified by name, content hash, or both. If a hash was specified in the
+  // request, it returns the artifacts that matched the hash.
   //
   // Querying by content hash is currently supported for npm, Cargo, Maven, and
   // NuGet. It is typical for hash queries to return many results; hashes are
   // matched against multiple release artifacts (such as JAR files) that
-  // comprise package versions, and any given artifact may appear in many
+  // comprise package versions, and any given artifact may appear in several
   // package versions.
   rpc Query(QueryRequest) returns (QueryResult) {
     option (google.api.http) = {
@@ -722,15 +723,15 @@ message Project {
 
   // The number of open issues reported by the project host.
   // Only available for GitHub and GitLab.
-  int64 open_issues_count = 2;
+  int32 open_issues_count = 2;
 
   // The number of stars reported by the project host.
   // Only available for GitHub and GitLab.
-  int64 stars_count = 3;
+  int32 stars_count = 3;
 
   // The number of forks reported by the project host.
   // Only available for GitHub and GitLab.
-  int64 forks_count = 4;
+  int32 forks_count = 4;
 
   // The license reported by the project host.
   string license = 5;
@@ -786,7 +787,7 @@ message Project {
 
       // A score in the range [0,10]. A higher score is better.
       // A negative score indicates that the check did not run successfully.
-      int64 score = 3;
+      int32 score = 3;
 
       // The reason for the score.
       string reason = 4;
@@ -813,9 +814,9 @@ message Project {
 
   message OSSFuzzDetails {
     // The total number of lines of code in the project.
-    int64 line_count = 1;
+    int32 line_count = 1;
     // The number of lines of code covered by fuzzing.
-    int64 line_cover_count = 2;
+    int32 line_cover_count = 2;
     // The date the fuzz test that produced the coverage information was run
     // against this project.
     // The time portion of this field is midnight UTC.
@@ -973,8 +974,22 @@ message QueryRequest {
 
 // QueryResult holds information about package versions matching the query.
 message QueryResult {
+  message Result {
+    // A package version matching the query.
+    Version version = 1;
+
+    // An artifact is content associated with a package version, such as a JAR
+    // file. Currently supported for npm, Cargo, Maven, and NuGet.
+    message Artifact {
+       // The origin of the artifact with this hash.
+       string url = 1;
+    }
+    // If a hash was specified in the request, artifacts describes the upstream
+    // artifacts matching the hash.
+    repeated Artifact artifacts = 2;
+  }
   // Package versions matching the query. At most 1000 versions are returned.
-  repeated Version versions = 1;
+  repeated Result results = 1;
 }
 
 // PurlLookupRequest identifies a purl to search for.
