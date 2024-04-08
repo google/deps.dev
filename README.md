@@ -8,13 +8,21 @@ The deps.dev API can be accessed in two ways: as JSON over HTTP, as well as via
 [gRPC](https://grpc.io/). This repository contains the service definition for
 the gRPC API, along with example applications for both APIs.
 
+There are two versions of the deps.dev API:
+- [v3](https://docs.deps.dev/api/v3/), [proto](api/v3/api.proto): Core
+  features with a stability guarantee and deprecation policy. Recommended for
+  most users.
+- [v3alpha](https://docs.deps.dev/api/v3alpha/),
+  [proto](api/v3alpha/api.proto): All the features of v3, with additional
+  experimental features. May change in incompatible ways from time to time.
+
 ## Using the HTTP API
 
 The HTTP API can be accessed using any HTTP client. To quickly get started, you
 can use the `curl` command-line tool. Example:
 
 ```console
-curl 'https://api.deps.dev/v3alpha/systems/npm/packages/%40colors%2Fcolors'
+curl 'https://api.deps.dev/v3/systems/npm/packages/%40colors%2Fcolors'
 ```
 
 Note that the `@` and `/` in the package name have been percent-encoded.
@@ -26,7 +34,7 @@ For complete documentation on the HTTP API, please visit
 
 The gRPC API can be accessed using any gRPC client. The service definition,
 which describes the methods of the API along with their request and response
-messages, can be found in [api/v3alpha/api.proto](./api/v3alpha/api.proto)
+messages, can be found in [api/v3/api.proto](api/v3/api.proto)
 
 To quickly get started exploring the API, you can use the
 [`grpcurl`](https://github.com/fullstorydev/grpcurl) command-line tool.
@@ -36,20 +44,20 @@ Example:
 grpcurl \
   -d '{"package_key":{"system":"NPM","name":"@colors/colors"}}' \
   api.deps.dev:443 \
-  deps_dev.v3alpha.Insights/GetPackage
+  deps_dev.v3.Insights/GetPackage
 ```
 
 ## Example applications
 
 Example applications written in Go can be found in the `examples` directory:
 
-- [`artifact_query`](./examples/go/artifact_query) shows how to query the
+- [`artifact_query`](examples/go/artifact_query) shows how to query the
   deps.dev HTTP API by file content hash.
-- [`dependencies_dot`](./examples/go/dependencies_dot) fetches a resolved
+- [`dependencies_dot`](examples/go/dependencies_dot) fetches a resolved
   dependency graph from the deps.dev HTTP API and renders it in the DOT
   language used by Graphviz.
-- [`package_lock_licenses`](./examples/go/package_lock_licenses) and
-  [`package_lock_licenses_batch`](./examples/go/package_lock_licenses_batch)
+- [`package_lock_licenses`](examples/go/package_lock_licenses) and
+  [`package_lock_licenses_batch`](examples/go/package_lock_licenses_batch)
   read dependencies from an npm package-lock.json file and fetch their licenses
   from deps.dev, using concurrent requests to the gRPC API or batch requests to
   the HTTP API, respectively.
