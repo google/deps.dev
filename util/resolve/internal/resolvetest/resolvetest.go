@@ -106,7 +106,7 @@ import (
 	"strings"
 
 	"deps.dev/util/resolve"
-	"deps.dev/util/resolve/internal/schema"
+	"deps.dev/util/resolve/schema"
 	"deps.dev/util/resolve/version"
 )
 

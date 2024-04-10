@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"deps.dev/util/resolve"
-	"deps.dev/util/resolve/internal/schema"
+	"deps.dev/util/resolve/schema"
 )
 
 // This schema declares three packages, each with versions that have
