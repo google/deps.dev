@@ -218,7 +218,15 @@ func New(text string, sys resolve.System) (*Schema, error) {
 			imp = &resolve.RequirementVersion{}
 			imp.System = p.System
 
-			parts := strings.SplitN(line, "@", 2)
+			// Allow for package names to begin with @.
+			parts := strings.SplitN(line, "@", 3)
+			if len(parts) == 3 {
+				if parts[0] == "" {
+					parts = []string{"@" + parts[1], parts[2]}
+				} else {
+					parts = strings.SplitN(line, "@", 2)
+				}
+			}
 			if len(parts) != 2 {
 				return nil, fmt.Errorf(`got import %q, expect "package@version"`, line)
 			}

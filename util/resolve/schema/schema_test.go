@@ -31,6 +31,8 @@ const testSchema = `
 package-1
 	1.0.0
 		another-package@^1.0.0
+	1.1.1
+		@scoped/package@^1.1.1
 	Blocked|2.0.0
 		Opt|another-package@2.0.0
 another-package
@@ -44,12 +46,15 @@ package-2
 	0.0.0
 		XTest someXTest|package-2@v0.0.0
 		Framework "some framework" Opt Dev|package-1@1.0.0
+@scoped/package
+	1.1.1
 `
 
 var (
 	pkg1       = resolve.PackageKey{System: resolve.NPM, Name: "package-1"}
 	anotherPkg = resolve.PackageKey{System: resolve.NPM, Name: "another-package"}
 	pkg2       = resolve.PackageKey{System: resolve.NPM, Name: "package-2"}
+	scopedPkg  = resolve.PackageKey{System: resolve.NPM, Name: "@scoped/package"}
 )
 
 func date(date string) time.Time {
@@ -72,6 +77,19 @@ var wantTestSchema = &Schema{Packages: []Package{{
 			VersionKey: resolve.VersionKey{
 				PackageKey:  anotherPkg,
 				Version:     "^1.0.0",
+				VersionType: resolve.Requirement,
+			},
+		}},
+	}, {
+		VersionKey: resolve.VersionKey{
+			PackageKey:  pkg1,
+			VersionType: resolve.Concrete,
+			Version:     "1.1.1",
+		},
+		Requirements: []resolve.RequirementVersion{{
+			VersionKey: resolve.VersionKey{
+				PackageKey:  scopedPkg,
+				Version:     "^1.1.1",
 				VersionType: resolve.Requirement,
 			},
 		}},
@@ -145,6 +163,15 @@ var wantTestSchema = &Schema{Packages: []Package{{
 			},
 			Type: deptest.Must(deptest.ParseString(`Framework "some framework" Opt Dev`)),
 		}},
+	}},
+}, {
+	PackageKey: scopedPkg,
+	Versions: []Version{{
+		VersionKey: resolve.VersionKey{
+			PackageKey:  scopedPkg,
+			VersionType: resolve.Concrete,
+			Version:     "1.1.1",
+		},
 	}},
 }}}
 

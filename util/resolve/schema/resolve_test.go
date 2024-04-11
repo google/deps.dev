@@ -139,6 +139,49 @@ name1 v1
 	}
 }
 
+func TestSchema_ScopedNames(t *testing.T) {
+	got, err := ParseResolve(`
+@scope1/name1 v1
+	@scope2/name2@r1 v2
+		label: @scope3/name3@r3 v3
+	KnownAs @alias/pkg|@scope4/name4@r2 v4
+		$label@r4
+		not/scope5@name5@r5 v5
+`, resolve.NPM)
+	if err != nil {
+		t.Fatalf("cannot parse sample graph: %v", err)
+	}
+	want := &resolve.Graph{}
+	n1 := want.AddNode(makeVK("@scope1/name1", "v1")) // Root
+	n2 := want.AddNode(makeVK("@scope2/name2", "v2"))
+	n3 := want.AddNode(makeVK("@scope3/name3", "v3"))
+	n4 := want.AddNode(makeVK("@scope4/name4", "v4"))
+	n5 := want.AddNode(makeVK("not/scope5", "v5"))
+	if err := want.AddEdge(n1, n2, "r1", dep.Type{}); err != nil {
+		t.Fatal(err)
+	}
+	dt := dep.Type{}
+	dt.AddAttr(dep.KnownAs, "@alias/pkg")
+	if err := want.AddEdge(n1, n4, "r2", dt); err != nil {
+		t.Fatal(err)
+	}
+	if err := want.AddEdge(n2, n3, "r3", dep.Type{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := want.AddEdge(n4, n3, "r4", dep.Type{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := want.AddEdge(n4, n5, "name5@r5", dep.Type{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := want.Canon(); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected graph, got\n%v\nwant\n%v", got, want)
+	}
+}
+
 func TestGraphString(t *testing.T) {
 	cases := []struct {
 		title     string
@@ -280,6 +323,22 @@ alice 1
 				Version:    "r5",
 			},
 			err: errors.New("not found"),
+		},
+		{
+			title: "simple with scopes",
+			schema: `
+@a/alice 1
+	@b/bob@r1 2
+		@c/chuck@r2 3
+		$dave@r3
+	dave: @d/dave@r4 4
+`,
+			want: `@a/alice 1
+├─ @b/bob@r1 2
+│  ├─ @c/chuck@r2 3
+│  └─ $1@r3
+└─ 1: @d/dave@r4 4
+`,
 		},
 	}
 

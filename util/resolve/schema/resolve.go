@@ -260,6 +260,9 @@ func parseResolve(text string) (*resolveSchema, error) {
 				return nil, fmt.Errorf("line %d: didn't expect a label, got %q", r.line, requirement)
 			}
 			i := strings.Index(requirement, "@")
+			if i == 0 { // Allow package names to start with @.
+				i = strings.Index(requirement[1:], "@") + 1
+			}
 			if i < 0 {
 				return nil, fmt.Errorf("line %d: expected a requirement, got %q", r.line, requirement)
 			}
@@ -275,7 +278,10 @@ func parseResolve(text string) (*resolveSchema, error) {
 			}
 			requirement, concrete := items[0], items[1]
 			i := strings.Index(requirement, "@")
-			if i < 0 && r.depth == 0 { // This is the root.
+			if i == 0 { // Allow package names to start with @.
+				i = strings.Index(requirement[1:], "@") + 1
+			}
+			if i <= 0 && r.depth == 0 { // This is the root.
 				r.name = requirement
 				r.concrete = concrete
 				break
