@@ -176,7 +176,7 @@ func mavenRequirementsToProject(req *pb.Requirements_Maven) maven.Project {
 		for _, d := range deps {
 			var exs []maven.Exclusion
 			for _, ex := range d.Exclusions {
-				j := strings.Index(d.Name, ":")
+				j := strings.Index(ex, ":")
 				exs = append(exs, maven.Exclusion{
 					GroupID:    maven.String(ex[:j]),
 					ArtifactID: maven.String(ex[j+1:]),
