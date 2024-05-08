@@ -20,10 +20,12 @@ package maven
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -91,18 +93,41 @@ type versionKey struct {
 	resolve.VersionKey
 }
 
+var errIncompatible = errors.New("incompatible requirements")
+
 // TODO: a user may set the default registry outside pom.xml, so we should
 // allow injecting the registry configuration.
 func (r *resolver) Resolve(ctx context.Context, vk resolve.VersionKey) (*resolve.Graph, error) {
 	start := time.Now()
+	const maxRetries = 100
+	// requirements holds all requirements that we encounter during the
+	// resolution.
+	// This is used for packages that appear with several and different
+	// requirements in the dependency graph. Maven allows only one concrete
+	// version per package: the effective requirement is the intersection of
+	// all requirements for a given package.
+	requirements := make(map[packageKey][]resolve.VersionKey)
 	// Resolve first in full-visibility mode. If only one registry is required,
 	// this is the result.
-	g, hasMulti, err := r.resolve(ctx, vk, false)
+	g, hasMulti, err := r.resolve(ctx, vk, requirements, false)
+	// Set a limit on how many times to retry the resolution.
+	for i := 0; i < maxRetries && errors.Is(err, errIncompatible); i++ {
+		// Check the context at each iteration.
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		// The requirements map has been mutated with the additional
+		// requirements, retry the resolution with the new set to see if
+		// this will yield a compatible version for all (or if more
+		// incompatible requirements will be discovered).
+		g, hasMulti, err = r.resolve(ctx, vk, requirements, false)
+	}
 	if !hasMulti {
 		return g, err
 	}
+
 	// Resolve allowing multiple registries.
-	gm, _, err := r.resolve(ctx, vk, true)
+	gm, _, err := r.resolve(ctx, vk, requirements, true)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +155,7 @@ func (r *resolver) Resolve(ctx context.Context, vk resolve.VersionKey) (*resolve
 // each respective version's pom.xml.
 // In all cases, resolve returns whether some matching versions are in
 // multiple repositories.
-func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, multi bool) (g *resolve.Graph, hasMulti bool, err error) {
+func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requirements map[packageKey][]resolve.VersionKey, multi bool) (g *resolve.Graph, hasMulti bool, err error) {
 	if vk.System != resolve.Maven {
 		return nil, false, fmt.Errorf("expected %s system, got %s", resolve.Maven, vk.System)
 	}
@@ -163,6 +188,7 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, multi boo
 	}
 	todo := []version{v}
 
+	resolvedPackages := map[packageKey]bool{todo[0].packageKey: true}
 	concreteVersions := map[versionKey]resolve.NodeID{todo[0].versionKey: 0}
 	// nodes ensure that there is only one resolve node per version key,
 	// regardless of the dependency type that yields to that resolution.
@@ -214,19 +240,34 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, multi boo
 				}
 				continue
 			}
-			if v, ok := mgt[r.packageKeyForDependency(d.RequirementVersion)]; ok && !first {
+
+			c := versionKey{
+				packageKey: r.packageKeyForDependency(d.RequirementVersion),
+			}
+			if v, ok := mgt[c.packageKey]; ok && !first {
 				d.Version = v.Version
 			}
-			matches, err := r.client.MatchingVersions(ctx, d.VersionKey)
+			if reqs := requirements[c.packageKey]; !slices.Contains(reqs, d.VersionKey) {
+				// Append the requirement if it is not seen before
+				requirements[c.packageKey] = append(reqs, d.VersionKey)
+			}
+
+			matches, err := r.matchAll(ctx, requirements[c.packageKey])
 			if err != nil {
 				return nil, false, err
+			}
+			if len(matches) == 0 {
+				reqs := make([]string, len(requirements[c.packageKey]))
+				for i, req := range requirements[c.packageKey] {
+					reqs[i] = req.Version
+				}
+				slices.Sort(reqs)
+				g.AddError(concreteVersions[cur.versionKey], d.VersionKey, fmt.Sprintf("could not find a version that satisfies requirements %s for package %s", reqs, d.Name))
+				continue
 			}
 
 			// Look if this is already resolved.
 			matched := false
-			c := versionKey{
-				packageKey: r.packageKeyForDependency(d.RequirementVersion),
-			}
 			for _, m := range matches {
 				c.VersionKey = m.VersionKey
 				if _, ok := concreteVersions[c]; !ok {
@@ -240,6 +281,17 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, multi boo
 			}
 			if matched {
 				continue
+			}
+			if ok := resolvedPackages[c.packageKey]; ok {
+				// Not matched but already resolved, which indicates this is an
+				// incompatible requirement
+				reqs, ok2 := requirements[c.packageKey]
+				if !ok2 {
+					reqs = []resolve.VersionKey{}
+				}
+				// TODO: check requirement duplicates?
+				requirements[c.packageKey] = append(reqs, d.VersionKey)
+				return nil, false, errIncompatible
 			}
 
 			// Remember the versions that we can't access.
@@ -356,6 +408,7 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, multi boo
 				n.includesDependencies = t == "ear" || t == "war" || t == "rar"
 			}
 			concreteVersions[n.versionKey] = matchID
+			resolvedPackages[n.packageKey] = true
 			if d.exclusions != nil {
 				mergeExclusions(d.exclusions, cur.exclusions)
 				n.exclusions = d.exclusions
@@ -381,6 +434,30 @@ const (
 	optImports
 	providedImports
 )
+
+// matchAll returns the versions matching all the given requirements.
+func (r *resolver) matchAll(ctx context.Context, requirements []resolve.VersionKey) ([]resolve.Version, error) {
+	var matches []resolve.Version
+	for n, req := range requirements {
+		matchVersions, err := r.client.MatchingVersions(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		if n == 0 {
+			matches = slices.Clone(matchVersions)
+			continue
+		}
+		matches = slices.DeleteFunc(matches, func(match resolve.Version) bool {
+			for _, v := range matchVersions {
+				if v.VersionKey == match.VersionKey {
+					return false
+				}
+			}
+			return true
+		})
+	}
+	return matches, nil
+}
 
 func (r *resolver) imports(ctx context.Context, ver resolve.VersionKey, opt importsOpt) (deps []dependency, err error) {
 	imps, err := r.client.Requirements(ctx, ver)

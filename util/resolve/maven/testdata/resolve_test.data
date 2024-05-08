@@ -292,3 +292,61 @@ Resolve group:alice 1.0
 Universe includesDependencies
 Graph includesDependencies
 -- END
+
+
+-- Universe rangeRequirements
+group:alice
+	1.0.0
+		group:chuck@1.0.0
+		group:dave@1.0.0
+	2.0.0
+		group:dave@1.0.0
+		group:chuck@1.0.0
+	3.0.0
+		group:dave@1.0.0
+		group:eve@1.0.0
+	4.0.0
+		group:dave@1.0.0
+		group:chuck@1.0.0
+		group:frank@1.0.0
+group:bob
+	2.17.1
+	2.20.0
+	3.0.0-beta1
+group:chuck
+	1.0.0
+		group:bob@[2.17.1,2.20.0]
+group:dave
+	1.0.0
+		group:bob@[2.17.1,3.0.0)
+group:eve
+	1.0.0
+		group:bob@[3.0.0,)
+group:frank
+	1.0.0
+		group:bob@[,2.20.0)
+-- END
+
+-- Test rangeRequirements1
+Resolve group:alice 1.0.0
+Universe rangeRequirements
+Graph rangeRequirements1
+-- END
+
+-- Test rangeRequirements2
+Resolve group:alice 2.0.0
+Universe rangeRequirements
+Graph rangeRequirements2
+-- END
+
+-- Test rangeRequirements3
+Resolve group:alice 3.0.0
+Universe rangeRequirements
+Graph rangeRequirements3
+-- END
+
+-- Test rangeRequirements4
+Resolve group:alice 4.0.0
+Universe rangeRequirements
+Graph rangeRequirements4
+-- END

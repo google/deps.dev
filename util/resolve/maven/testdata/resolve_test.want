@@ -94,3 +94,33 @@ group:alice 1.0
 ├─ selector|group:chuck@ 1.0
 └─ selector|group:dave@ 1.0
 -- END
+
+-- Graph rangeRequirements1
+group:alice 1.0.0
+├─ selector|group:chuck@ 1.0.0
+│  └─ selector|group:bob@ 2.20.0
+└─ selector|group:dave@ 1.0.0
+-- END
+
+-- Graph rangeRequirements2
+group:alice 2.0.0
+├─ selector|group:dave@ 1.0.0
+│  └─ selector|group:bob@ 2.20.0
+└─ selector|group:chuck@ 1.0.0
+-- END
+
+-- Graph rangeRequirements3
+group:alice 3.0.0
+├─ selector|group:dave@ 1.0.0
+│  └─ selector|group:bob@ 3.0.0-beta1
+└─ selector|group:eve@ 1.0.0
+   └─ selector|group:bob@[3.0.0,) ERROR: could not find a version that satisfies requirements [[2.17.1,3.0.0) [3.0.0,)] for package group:bob
+-- END
+
+-- Graph rangeRequirements4
+group:alice 4.0.0
+├─ selector|group:dave@ 1.0.0
+│  └─ selector|group:bob@ 2.17.1
+├─ selector|group:chuck@ 1.0.0
+└─ selector|group:frank@ 1.0.0
+-- END
