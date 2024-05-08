@@ -171,22 +171,27 @@ func mavenRequirementsToProject(req *pb.Requirements_Maven) maven.Project {
 		return maven.Project{}
 	}
 
+	getIDs := func(name string) (maven.String, maven.String) {
+		if i := strings.Index(name, ":"); i < 0 {
+			return "", ""
+		} else {
+			return maven.String(name[:i]), maven.String(name[i+1:])
+		}
+	}
+
 	getDependencies := func(deps []*pb.Requirements_Maven_Dependency) []maven.Dependency {
 		var result []maven.Dependency
 		for _, d := range deps {
 			var exs []maven.Exclusion
 			for _, ex := range d.Exclusions {
-				j := strings.Index(ex, ":")
-				exs = append(exs, maven.Exclusion{
-					GroupID:    maven.String(ex[:j]),
-					ArtifactID: maven.String(ex[j+1:]),
-				})
+				g, a := getIDs(ex)
+				exs = append(exs, maven.Exclusion{GroupID: g, ArtifactID: a})
 			}
 
-			i := strings.Index(d.Name, ":")
+			group, artifact := getIDs(d.Name)
 			result = append(result, maven.Dependency{
-				GroupID:    maven.String(d.Name[:i]),
-				ArtifactID: maven.String(d.Name[i+1:]),
+				GroupID:    maven.String(group),
+				ArtifactID: maven.String(artifact),
 				Version:    maven.String(d.Version),
 				Type:       maven.String(d.Type),
 				Classifier: maven.String(d.Classifier),
@@ -261,7 +266,20 @@ func mavenRequirementsToProject(req *pb.Requirements_Maven) maven.Project {
 		})
 	}
 
+	var parent maven.Parent
+	if req.Parent != nil {
+		group, artifact := getIDs(req.Parent.Name)
+		parent = maven.Parent{
+			ProjectKey: maven.ProjectKey{
+				GroupID:    group,
+				ArtifactID: artifact,
+				Version:    maven.String(req.Parent.Version),
+			},
+		}
+	}
+
 	return maven.Project{
+		Parent:               parent,
 		Dependencies:         getDependencies(req.Dependencies),
 		DependencyManagement: maven.DependencyManagement{Dependencies: getDependencies(req.DependencyManagement)},
 		Properties:           maven.Properties{Properties: getProperties(req.Properties)},

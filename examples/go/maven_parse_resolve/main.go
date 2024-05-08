@@ -133,9 +133,6 @@ func main() {
 		e.Type = dep.Type{}
 		g.Edges[i] = e
 	}
-	if err := g.Canon(); err != nil {
-		log.Fatal(err)
-	}
 	log.Printf("Resolved in %v", time.Since(start))
 
 	// Print the resolved graph.
