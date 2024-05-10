@@ -14,7 +14,11 @@
 
 package maven
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
 type ProjectKey struct {
 	GroupID    String `xml:"groupId,omitempty"`
@@ -24,6 +28,18 @@ type ProjectKey struct {
 
 func (pk ProjectKey) Name() string {
 	return fmt.Sprintf("%s:%s", pk.GroupID, pk.ArtifactID)
+}
+
+func MakeProjectKey(name, version string) (ProjectKey, error) {
+	group, artifact, ok := strings.Cut(name, ":")
+	if !ok {
+		return ProjectKey{}, errors.New("invalid Maven package name")
+	}
+	return ProjectKey{
+		GroupID:    String(group),
+		ArtifactID: String(artifact),
+		Version:    String(version),
+	}, nil
 }
 
 type Parent struct {

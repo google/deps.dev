@@ -166,13 +166,14 @@ var (
 // MergeProfiles merge the data in activated profiles to the project.
 // If there is no active profile, merge the data from default profiles.
 // The activation is based on the constants specified above.
-func (p *Project) MergeProfiles(jdk string, os ActivationOS) error {
+func (p *Project) MergeProfiles(jdk string, os ActivationOS) (err error) {
 	activeProfiles := make([]Profile, 0, len(p.Profiles))
 	defaultProfiles := make([]Profile, 0, len(p.Profiles))
 	for _, prof := range p.Profiles {
-		act, err := prof.activated(jdk, os)
-		if err != nil {
-			return fmt.Errorf("profile activation error: %v", err)
+		act, actErr := prof.activated(jdk, os)
+		if actErr != nil {
+			// Keep the error for later, and try other profiles.
+			err = appendError(err, actErr)
 		}
 		if act {
 			activeProfiles = append(activeProfiles, prof)
@@ -191,5 +192,12 @@ func (p *Project) MergeProfiles(jdk string, os ActivationOS) error {
 		p.Dependencies = append(p.Dependencies, prof.Dependencies...)
 		p.Repositories = append(p.Repositories, prof.Repositories...)
 	}
-	return nil
+	return
+}
+
+func appendError(e1, e2 error) error {
+	if e1 == nil {
+		return e2
+	}
+	return fmt.Errorf("%w, %w", e1, e2)
 }

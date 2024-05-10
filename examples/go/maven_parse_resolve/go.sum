@@ -1,9 +1,9 @@
 deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7 h1:dleK4xoNCfxlfknQNPR1DmSdVErIAWlEzxtTImCqWXI=
 deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7/go.mod h1:k3RHZwAw7ijqoXmVDvcO7ikeTwTC4jtmhCDathV+IKE=
-deps.dev/util/maven v0.0.0-20240328052954-3c5196c6e698 h1:ZJ5IcZCwhI34vzR5RGhdZVQwu4ESA52qJ6LC+WQU+Hc=
-deps.dev/util/maven v0.0.0-20240328052954-3c5196c6e698/go.mod h1:SBW3EribdkZYk6zxi5oVn/ZECvi4ixb7EGgEWfSimNk=
-deps.dev/util/resolve v0.0.0-20240503034408-f4132b35bb3a h1:tN+vbftSr/hxosJaHoq61nBb9GMJVwHq+HmcJfVnSjA=
-deps.dev/util/resolve v0.0.0-20240503034408-f4132b35bb3a/go.mod h1:XXi6yRYqhtxw5DvGX/mbG6fHSLn8OgoPowNd8EAxDgk=
+deps.dev/util/maven v0.0.0-20240508074152-8a0b6d3a5b11 h1:Pj5eDqVZUx/CdWEAef6sb/xCOI/wwg7G+saoYMHGOW8=
+deps.dev/util/maven v0.0.0-20240508074152-8a0b6d3a5b11/go.mod h1:SBW3EribdkZYk6zxi5oVn/ZECvi4ixb7EGgEWfSimNk=
+deps.dev/util/resolve v0.0.0-20240508074152-8a0b6d3a5b11 h1:LhE2lxJwN1ZaWxqNH9I3UuFboeVl5peKwr/UPoiQ3cY=
+deps.dev/util/resolve v0.0.0-20240508074152-8a0b6d3a5b11/go.mod h1:XXi6yRYqhtxw5DvGX/mbG6fHSLn8OgoPowNd8EAxDgk=
 deps.dev/util/semver v0.0.0-20240109040450-1e316b822bc4 h1:RDmJe2F67jB7ovkbd28Pdpw3vEYUi2tWV5RlOHlxByk=
 deps.dev/util/semver v0.0.0-20240109040450-1e316b822bc4/go.mod h1:jkcH+k02gWHBiZ7G4OnUOkSZ6WDq54Pt5DrOA8FN8Uo=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=

@@ -119,7 +119,7 @@ func (a *APIClient) fetchMavenParents(ctx context.Context, current maven.Project
 			return err
 		}
 
-		proj := mavenRequirementsToProject(resp.Maven)
+		proj := mavenRequirementsToProject(current, resp.Maven)
 		if err := proj.MergeProfiles(maven.JDKProfileActivation, maven.OSProfileActivation); err != nil {
 			return err
 		}
@@ -129,8 +129,12 @@ func (a *APIClient) fetchMavenParents(ctx context.Context, current maven.Project
 	return project.Interpolate()
 }
 
-func (a *APIClient) mavenRequirements(ctx context.Context, reqs *pb.Requirements_Maven) ([]RequirementVersion, error) {
-	project := mavenRequirementsToProject(reqs)
+func (a *APIClient) mavenRequirements(ctx context.Context, vk VersionKey, reqs *pb.Requirements_Maven) ([]RequirementVersion, error) {
+	projKey,err := maven.MakeProjectKey(vk.Name, vk.Version)
+	if err != nil {
+		return nil, err
+	}
+	project := mavenRequirementsToProject(projKey, reqs)
 	if err := project.MergeProfiles(maven.JDKProfileActivation, maven.OSProfileActivation); err != nil {
 		return nil, err
 	}
@@ -138,12 +142,13 @@ func (a *APIClient) mavenRequirements(ctx context.Context, reqs *pb.Requirements
 		return nil, err
 	}
 	project.ProcessDependencies(func(group, artifact, v maven.String) (maven.DependencyManagement, error) {
-		var result maven.Project
-		if err := a.fetchMavenParents(ctx, maven.ProjectKey{
+		pk := maven.ProjectKey{
 			GroupID:    group,
 			ArtifactID: artifact,
 			Version:    v,
-		}, &result); err != nil {
+		}
+		result := maven.Project{ProjectKey: pk}
+		if err := a.fetchMavenParents(ctx, pk, &result); err != nil {
 			return maven.DependencyManagement{}, err
 		}
 		return result.DependencyManagement, nil
@@ -166,17 +171,9 @@ func (a *APIClient) mavenRequirements(ctx context.Context, reqs *pb.Requirements
 	return result, nil
 }
 
-func mavenRequirementsToProject(req *pb.Requirements_Maven) maven.Project {
+func mavenRequirementsToProject(pk maven.ProjectKey, req *pb.Requirements_Maven) maven.Project {
 	if req == nil {
 		return maven.Project{}
-	}
-
-	getIDs := func(name string) (maven.String, maven.String) {
-		if i := strings.Index(name, ":"); i < 0 {
-			return "", ""
-		} else {
-			return maven.String(name[:i]), maven.String(name[i+1:])
-		}
 	}
 
 	getDependencies := func(deps []*pb.Requirements_Maven_Dependency) []maven.Dependency {
@@ -184,14 +181,20 @@ func mavenRequirementsToProject(req *pb.Requirements_Maven) maven.Project {
 		for _, d := range deps {
 			var exs []maven.Exclusion
 			for _, ex := range d.Exclusions {
-				g, a := getIDs(ex)
-				exs = append(exs, maven.Exclusion{GroupID: g, ArtifactID: a})
+				exKey, err := maven.MakeProjectKey(ex, "")
+				if err != nil {
+					continue
+				}
+				exs = append(exs, maven.Exclusion{GroupID: exKey.GroupID, ArtifactID: exKey.ArtifactID})
 			}
 
-			group, artifact := getIDs(d.Name)
+			dk, err := maven.MakeProjectKey(d.Name, "")
+			if err != nil {
+				continue
+			}
 			result = append(result, maven.Dependency{
-				GroupID:    maven.String(group),
-				ArtifactID: maven.String(artifact),
+				GroupID:    dk.GroupID,
+				ArtifactID: dk.ArtifactID,
 				Version:    maven.String(d.Version),
 				Type:       maven.String(d.Type),
 				Classifier: maven.String(d.Classifier),
@@ -268,17 +271,12 @@ func mavenRequirementsToProject(req *pb.Requirements_Maven) maven.Project {
 
 	var parent maven.Parent
 	if req.Parent != nil {
-		group, artifact := getIDs(req.Parent.Name)
-		parent = maven.Parent{
-			ProjectKey: maven.ProjectKey{
-				GroupID:    group,
-				ArtifactID: artifact,
-				Version:    maven.String(req.Parent.Version),
-			},
-		}
+		parent.ProjectKey, _ = maven.MakeProjectKey(req.Parent.Name, req.Parent.Version)
+
 	}
 
 	return maven.Project{
+		ProjectKey:           pk,
 		Parent:               parent,
 		Dependencies:         getDependencies(req.Dependencies),
 		DependencyManagement: maven.DependencyManagement{Dependencies: getDependencies(req.DependencyManagement)},

@@ -171,7 +171,7 @@ func (a *APIClient) Requirements(ctx context.Context, vk VersionKey) ([]Requirem
 
 	switch vk.System {
 	case Maven:
-		return a.mavenRequirements(ctx, resp.Maven)
+		return a.mavenRequirements(ctx, vk, resp.Maven)
 	case NPM:
 		return a.npmRequirements(vk, resp.Npm)
 	}

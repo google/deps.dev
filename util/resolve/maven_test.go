@@ -142,6 +142,13 @@ func TestMavenRequirements(t *testing.T) {
 	}
 
 	ctx := context.Background()
+	vk := VersionKey{
+		PackageKey: PackageKey{
+			System: Maven,
+			Name:   "abc:xyz",
+		},
+		Version: "3.2.1",
+	}
 	reqs := &pb.Requirements_Maven{
 		Parent: &pb.VersionKey{
 			System:  pb.System_MAVEN,
@@ -178,7 +185,7 @@ func TestMavenRequirements(t *testing.T) {
 			},
 		},
 	}
-	got, err := client.mavenRequirements(ctx, reqs)
+	got, err := client.mavenRequirements(ctx, vk, reqs)
 	if err != nil {
 		t.Fatalf("mavenRequirements: %v", err)
 	}
@@ -231,6 +238,16 @@ func TestMavenRequirements(t *testing.T) {
 				},
 				VersionType: Requirement,
 				Version:     "6.0.0",
+			},
+		},
+		{
+			VersionKey: VersionKey{
+				PackageKey: PackageKey{
+					System: Maven,
+					Name:   "org.dependency:ggg",
+				},
+				VersionType: Requirement,
+				Version:     "7.0.0",
 			},
 		},
 	}
