@@ -261,6 +261,17 @@ message Link {
   string url = 2;
 }
 
+// Non-normalized upstream identifiers encountered when syncing this package
+// version.
+message UpstreamIdentifier {
+  // The non-normalized package name string.
+  string package_name = 1;
+  // The non-normalized version string.
+  string version_string = 2;
+  // The upstream source for this identifier.
+  string source = 3;
+}
+
 // DependencyRelation describes the relation of a node within a dependency
 // graph.
 enum DependencyRelation {
@@ -399,6 +410,9 @@ message Version {
 
   // Projects that are related to this package version.
   repeated Project related_projects = 10;
+
+    // Some upstream identifiers used to refer to this package version.
+  repeated UpstreamIdentifier upstream_identifiers = 11;
 }
 
 // GetVersionBatchRequest identifies a batch of versions for which to return
