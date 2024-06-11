@@ -5,7 +5,7 @@ go 1.21.1
 require (
 	deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7
 	deps.dev/util/maven v0.0.0-20240508074152-8a0b6d3a5b11
-	deps.dev/util/resolve v0.0.0-20240508074152-8a0b6d3a5b11
+	deps.dev/util/resolve v0.0.0-20240611045547-af20eef0f1eb
 	google.golang.org/grpc v1.56.3
 )
 
