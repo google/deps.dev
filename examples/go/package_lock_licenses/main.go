@@ -34,7 +34,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
@@ -43,7 +42,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 
-	pb "deps.dev/api/v3"
+	pb "deps.dev/api/v3alpha"
 )
 
 // NPMPackageLock represents a package-lock.json file used by the npm package
@@ -72,7 +71,7 @@ type Version struct {
 }
 
 type VersionResponse struct {
-	Licenses []string
+	Response *pb.Version
 	Error    error
 }
 
@@ -139,7 +138,7 @@ func main() {
 	}
 	client := pb.NewInsightsClient(conn)
 
-	// Fetch licenses from the deps.dev API.
+	// Fetch license details from the deps.dev API.
 	// To speed things up, use an error group to make many requests
 	// concurrently, but limit the rate to 500 requests/second.
 	// Note that gRPC will multiplex multiple requests over a single HTTP/2
@@ -162,7 +161,7 @@ func main() {
 			resp, err := client.GetVersion(ctx, &req)
 			switch status.Code(err) {
 			case codes.OK:
-				r.Licenses = resp.Licenses
+				r.Response = resp
 			case codes.NotFound:
 				r.Error = err
 			default:
@@ -175,13 +174,18 @@ func main() {
 		log.Fatalf("Fetching licenses: %v", err)
 	}
 
-	// Print each package version and its license on stdout.
+	// Print each package version and its license details on stdout.
 	for v, r := range versions {
-		fmt.Printf("%s@%s: ", v.Name, v.Version)
+		fmt.Printf("%s@%s:", v.Name, v.Version)
 		if r.Error != nil {
-			fmt.Printf("error: %v", r.Error)
+			fmt.Printf(" error: %v", r.Error)
 		} else {
-			fmt.Printf("%s", strings.Join(r.Licenses, " "))
+			for _, l := range r.Response.LicenseDetails {
+				fmt.Printf(" %s", l.Spdx)
+				if l.Spdx == "non-standard" {
+					fmt.Printf(" (%s)", l.License)
+				}
+			}
 		}
 		fmt.Printf("\n")
 	}

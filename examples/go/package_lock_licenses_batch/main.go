@@ -15,7 +15,7 @@
 /*
 package_lock_licenses_batch is a simple example application that reads
 dependencies from an npm package-lock.json file and fetches their licenses from
-the deps.dev gRPC API.
+the deps.dev HTTP API.
 
 The output from this application is the same as
 examples/go/package_lock_licences, but it retrieves licenses by calling the
@@ -35,7 +35,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 )
 
 // NPMPackageLock represents a package-lock.json file used by the npm package
@@ -64,9 +63,15 @@ type Version struct {
 	Version string
 }
 
-// Result holds the licenses for a version.
+// Result holds the license details for a version.
 type Result struct {
-	Licenses []string `json:"licenses"`
+	LicenseDetails []License
+}
+
+// License corresponds to the v3alpha API definition of Version.License.
+type License struct {
+	License string `json:"license"`
+	SPDX    string `json:"spdx"`
 }
 
 // VersionKey corresponds to the v3alpha API definition of a VersionKey.
@@ -87,13 +92,12 @@ type GetVersionBatchRequest struct {
 	PageToken string              `json:"pageToken,omitempty"`
 }
 
-// VersionResponse corresponds to the v3alpha API definition of
-// VersionBatch.Response.
+// VersionResponse corresponds to the v3alpha API definition of VersionBatch.Response.
 type VersionResponse struct {
 	Request GetVersionRequest `json:"request"`
 	Version struct {
-		VersionKey VersionKey `json:"versionKey"`
-		Licenses   []string   `json:"licenses"`
+		VersionKey     VersionKey `json:"versionKey"`
+		LicenseDetails []License  `json:"licenseDetails"`
 	} `json:"version"`
 }
 
@@ -111,7 +115,7 @@ var (
 func main() {
 	log.SetFlags(0)
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: package_lock_licenses [flags] package-lock.json\n\nFlags:\n")
+		fmt.Fprintf(os.Stderr, "Usage: package_lock_licenses_batch [flags] package-lock.json\n\nFlags:\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -204,7 +208,7 @@ func main() {
 				// version was not found.
 				versions[v] = nil
 			} else {
-				versions[v].Licenses = response.Version.Licenses
+				versions[v].LicenseDetails = response.Version.LicenseDetails
 			}
 		}
 
@@ -218,13 +222,18 @@ func main() {
 		req.PageToken = batch.NextPageToken
 	}
 
-	// Print each package version and its license on stdout.
+	// Print each package version and its license details on stdout.
 	for v, r := range versions {
-		fmt.Printf("%s@%s: ", v.Name, v.Version)
+		fmt.Printf("%s@%s:", v.Name, v.Version)
 		if r == nil {
-			fmt.Printf("error: version not found")
+			fmt.Printf(" error: version not found")
 		} else {
-			fmt.Printf("%s", strings.Join(r.Licenses, " "))
+			for _, l := range r.LicenseDetails {
+				fmt.Printf(" %s", l.SPDX)
+				if l.SPDX == "non-standard" {
+					fmt.Printf(" (%s)", l.License)
+				}
+			}
 		}
 		fmt.Printf("\n")
 	}

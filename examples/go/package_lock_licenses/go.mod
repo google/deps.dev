@@ -3,7 +3,7 @@ module github.com/google/deps.dev/examples/go/package_lock_licenses
 go 1.20
 
 require (
-	deps.dev/api/v3 v3.0.0-20240311053741-8694636601c8
+	deps.dev/api/v3alpha v0.0.0-20240701033337-efe6530670b9
 	golang.org/x/sync v0.6.0
 	golang.org/x/time v0.5.0
 	google.golang.org/grpc v1.56.3
