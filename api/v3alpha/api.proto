@@ -344,6 +344,9 @@ message Package {
     // system-specific, but it is commonly the version with the greatest
     // version number, ignoring pre-release versions.
     bool is_default = 2;
+
+    // If true, this version has been marked as deprecated.
+    bool is_deprecated = 5;
   }
 
   // The available versions of the package.
@@ -376,6 +379,9 @@ message Version {
   // system-specific, but it is commonly the version with the greatest version
   // number, ignoring pre-release versions.
   bool is_default = 2;
+
+  // If true, this version has been marked as deprecated.
+  bool is_deprecated = 12;
 
   // The licenses governing the use of this package version.
   //
