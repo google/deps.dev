@@ -392,14 +392,39 @@ message Version {
   // information, this field is empty. When more than one license is listed,
   // their relationship is unspecified.
   //
-  // For Cargo, Maven, npm, and PyPI, license information is read from the
-  // package metadata. For Go, license information is determined using the
+  // For Cargo, Maven, npm, NuGet, and PyPI, license information is read from
+  // the package metadata. For Go, license information is determined using the
   // [licensecheck](https://github.com/google/licensecheck) package.
   //
   // License information is not intended to be legal advice, and you should
   // independently verify the license or terms of any software for your own
   // needs.
   repeated string licenses = 3;
+
+  message License {
+    // For Cargo, Maven, npm, NuGet, and PyPI, this field holds the license as
+    // specified by the package author in the package metadata. For Go, it
+    // holds license information as determined using the
+    // [licensecheck](https://github.com/google/licensecheck) package.
+    string license = 1;
+
+    // The license mapped to an
+    // [SPDX 2.1](https://spdx.dev/spdx-specification-21-web-version/)
+    // expression, or "non-standard" if the license cannot be unambiguously
+    // mapped to SPDX.
+    string spdx = 2;
+  }
+
+  // Detailed information about the licenses governing the use of this package
+  // version.
+  //
+  // When deps.dev is unable to obtain license information, this field is
+  // empty.
+  //
+  // License information is not intended to be legal advice, and you should
+  // independently verify the license or terms of any software for your own
+  // needs.
+  repeated License license_details = 13;
 
   // Security advisories known to affect this package version.
   // Further information can be requested using the Advisory method.
