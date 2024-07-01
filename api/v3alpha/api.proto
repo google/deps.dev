@@ -411,7 +411,7 @@ message Version {
   // Projects that are related to this package version.
   repeated Project related_projects = 10;
 
-    // Some upstream identifiers used to refer to this package version.
+  // Some upstream identifiers used to refer to this package version.
   repeated UpstreamIdentifier upstream_identifiers = 11;
 }
 
@@ -419,6 +419,7 @@ message Version {
 // Version information.
 message GetVersionBatchRequest {
   // The batch list of versions to return Version information for.
+  // Up to 5000 requests are allowed in a single batch.
   repeated GetVersionRequest requests = 1;
   // If set, request the next page of the result set. It must be set to the
   // page token provided by the previous version batch response. All other
@@ -850,6 +851,7 @@ message Project {
 // Project information.
 message GetProjectBatchRequest {
   // The batch list of projects to return Project information for.
+  // Up to 5000 requests are allowed in a single batch.
   repeated GetProjectRequest requests = 1;
   // If set, request the next page of the result set. It must be set to the
   // page token provided by the previous project batch response. All other
@@ -1025,6 +1027,7 @@ message PurlLookupResult {
 // PurlLookupBatchRequest identifies a batch of purls to search for.
 message PurlLookupBatchRequest {
   // The batch list of purls to search for.
+  // Up to 5000 requests are allowed in a single batch.
   repeated PurlLookupRequest requests = 1;
   // If set, request the next page of the result set. It must be set to the
   // page token provided by the previous purl lookup batch response. All other
