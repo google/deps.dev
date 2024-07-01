@@ -79,6 +79,20 @@ service Insights {
     };
   }
 
+  // GetDependents returns information about the number of distinct packages
+  // known to depend on the given package version. Dependent counts are
+  // currently available for Go, npm, Cargo, Maven and PyPI.
+  //
+  // Dependent counts are derived from the dependency graphs computed by
+  // deps.dev, which means that only public dependents are counted. As such,
+  // dependent counts should be treated as indicative of relative popularity
+  // rather than precisely accurate.
+  rpc GetDependents(GetDependentsRequest) returns (Dependents) {
+    option (google.api.http) = {
+      get: "/v3alpha/systems/{version_key.system}/packages/{version_key.name}/versions/{version_key.version}:dependents"
+    };
+  }
+
   // GetProject returns information about projects hosted by GitHub, GitLab, or
   // BitBucket, when known to us.
   rpc GetProject(GetProjectRequest) returns (Project) {
@@ -722,6 +736,32 @@ message Dependencies {
   // This error message has no defined format and is intended for human
   // consumption.
   string error = 3;
+}
+
+// GetDependentsRequest identifies a package version for which to return
+// dependent counts.
+message GetDependentsRequest {
+  VersionKey version_key = 1;
+}
+
+// Dependents holds information about the number of distinct packages known to
+// depend on a package version.
+//
+// Dependent counts are derived from the dependency graphs computed by
+// deps.dev, which means that only public dependents are counted. As such,
+// dependent counts should be treated as indicative of relative popularity
+// rather than precisely accurate.
+message Dependents {
+  // The number of packages known to depend on this package version, either
+  // directly or indirectly. Note that this may be less than the sum of the
+  // direct and indirect dependent counts.
+  uint32 dependent_count = 1;
+
+  // The number of packages known to depend directly on this package version.
+  uint32 direct_dependent_count = 2;
+
+  // The number of packages known to depend indirectly on this package version.
+  uint32 indirect_dependent_count = 3;
 }
 
 // GetProjectRequest identifies a project for which to return information.

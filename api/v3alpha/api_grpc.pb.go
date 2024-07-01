@@ -38,6 +38,7 @@ const (
 	Insights_GetVersionBatch_FullMethodName           = "/deps_dev.v3alpha.Insights/GetVersionBatch"
 	Insights_GetRequirements_FullMethodName           = "/deps_dev.v3alpha.Insights/GetRequirements"
 	Insights_GetDependencies_FullMethodName           = "/deps_dev.v3alpha.Insights/GetDependencies"
+	Insights_GetDependents_FullMethodName             = "/deps_dev.v3alpha.Insights/GetDependents"
 	Insights_GetProject_FullMethodName                = "/deps_dev.v3alpha.Insights/GetProject"
 	Insights_GetProjectBatch_FullMethodName           = "/deps_dev.v3alpha.Insights/GetProjectBatch"
 	Insights_GetProjectPackageVersions_FullMethodName = "/deps_dev.v3alpha.Insights/GetProjectPackageVersions"
@@ -79,6 +80,15 @@ type InsightsClient interface {
 	// dependencies present. The precise meaning of this varies from system to
 	// system.
 	GetDependencies(ctx context.Context, in *GetDependenciesRequest, opts ...grpc.CallOption) (*Dependencies, error)
+	// GetDependents returns information about the number of distinct packages
+	// known to depend on the given package version. Dependent counts are
+	// currently available for Go, npm, Cargo, Maven and PyPI.
+	//
+	// Dependent counts are derived from the dependency graphs computed by
+	// deps.dev, which means that only public dependents are counted. As such,
+	// dependent counts should be treated as indicative of relative popularity
+	// rather than precisely accurate.
+	GetDependents(ctx context.Context, in *GetDependentsRequest, opts ...grpc.CallOption) (*Dependents, error)
 	// GetProject returns information about projects hosted by GitHub, GitLab, or
 	// BitBucket, when known to us.
 	GetProject(ctx context.Context, in *GetProjectRequest, opts ...grpc.CallOption) (*Project, error)
@@ -201,6 +211,15 @@ func (c *insightsClient) GetDependencies(ctx context.Context, in *GetDependencie
 	return out, nil
 }
 
+func (c *insightsClient) GetDependents(ctx context.Context, in *GetDependentsRequest, opts ...grpc.CallOption) (*Dependents, error) {
+	out := new(Dependents)
+	err := c.cc.Invoke(ctx, Insights_GetDependents_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *insightsClient) GetProject(ctx context.Context, in *GetProjectRequest, opts ...grpc.CallOption) (*Project, error) {
 	out := new(Project)
 	err := c.cc.Invoke(ctx, Insights_GetProject_FullMethodName, in, out, opts...)
@@ -304,6 +323,15 @@ type InsightsServer interface {
 	// dependencies present. The precise meaning of this varies from system to
 	// system.
 	GetDependencies(context.Context, *GetDependenciesRequest) (*Dependencies, error)
+	// GetDependents returns information about the number of distinct packages
+	// known to depend on the given package version. Dependent counts are
+	// currently available for Go, npm, Cargo, Maven and PyPI.
+	//
+	// Dependent counts are derived from the dependency graphs computed by
+	// deps.dev, which means that only public dependents are counted. As such,
+	// dependent counts should be treated as indicative of relative popularity
+	// rather than precisely accurate.
+	GetDependents(context.Context, *GetDependentsRequest) (*Dependents, error)
 	// GetProject returns information about projects hosted by GitHub, GitLab, or
 	// BitBucket, when known to us.
 	GetProject(context.Context, *GetProjectRequest) (*Project, error)
@@ -392,6 +420,9 @@ func (UnimplementedInsightsServer) GetRequirements(context.Context, *GetRequirem
 }
 func (UnimplementedInsightsServer) GetDependencies(context.Context, *GetDependenciesRequest) (*Dependencies, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDependencies not implemented")
+}
+func (UnimplementedInsightsServer) GetDependents(context.Context, *GetDependentsRequest) (*Dependents, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDependents not implemented")
 }
 func (UnimplementedInsightsServer) GetProject(context.Context, *GetProjectRequest) (*Project, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProject not implemented")
@@ -516,6 +547,24 @@ func _Insights_GetDependencies_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(InsightsServer).GetDependencies(ctx, req.(*GetDependenciesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Insights_GetDependents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDependentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InsightsServer).GetDependents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Insights_GetDependents_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InsightsServer).GetDependents(ctx, req.(*GetDependentsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -690,6 +739,10 @@ var Insights_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDependencies",
 			Handler:    _Insights_GetDependencies_Handler,
+		},
+		{
+			MethodName: "GetDependents",
+			Handler:    _Insights_GetDependents_Handler,
 		},
 		{
 			MethodName: "GetProject",
