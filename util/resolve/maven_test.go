@@ -172,9 +172,7 @@ func TestMavenRequirements(t *testing.T) {
 			{
 				Id: "profile-one",
 				Activation: &pb.Requirements_Maven_Profile_Activation{
-					Os: &pb.Requirements_Maven_Profile_Activation_OS{
-						Name: "Linux",
-					},
+					ActiveByDefault: "true",
 				},
 				Dependencies: []*pb.Requirements_Maven_Dependency{
 					{Name: "org.dependency:fff", Version: "${fff.version}"},

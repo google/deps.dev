@@ -335,6 +335,13 @@ func TestBuildProfileActivation(t *testing.T) {
 			t.Errorf("profile.activated() on %s got: %v, want: %v", test.prof, got, test.want)
 		}
 	}
+
+	// Tests activation on empty JDK and OS
+	prof := Profile{}
+	got, err := prof.activated("", ActivationOS{})
+	if got != false || err != nil {
+		t.Errorf("profile.activated() expects false, nil but got: %v, %v", got, err)
+	}
 }
 
 func TestMergeProfiles(t *testing.T) {
@@ -350,6 +357,11 @@ func TestMergeProfiles(t *testing.T) {
 		Repositories: []Repository{
 			{ID: "default-repo", URL: "https://www.example.com"},
 		},
+		Properties: Properties{
+			Properties: []Property{
+				{Name: "abc.version", Value: "1.0.0"},
+			},
+		},
 		Profiles: []Profile{{
 			// Not activated
 			Activation: Activation{
@@ -360,6 +372,11 @@ func TestMergeProfiles(t *testing.T) {
 			},
 			Repositories: []Repository{
 				{ID: "repo-not-activated", URL: "https://www.example.com"},
+			},
+			Properties: Properties{
+				Properties: []Property{
+					{Name: "abc.version", Value: "9.9.9"},
+				},
 			},
 		}, {
 			// Activated
@@ -372,6 +389,11 @@ func TestMergeProfiles(t *testing.T) {
 			},
 			Repositories: []Repository{
 				{ID: "profile-repo-1", URL: "https://www.profile.repo-1.example.com"},
+			},
+			Properties: Properties{
+				Properties: []Property{
+					{Name: "abc.version", Value: "2.0.0"},
+				},
 			},
 		}, {
 			// Activated
@@ -391,6 +413,11 @@ func TestMergeProfiles(t *testing.T) {
 			},
 			Repositories: []Repository{
 				{ID: "profile-repo-2", URL: "https://www.profile.repo-2.example.com"},
+			},
+			Properties: Properties{
+				Properties: []Property{
+					{Name: "abc.version", Value: "3.0.0"},
+				},
 			},
 		}},
 	}
@@ -412,6 +439,13 @@ func TestMergeProfiles(t *testing.T) {
 			{ID: "default-repo", URL: "https://www.example.com"},
 			{ID: "profile-repo-1", URL: "https://www.profile.repo-1.example.com"},
 			{ID: "profile-repo-2", URL: "https://www.profile.repo-2.example.com"},
+		},
+		Properties: Properties{
+			Properties: []Property{
+				{Name: "abc.version", Value: "1.0.0"},
+				{Name: "abc.version", Value: "2.0.0"},
+				{Name: "abc.version", Value: "3.0.0"},
+			},
 		},
 	}
 	proj.Profiles = nil

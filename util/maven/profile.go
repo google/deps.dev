@@ -72,10 +72,16 @@ func (af ActivationFile) blank() bool {
 }
 
 // activated returns if a Maven build profile is activated or not.
+// If no JDK or OS information is provided, the profile is considered
+// as not activated.
 // Since Maven 3.2.2 Activation occurs when all of the specified criteria have
 // been met: https://maven.apache.org/pom.html#activation
 // TODO: support profile activation on File.
 func (p *Profile) activated(jdk string, os ActivationOS) (bool, error) {
+	if jdk == "" && os.blank() {
+		return false, nil
+	}
+
 	act := p.Activation
 	res := false
 	if act.JDK != "" {
@@ -165,6 +171,7 @@ var (
 
 // MergeProfiles merge the data in activated profiles to the project.
 // If there is no active profile, merge the data from default profiles.
+// If no JDK or OS information is provided, default profiles are merged.
 // The activation is based on the constants specified above.
 func (p *Project) MergeProfiles(jdk string, os ActivationOS) (err error) {
 	activeProfiles := make([]Profile, 0, len(p.Profiles))
@@ -187,7 +194,10 @@ func (p *Project) MergeProfiles(jdk string, os ActivationOS) (err error) {
 		activeProfiles = defaultProfiles
 	}
 	for _, prof := range activeProfiles {
-		p.Properties.merge(prof.Properties)
+		// Properties in active profiles should overwrite global properties.
+		prof.Properties.merge(p.Properties)
+		p.Properties = prof.Properties
+
 		p.DependencyManagement.merge(prof.DependencyManagement)
 		p.Dependencies = append(p.Dependencies, prof.Dependencies...)
 		p.Repositories = append(p.Repositories, prof.Repositories...)

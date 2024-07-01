@@ -120,7 +120,8 @@ func (a *APIClient) fetchMavenParents(ctx context.Context, current maven.Project
 		}
 
 		proj := mavenRequirementsToProject(current, resp.Maven)
-		if err := proj.MergeProfiles(maven.JDKProfileActivation, maven.OSProfileActivation); err != nil {
+		// Only merge default profiles by passing empty JDK and OS information.
+		if err := proj.MergeProfiles("", maven.ActivationOS{}); err != nil {
 			return err
 		}
 		project.MergeParent(proj)
@@ -130,12 +131,13 @@ func (a *APIClient) fetchMavenParents(ctx context.Context, current maven.Project
 }
 
 func (a *APIClient) mavenRequirements(ctx context.Context, vk VersionKey, reqs *pb.Requirements_Maven) ([]RequirementVersion, error) {
-	projKey,err := maven.MakeProjectKey(vk.Name, vk.Version)
+	projKey, err := maven.MakeProjectKey(vk.Name, vk.Version)
 	if err != nil {
 		return nil, err
 	}
 	project := mavenRequirementsToProject(projKey, reqs)
-	if err := project.MergeProfiles(maven.JDKProfileActivation, maven.OSProfileActivation); err != nil {
+	// Only merge default profiles by passing empty JDK and OS information.
+	if err := project.MergeProfiles("", maven.ActivationOS{}); err != nil {
 		return nil, err
 	}
 	if err := a.fetchMavenParents(ctx, project.Parent.ProjectKey, &project); err != nil {
