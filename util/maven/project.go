@@ -242,7 +242,6 @@ func (p *Project) MergeParent(parent Project) {
 	p.Build.merge(parent.Build)
 	p.Dependencies = append(p.Dependencies, parent.Dependencies...)
 	p.Repositories = append(p.Repositories, parent.Repositories...)
-	p.Profiles = append(p.Profiles, parent.Profiles...)
 }
 
 // Interpolate resolves placeholders in Project if there exists.
