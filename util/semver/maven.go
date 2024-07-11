@@ -17,6 +17,7 @@ package semver
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
 // Maven-specific support - roughly equivalent to v3.6.0 / v3.8.6
@@ -111,6 +112,53 @@ func init() {
 	}
 }
 
+// mavenCategory determines the category of the first rune in the string, like
+// versionCategory but specifically for Maven. Maven allows any character
+// anywhere in the version, but treats numbers specially and uses "." or "-" as
+// separators. Also returns the width of the rune that was checked.
+func mavenCategory(s string) (cat, width int) {
+	if len(s) == 0 {
+		return versionEOF, 0
+	}
+	c, w := utf8.DecodeRuneInString(s)
+	switch {
+	case c == '∞':
+		return versionNumeric, w
+	case '0' <= c && c <= '9':
+		return versionNumeric, w
+	case c == '.', c == '-':
+		return versionSeparator, w
+	}
+	return versionQualifier, w
+}
+
+// nextMavenElem collects the next element of the version string s. An element
+// is an optional separator, followed by a run of characters until either the
+// category changes (as defined by mavenCategory) or we reach a separator.
+// Returns the prefix of the input corresponding the next element and the
+// remainder of the input string.
+func nextMavenElem(s string) (string, string) {
+	if len(s) <= 1 {
+		return s, ""
+	}
+	var (
+		i       = 0
+		prev, _ = mavenCategory(s)
+	)
+	if prev == versionSeparator {
+		i++
+		prev, _ = mavenCategory(s[1:])
+	}
+	for i < len(s) {
+		cat, w := mavenCategory(s[i:])
+		if cat != prev || cat == versionSeparator {
+			return s[:i], s[i:]
+		}
+		i += w
+	}
+	return s, ""
+}
+
 // init parses a Maven version string into a slice of elements and stores them in the extension.
 func (m *mavenExtension) init(input string) error {
 	elements := make([]mavenElement, 0, 5) // Pre-allocated to reduce allocations from growth.
@@ -118,12 +166,11 @@ func (m *mavenExtension) init(input string) error {
 	first := true
 	prevCat := versionUnknown
 	input = strings.ToLower(input)
-	for s, i := input, 0; s != ""; s = s[i:] {
+	for str, s := "", input; s != ""; {
 		var e mavenElement
-		i = nextVersionElemPos(s)
-		str := s[:i]
-		cat := versionCategory(str, 0)
-		if cat == versionUnknown || cat == versionStar {
+		str, s = nextMavenElem(s)
+		cat, _ := mavenCategory(str)
+		if cat == versionUnknown {
 			return fmt.Errorf("invalid version %#q", input)
 		}
 		if cat == versionSeparator {
@@ -132,7 +179,7 @@ func (m *mavenExtension) init(input string) error {
 			if str == "" {
 				str = "0"
 			}
-			cat = versionCategory(str, 0)
+			cat, _ = mavenCategory(str)
 		} else if !first {
 			e.sep = '-'
 			if cat == versionNumeric {
@@ -172,7 +219,7 @@ func (m *mavenExtension) init(input string) error {
 	}
 	// Final step: Integers for numbers.
 	for i, e := range elements {
-		if versionCategory(e.str, 0) == versionNumeric {
+		if cat, _ := mavenCategory(e.str); cat == versionNumeric {
 			if e.str == "∞" {
 				elements[i].int = int64(infinity)
 			} else {
@@ -225,14 +272,14 @@ func (m *mavenExtension) compare(e extension) int {
 			ac = versionEOF
 		} else {
 			a = as[i]
-			ac = versionCategory(a.str, 0)
+			ac, _ = mavenCategory(a.str)
 		}
 		if i >= len(bs) {
 			b = mavenPadElement(as[i].sep)
 			bc = versionEOF
 		} else {
 			b = bs[i]
-			bc = versionCategory(b.str, 0)
+			bc, _ = mavenCategory(b.str)
 		}
 		if a == b {
 			continue

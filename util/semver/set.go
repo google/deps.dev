@@ -263,9 +263,19 @@ func (s Set) matchVersion(v *Version, includePrerelease bool) bool {
 		pre := includePrerelease
 		// PyPI has special checks.
 		if v.sys == PyPI && span.rank == vector {
-			// Prereleases only match if the span is a prerelease.
-			if !pre && v.IsPrerelease() {
-				if !span.min.IsPrerelease() && !span.max.IsPrerelease() {
+			// Prerelease and dev versions only match if the span is a prerelease or
+			// dev (it doesn't seem to matter which is which).
+			if !pre && (v.IsPrerelease() || v.isPyPIDev()) {
+				anyPre := span.min.IsPrerelease() || span.max.IsPrerelease()
+				anyDev := span.min.isPyPIDev() || span.max.isPyPIDev()
+				if !(anyPre || anyDev) {
+					continue
+				}
+				// Empirically we've also observed that
+				// prerelease/dev matching is not enabled when
+				// the lower bound is open, regardless of
+				// whether the span is prerelease or dev.
+				if span.minOpen {
 					continue
 				}
 				pre = true
@@ -274,20 +284,15 @@ func (s Set) matchVersion(v *Version, includePrerelease bool) bool {
 			// on to be able to match generously for security
 			// advisories.
 
-			// Dev versions behave similarly to prereleases: they
-			// only match if the span has an explicit dev version.
-			if v.isPyPIDev() {
-				if !span.min.isPyPIDev() && !span.max.isPyPIDev() {
+			// Postreleases are treated as normal versions, unless
+			// the lower bound is open, not a postrelease and the
+			// numbers exactly match.
+			if v.isPyPIPost() && !span.min.isPyPIPost() && span.minOpen {
+				if numsEqual(v, span.min) {
 					continue
 				}
 			}
-			// Postreleases and locals are even stricter: they require the property.
-			if v.isPyPIPost() {
-				if !span.min.isPyPIPost() && !span.max.isPyPIPost() {
-					continue
-				}
-			}
-			// Locals never match spans.
+			// TODO: match locals properly
 			if v.isPyPILocal() {
 				continue
 			}
@@ -308,6 +313,21 @@ func (s Set) matchVersion(v *Version, includePrerelease bool) bool {
 		}
 	}
 	return false
+}
+
+// numsEqual reports whether just the numeric components of the two versions are
+// identical, with zero-padding if required.
+func numsEqual(a, b *Version) bool {
+	n := len(a.num)
+	if nb := len(b.num); nb > n {
+		n = nb
+	}
+	for i := 0; i < n; i++ {
+		if s := sgnv(a.getNum(i), b.getNum(i)); s != 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // MatchVersion reports whether the version is contained in the set.

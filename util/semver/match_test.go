@@ -107,7 +107,9 @@ var matchTests = []matchTest{
 	{A ^ (P | R), ">=2.0.0-rc.1", u(m("2.0.0-rc.1 2.0.0-rc.2"), all2, all3, all4)},
 	{P | R, ">=2.0.0-rc.1", u(m("2.0.0-rc.1 2.0.0-rc.2"), all2, all3, allPre4)},
 	{A ^ (P | R), ">2.0.0-rc.1", u(m("2.0.0-rc.2"), all2, all3, all4)},
-	{P | R, ">2.0.0-rc.1", u(m("2.0.0-rc.2"), all2, all3, allPre4)},
+	// Python turns off prereleases when the lower bound is >.
+	{P, ">2.0.0-rc.1", u(all2, all3, all4)},
+	{R, ">2.0.0-rc.1", u(m("2.0.0-rc.2"), all2, all3, allPre4)},
 
 	// Caret.
 	{D | C | N, "^1.0.0", m("1.0.0 1.0.1 1.0.2 1.1.0 1.1.1 1.2.0 1.2.1")},
@@ -169,7 +171,8 @@ var matchTests = []matchTest{
 
 	// Partial match with prerelease.
 	{D | N | P, ">=2.0.0-rc <2.0.0", m("2.0.0-rc 2.0.0-rc.1 2.0.0-rc.2")},
-	{D | N | P, ">2.0.0-rc <2.0.0", m("2.0.0-rc.1 2.0.0-rc.2")},
+	{D | N, ">2.0.0-rc <2.0.0", m("2.0.0-rc.1 2.0.0-rc.2")},
+	{P, ">2.0.0-rc <2.0.0", m("")}, // Open lower bound disables prereleases for Python.
 
 	// Fixed bugs.
 	// Union did not check maxOpen for both pieces when maxes lined up.

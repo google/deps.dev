@@ -288,6 +288,9 @@ func (sys System) parse(str string, allowInfinity bool) (*Version, error) {
 // filter out most invalid versions.
 func (sys System) possibleVersionString(str string) bool {
 	switch sys {
+	// Any string can be a Maven version.
+	case Maven:
+		return true
 	// For NPM, PyPI, Go and Composer, peel off leading v's. For NPM, there can be many.
 	case NPM:
 		str = strings.TrimLeft(str, "v")
@@ -706,7 +709,16 @@ func isNumeric(sys System, s string) (int64, bool) {
 			return 0, false
 		}
 	}
-	n, err := strconv.ParseInt(s, 10, 64)
+	var (
+		n   int64
+		err error
+	)
+	if sys == NuGet {
+		// NuGet uses int32 for prerelease components.
+		n, err = strconv.ParseInt(s, 10, 32)
+	} else {
+		n, err = strconv.ParseInt(s, 10, 64)
+	}
 	if err != nil {
 		return 0, false
 	}
@@ -832,7 +844,7 @@ func compareElem(sys System, s1, s2 string) int {
 		return 1
 	}
 	if sys == NuGet {
-		// Case insensitive
+		// Case insensitive.
 		return compareNugetPrerelease(s1, s2)
 	}
 

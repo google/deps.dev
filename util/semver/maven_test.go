@@ -57,11 +57,23 @@ var mavenCanonTests = []canonTest{
 
 	// Other odd examples.
 	{"1....0-3", "1-3", ""},
+	{"1.*-a", "1.*-a", ""},
+	{"0.*_*.0", "0.*_*", ""},
 
 	// Underscore is a "character" in Maven.
 	{"1.2_3", "1.2-_-3", ""},
 	{"1.2.abc_3", "1.2.abc_-3", ""},
 	{"1.2.abc_def", "1.2.abc_def", ""},
+
+	// Strings and numbers can be interleaved.
+	{"RELEASE120", "release-120", ""},
+	{"1.1.3-alpha.3.0+2022-05-16T16-21-58-758705Z", "1.1.3-alpha.3-+-2022-05-16-t-16-21-58-758705-z", ""},
+	// But the special string abbreviations still apply when followed by a
+	// number (with no separator).
+	{"a", "a", ""},
+	{"a0", "alpha", ""},
+	{"a1", "alpha-1", ""},
+	{"a-1", "a-1", ""},
 }
 
 func TestMavenCanon(t *testing.T) {
@@ -69,7 +81,6 @@ func TestMavenCanon(t *testing.T) {
 }
 
 var mavenConstraintErrorTests = []constraintErrorTest{
-	{"1.*", "invalid version `1.*`"},
 	{"[", "expected comma or closing bracket in `[`"},
 	{"()", "hard requirement must be closed on both ends in `()`"},
 	{")", "unexpected rbracket in `)`"},
@@ -153,6 +164,14 @@ var mavenCompareTests = []compareTest{
 	{"2.14.jre7", "2.14", 1},
 	{"2.14.jre7", "2.14.0", 1},
 	{"2.14.jre7", "2.14.1", -1},
+
+	// ... no matter where they are in the version.
+	{"RELEASE90", "RELEASE120", -1},
+	// The separator (or presence of a separator) matters.
+	{"a1", "alpha-1", 0},
+	{"a-1", "alpha-1", 1},
+	{"a.1", "alpha-1", 1},
+	{"aaaaaa", "alpha", 1},
 }
 
 func TestMavenCompare(t *testing.T) {

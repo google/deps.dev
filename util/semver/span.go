@@ -189,11 +189,10 @@ func (s span) contains(v *Version, includePrerelease bool) bool {
 	min := s.min
 	max := s.max
 
-	n := v.atLeast3()
-	if leftOf(v, min, s.minOpen, n > min.atLeast3(), false) {
+	if c := v.Compare(min); c == 0 && s.minOpen || c < 0 {
 		return false
 	}
-	if leftOf(max, v, s.maxOpen, false, n > max.atLeast3()) {
+	if c := max.Compare(v); c == 0 && s.maxOpen || c < 0 {
 		return false
 	}
 
@@ -215,35 +214,6 @@ func (s span) contains(v *Version, includePrerelease bool) bool {
 		return false // There may be more at this min to check, such as 1.2.0-p1 || 1.2.0-p2.
 	}
 	return true
-}
-
-// leftOf reports whether v1 is left of v2. The booleans reflect whether
-// to truncate the corresponding version's numbers list; see the comment inside.
-func leftOf(v1, v2 *Version, open, trunc1, trunc2 bool) bool {
-	// We almost always have exactly 3 numbers at this point. However,
-	// RubyGems allows many numbers, which means we must handle cases where
-	// the number of numbers disagree. That is, the constraint "1.2.3" must
-	// include "1.2.3.4.5". The easiest way to do this is to truncate (a copy
-	// of) the version to the same length as the constraint.
-	// TODO: Very ugly, but cheap and uncommon.
-	if trunc1 {
-		nv := *v1
-		nv.num = nv.num[:v2.atLeast3()]
-		if nv.lessThan(v2) || open && nv.equal(v2) {
-			return true
-		}
-	} else if trunc2 {
-		nv := *v2
-		nv.num = nv.num[:v1.atLeast3()]
-		if v1.lessThan(&nv) || open && v1.equal(&nv) {
-			return true
-		}
-	} else {
-		if v1.lessThan(v2) || open && v1.equal(v2) {
-			return true
-		}
-	}
-	return false
 }
 
 func equalValues(a, b []value) bool {

@@ -168,6 +168,28 @@ func TestNuGetSets(t *testing.T) {
 }
 
 var nugetCompareTests = []compareTest{
+	// Taken from the SemVer 2.0 sorting tab in
+	// https://learn.microsoft.com/en-us/nuget/concepts/package-versioning.
+	// The actual tests for this are not that comprehensive but do
+	// implement this spec.
+	{"1.0.1-aaa", "1.0.1-alpha10", -1},
+	{"1.0.1-alpha10", "1.0.1-alpha2", -1},
+	{"1.0.1-alpha2", "1.0.1-beta", -1},
+	{"1.0.1-beta", "1.0.1-open", -1},
+	{"1.0.1-open", "1.0.1-rc.2", -1},
+	{"1.0.1-rc.2", "1.0.1-rc.10", -1},
+	{"1.0.1-rc.10", "1.0.1-zzz", -1},
+	{"1.0.1-zzz", "1.0.1", -1},
+
+	// Numeric labels comes before string labels.
+	// https://github.com/NuGetArchive/NuGet.Versioning/blob/0f25e04c3a33d2dff11cbb97e1c0827cf5bf6da6/src/NuGet.Versioning/VersionComparer.cs#L259.
+	// See  for examples of packages that exhibit this property.
+	{"1.0.1-zzz", "1.0.1", -1},
+	{"1.0.1-111", "1.0.1-aaa", -1},
+	// Numbers that can't be parsed into an int32 should be treated as
+	// strings.
+	{"4.2.0-nightly.2024-02-01-0102", "4.2.0-nightly.202401090430", -1},
+
 	// Ordering of "pre-release versions".
 	// Example from the semver.org Version 2.0.0 spec.
 	{"1.0.0-alpha", "1.0.0-alpha.1", -1},
@@ -232,8 +254,9 @@ var nuGetMatchTests = []matchTest{
 
 	// Single versions match only themselves.
 	{U, "[1.2.3.4]", m("1.2.3.4")},
-	{U, "[1.2.3]", m("1.2.3")},   // Does not match 1.2.3.4.
-	{U, "[1.2]", m("1.2 1.2.0")}, // Does not match 1.2.3, etc. but does match 1.2.0.
+	{U, "[1.2.3]", m("1.2.3")},               // Does not match 1.2.3.4.
+	{U, "[1.2,1.2.3]", m("1.2 1.2.0 1.2.3")}, // Does not match 1.2.3.4.
+	{U, "[1.2]", m("1.2 1.2.0")},             // Does not match 1.2.3, etc. but does match 1.2.0.
 	{U, "[1]", m("1")},
 }
 

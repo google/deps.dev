@@ -124,7 +124,7 @@ func TestPyPISets(t *testing.T) {
 		// Simple confidence checks of basic operators.
 		{"", "{[0.0.0:∞.∞.∞]}"}, // Empty constraint matches anything.
 		{"==1.2.3.4.5", "{1.2.3.4.5}"},
-		{">1.2.3.4.5", "{[1.2.3.4.6:∞.∞.∞.∞.∞]}"},
+		{">1.2.3.4.5", "{(1.2.3.4.5:∞.∞.∞.∞.∞]}"},
 		{">=1.2.3.4.5", "{[1.2.3.4.5:∞.∞.∞.∞.∞]}"},
 		{"<1.2.3.4.5", "{[0.0.0.dev0:1.2.3.4.5)}"},
 		{"<=1.2.3.4.5", "{[0.0.0.dev0:1.2.3.4.5]}"},
@@ -177,6 +177,9 @@ var pypiCompareTests = []compareTest{
 	{"6.0.0+build2", "6.0.0+build1", 1},
 	{"6.0.0", "6.0.0+build1", -1},
 	{"6.0.0+build2", "6.0.0-a", 1},
+	// . separated local sections are compared individually.
+	{"6.0.0+build1", "6.0.0+build.1", 1},
+	{"6.0.0+build.1", "6.0.0+build.2", -1},
 
 	// Shortened versions imply zeros.
 	{"1", "1.0", 0},
@@ -213,6 +216,7 @@ func TestPyPICompareSequential(t *testing.T) {
 		"1.0+5",
 		"1.0.post456.dev34",
 		"1.0.post456",
+		"1.0.post567",
 		"1.1.dev1",
 	}
 	testCompareSequential(t, PyPI, tests)
@@ -221,20 +225,28 @@ func TestPyPICompareSequential(t *testing.T) {
 // Test among other things that matching works with more than 3 numbers.
 var pypiMatchTests = []matchTest{
 	{P, "==1.2.3.4", m("1.2.3.4")},
-	{P, ">=2.3.3", m("2.3.4 2.3.4.5")},
+	{P, ">=2.3.3", m("2.3.4 2.3.4.post2 2.3.4.5")},
 	{P, "==2.3.4", m("2.3.4")},
 	{P, "==2.3.4-rc.1", m("2.3.4-rc.1")},
-	{P, "==2.3.4+post2", m("2.3.4+post2")},   // Must name post explicitly.
-	{P, "==2.3.4+local3", m("2.3.4+local3")}, // Must name local explicitly.
-	{P, "==2.3.4.dev1", m("2.3.4.dev1")},     // Only way to match the .dev is to be explicit.
-	{P, ">=2.3.4", m("2.3.4 2.3.4.5")},
+	{P, "==2.3.4.post2", m("2.3.4.post2")},
+	{P, "==2.3.4+local3", m("2.3.4+local3")},
+	{P, "==2.3.4.dev1", m("2.3.4.dev1")}, // Only way to match the .dev is to be explicit.
+	{P, ">2.3.4.post1", m("2.3.4.post2 2.3.4.5")},
+	{P, ">2.3.4.post2", m("2.3.4.5")},
+	{P, ">2.3.4.dev1", m("2.3.4 2.3.4.5")}, // Does not include post or pre for some reason.
+	{P, ">2.3.4-rc.1", m("2.3.4 2.3.4.5")}, // Does not include post.
+	{P, ">=2.3.4-rc.1", m("2.3.4 2.3.4-rc.1 2.3.4.post2 2.3.4.5")},
+	{P, ">2.3.3.dev1", m("2.3.4 2.3.4.post2 2.3.4.5")},                        // Still omits pre
+	{P, ">=2.3.4.dev1", m("2.3.4 2.3.4.dev1 2.3.4-rc.1 2.3.4.post2 2.3.4.5")}, // Includes pre
+	{P, ">=2.3.4", m("2.3.4 2.3.4.post2 2.3.4.5")},
 	{P, "==1.2.3", m("1.2.3")},
 	{P, "==1.2", m("1.2 1.2.0")},
 	{P, "==1.*", m("1 1.2 1.2.0 1.2.3 1.2.3.4")},
-	{P, "", m("1 1.2 1.2.0 1.2.3 1.2.3.4 2.3.4 2.3.4.5")},
-	{P, "!=1.2.3", m("1 1.2 1.2.0 1.2.3.4 2.3.4 2.3.4.5")},
-	{P, "!=1.2.*", m("1 2.3.4 2.3.4.5")},
-	{P, "!=1.*", m("2.3.4 2.3.4.5")},
+	{P, "==2.3.*", m("2.3.4 2.3.4.post2 2.3.4.5")},
+	{P, "", m("1 1.2 1.2.0 1.2.3 1.2.3.4 2.3.4 2.3.4.post2 2.3.4.5")},
+	{P, "!=1.2.3", m("1 1.2 1.2.0 1.2.3.4 2.3.4 2.3.4.post2 2.3.4.5")},
+	{P, "!=1.2.*", m("1 2.3.4 2.3.4.post2 2.3.4.5")},
+	{P, "!=1.*", m("2.3.4 2.3.4.post2 2.3.4.5")},
 }
 
 func TestPyPIMatch(t *testing.T) {
@@ -250,6 +262,28 @@ var pypiTestVersions = strings.Fields(`
 2.3.4
 2.3.4.dev1
 2.3.4-rc.1
-2.3.4+post2
+2.3.4.post2
 2.3.4+local3
 2.3.4.5`)
+
+func TestPyPIPostReleaseMatch(t *testing.T) {
+	testMatch(t, false, []matchTest{
+		{P, ">1", m("1.1 1.1.post1")},
+		{P, ">1.0", m("1.1 1.1.post1")},
+		{P, ">1.0.0", m("1.1 1.1.post1")},
+		{P, ">1.0.post1", m("1.0.post2 1.1 1.1.post1")},
+		{P, ">1.0,<=1.1", m("1.1")},
+		{P, "<=1.1", m("1.0 1.0.post1 1.0.post2 1.1")},
+		{P, "<1.1", m("1.0 1.0.post1 1.0.post2")},
+		{P, ">1.0.post1,<1.1", m("1.0.post2")},
+		{P, "==1.*", m("1.0 1.0.post1 1.0.post2 1.1 1.1.post1")},
+		{P, "==1.0.post1", m("1.0.post1")},
+		{P, "~=1.1", m("1.1 1.1.post1")},
+	}, []string{
+		"1.0",
+		"1.0.post1",
+		"1.0.post2",
+		"1.1",
+		"1.1.post1",
+	})
+}

@@ -90,7 +90,7 @@ func (sys System) ParseConstraint(str string) (retC *Constraint, retErr error) {
 	return parser.constraint()
 }
 
-// ParseSetConstraint returns the result of parsing the set representated by str
+// ParseSetConstraint returns the result of parsing the set represented by str
 // in the packaging system. The syntax is system-independent. Trimmed of leading
 // and trailing spaces, the syntax is a list of comma-separated spans inside a
 // braces:

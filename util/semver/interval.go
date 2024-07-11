@@ -147,7 +147,7 @@ func opVersionToSpan(typ tokType, op string, lo *Version) (span, error) {
 		if lo.all(wildcard) {
 			return span{rank: empty}, nil
 		}
-		if len(lo.pre) > 0 || lo.sys == RubyGems {
+		if len(lo.pre) > 0 || lo.sys == RubyGems || lo.sys == PyPI {
 			// >1.2 matches 1.2.3 in RubyGems but not in NPM (for example).
 			minOpen = open
 		} else {
