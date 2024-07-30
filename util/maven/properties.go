@@ -16,6 +16,7 @@ package maven
 
 import (
 	"encoding/xml"
+	"strings"
 )
 
 // Properties hold property pairs defined in a pom.xml.
@@ -54,7 +55,7 @@ func (p *Properties) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error 
 			}
 			p.Properties = append(p.Properties, Property{
 				Name:  t1.Name.Local,
-				Value: s,
+				Value: strings.TrimSpace(s),
 			})
 		case xml.EndElement:
 			return nil

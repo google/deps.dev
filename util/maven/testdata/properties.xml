@@ -19,5 +19,8 @@
         <name>value</name>
         <foo.version>1.2.3</foo.version>
         <bar.version>${foo.version}</bar.version>
+        <with.space>
+            text
+        </with.space>
     </properties>
 </project>

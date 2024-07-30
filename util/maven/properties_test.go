@@ -33,6 +33,7 @@ func TestProperties(t *testing.T) {
 			{Name: "name", Value: "value"},
 			{Name: "foo.version", Value: "1.2.3"},
 			{Name: "bar.version", Value: "${foo.version}"},
+			{Name: "with.space", Value: "text"},
 		},
 	}
 	var project struct {
