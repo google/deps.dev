@@ -17,13 +17,38 @@ package maven
 // Metadata contains repository information of a package.
 // https://maven.apache.org/ref/3.9.3/maven-repository-metadata/repository-metadata.html
 type Metadata struct {
-	GroupID    String     `xml:"groupId"`
-	ArtifactID String     `xml:"artifactId"`
-	Versioning Versioning `xml:"versioning"`
+	ModelVersion String           `xml:"modelVersion"`
+	GroupID      String           `xml:"groupId"`
+	ArtifactID   String           `xml:"artifactId"`
+	Versioning   Versioning       `xml:"versioning"`
+	Version      String           `xml:"version"`
+	Plugins      []MetadataPlugin `xml:"plugins>plugin"`
 }
 
 type Versioning struct {
-	Latest   String   `xml:"latest"`
-	Release  String   `xml:"release"`
-	Versions []String `xml:"versions>version"`
+	Latest           String            `xml:"latest"`
+	Release          String            `xml:"release"`
+	Versions         []String          `xml:"versions>version"`
+	LastUpdated      String            `xml:"lastUpdated"`
+	Snapshot         Snapshot          `xml:"snapshot"`
+	SnapshotVersions []SnapshotVersion `xml:"snapshotVersions>snapshotVersion"`
+}
+
+type Snapshot struct {
+	Timestamp   String `xml:"timestamp"`
+	BuildNumber int    `xml:"buildNumber"`
+	LocalCopy   bool   `xml:"localCopy"`
+}
+
+type SnapshotVersion struct {
+	Classifier String `xml:"classifier"`
+	Extension  String `xml:"extension"`
+	Value      String `xml:"value"`
+	Updated    String `xml:"updated"`
+}
+
+type MetadataPlugin struct {
+	Name       String `xml:"name"`
+	Prefix     String `xml:"prefix"`
+	ArtifactID String `xml:"artifactId"`
 }

@@ -25,5 +25,27 @@
             <version>2.0.0</version>
             <version>3.0.0</version>
         </versions>
+        <lastUpdated>20240101000000</lastUpdated>
+        <snapshot>
+            <timestamp>20240101.000000</timestamp>
+            <buildNumber>1</buildNumber>
+            <localCopy>true</localCopy>
+        </snapshot>
+        <snapshotVersions>
+            <snapshotVersion>
+                <classifier>sources</classifier>
+                <extension>jar</extension>
+                <value>4.0.0-SNAPSHOT</value>
+                <updated>20240101000000</updated>
+            </snapshotVersion>
+        </snapshotVersions>
     </versioning>
+    <version>4.0.0-SNAPSHOT</version>
+    <plugins>
+        <plugin>
+            <name>plugin</name>
+            <prefix>plugin</prefix>
+            <artifactId>plugin</artifactId>
+        </plugin>
+    </plugins>
 </metadata>
