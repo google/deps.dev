@@ -97,12 +97,13 @@ service Insights {
   }
 
   // Query returns information about multiple package versions, which can be
-  // specified by name, content hash, or both.
+  // specified by name, content hash, or both. If a hash was specified in the
+  // request, it returns the artifacts that matched the hash.
   //
   // Querying by content hash is currently supported for npm, Cargo, Maven, and
   // NuGet. It is typical for hash queries to return many results; hashes are
   // matched against multiple release artifacts (such as JAR files) that
-  // comprise package versions, and any given artifact may appear in many
+  // comprise package versions, and any given artifact may appear in several
   // package versions.
   rpc Query(QueryRequest) returns (QueryResult) {
     option (google.api.http) = {
@@ -272,8 +273,8 @@ message Version {
   // information, this field is empty. When more than one license is listed,
   // their relationship is unspecified.
   //
-  // For Cargo, Maven, npm, and PyPI, license information is read from the
-  // package metadata. For Go, license information is determined using the
+  // For Cargo, Maven, npm, NuGet, and PyPI, license information is read from
+  // the package metadata. For Go, license information is determined using the
   // [licensecheck](https://github.com/google/licensecheck) package.
   //
   // License information is not intended to be legal advice, and you should
@@ -281,8 +282,11 @@ message Version {
   // needs.
   repeated string licenses = 3;
 
-  // Security advisories known to affect this package version.
-  // Further information can be requested using the Advisory method.
+  // Security advisories known to affect this package version directly. Further
+  // information can be requested using the Advisory method.
+  //
+  // Note that this field does not include advisories that affect dependencies
+  // of this package version.
   repeated AdvisoryKey advisory_keys = 4;
 
   // Links declared by or derived from package version metadata, to external

@@ -426,8 +426,11 @@ message Version {
   // needs.
   repeated License license_details = 13;
 
-  // Security advisories known to affect this package version.
-  // Further information can be requested using the Advisory method.
+  // Security advisories known to affect this package version directly. Further
+  // information can be requested using the Advisory method.
+  //
+  // Note that this field does not include advisories that affect dependencies
+  // of this package version.
   repeated AdvisoryKey advisory_keys = 4;
 
   // Links declared by or derived from package version metadata, to external
