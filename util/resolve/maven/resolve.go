@@ -32,6 +32,7 @@ import (
 	"deps.dev/util/resolve"
 	"deps.dev/util/resolve/dep"
 	versionpkg "deps.dev/util/resolve/version"
+	"deps.dev/util/semver"
 )
 
 const (
@@ -252,11 +253,8 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 				requirements[c.packageKey] = append(reqs, d.VersionKey)
 			}
 
-			matches, err := r.matchAll(ctx, requirements[c.packageKey])
-			if err != nil {
-				return nil, false, err
-			}
-			if len(matches) == 0 {
+			match, err := r.findMatch(ctx, requirements[c.packageKey])
+			if errors.Is(err, errNoMatch) {
 				reqs := make([]string, len(requirements[c.packageKey]))
 				for i, req := range requirements[c.packageKey] {
 					reqs[i] = req.Version
@@ -264,22 +262,16 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 				slices.Sort(reqs)
 				g.AddError(concreteVersions[cur.versionKey], d.VersionKey, fmt.Sprintf("could not find a version that satisfies requirements %s for package %s", reqs, d.Name))
 				continue
+			} else if err != nil {
+				return nil, false, err
 			}
 
 			// Look if this is already resolved.
-			matched := false
-			for _, m := range matches {
-				c.VersionKey = m.VersionKey
-				if _, ok := concreteVersions[c]; !ok {
-					continue
-				}
+			c.VersionKey = match.VersionKey
+			if _, ok := concreteVersions[c]; ok {
 				if err := g.AddEdge(concreteVersions[cur.versionKey], concreteVersions[c], d.Version, d.Type); err != nil {
 					return nil, false, err
 				}
-				matched = true
-				break
-			}
-			if matched {
 				continue
 			}
 			if ok := resolvedPackages[c.packageKey]; ok {
@@ -294,16 +286,12 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 				return nil, false, errIncompatible
 			}
 
-			// Remember the versions that we can't access.
-			reachables := matches[:0]
-			cloned := false
-			for _, m := range matches {
-				if hasMulti && !multi {
-					// No need to check more, we already know that multiple
-					// registries are required.
-					break
-				}
-				registries, _ := parseRegistries(m.AttrSet)
+			// Check if this is a version that we can't access.
+			reachable := false
+			if !hasMulti || multi {
+				// Only need to check if we don't already know if multiple
+				// registries are required.
+				registries, _ := parseRegistries(match.AttrSet)
 				// TODO: revisit the logic here once we support injecting
 				// the registry configuration.
 				// Attributes having no registries means the package only
@@ -333,24 +321,15 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 						break
 					}
 				}
-				if multi {
-					if keep {
-						reachables = append(reachables, m)
-					} else if !cloned {
-						// Clone to avoid altering matches.
-						reachables = append([]resolve.Version(nil), reachables...)
-						cloned = true
-					}
+				if multi && keep {
+					reachable = true
 				}
 				if !keep {
 					hasMulti = true
 				}
 			}
 
-			if multi {
-				matches = reachables
-			}
-			if len(matches) == 0 {
+			if multi && !reachable {
 				// TODO: in the case of provided, we should use a similar
 				// mechanism to npm bundles with derived packages.
 				// In the meantime, just skip the error as this is most
@@ -361,24 +340,6 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 				vk := d.VersionKey
 				g.AddError(concreteVersions[cur.versionKey], vk, fmt.Sprintf("could not find a version that satisfies requirement %s for package %s", vk.Version, vk.Name))
 				continue
-			}
-
-			match := matches[len(matches)-1]
-			// Prefer a direct match if it exists: this honors the preference
-			// of soft requirements.
-			rqt := d.VersionKey
-			// Because the version strings are the same, just
-			// check whether the corresponding concrete version
-			// exists.
-			rqt.VersionType = resolve.Concrete
-			// Double check the version actually exists, and
-			// hasn't been deleted by ensuring it is one of
-			// the matching versions.
-			for _, mv := range matches {
-				if rqt == mv.VersionKey {
-					match = mv
-					break
-				}
 			}
 
 			if id, ok := nodes[match.VersionKey]; ok {
@@ -435,28 +396,103 @@ const (
 	providedImports
 )
 
-// matchAll returns the versions matching all the given requirements.
-func (r *resolver) matchAll(ctx context.Context, requirements []resolve.VersionKey) ([]resolve.Version, error) {
-	var matches []resolve.Version
-	for n, req := range requirements {
-		matchVersions, err := r.client.MatchingVersions(ctx, req)
-		if err != nil {
-			return nil, err
+var errNoMatch = errors.New("no version satisfies all requirements")
+
+// findMatch returns the preferred matching versions for the given requirements.
+// Requirements should be given in the order encountered during resolution.
+// Returns errNoMatch if no versions satisfy the constraints.
+//
+// Maven seems to choose the a version based on the order it's encountered,
+// skipping versions that don't satisfy all of the hard requirements.
+// e.g. {requirements in order} -> selected version:
+// {1.0, 2.0} -> 1.0
+// {1.0, [2.0,3.0]} -> 3.0
+// {1.0, 2.0, [2.0,3.0]} -> 2.0
+func (r *resolver) findMatch(ctx context.Context, requirements []resolve.VersionKey) (resolve.Version, error) {
+	// This sanity check is probably not necessary.
+	if len(requirements) == 0 {
+		return resolve.Version{}, errors.New("no requirements provided")
+	}
+	pk := requirements[0].PackageKey
+	for _, req := range requirements[1:] {
+		if req.PackageKey != pk {
+			return resolve.Version{}, fmt.Errorf("requirement package key mismatch: %s != %s", req.PackageKey, pk)
 		}
-		if n == 0 {
-			matches = slices.Clone(matchVersions)
+	}
+
+	var (
+		softVersions    []resolve.VersionKey // The soft versions, in order.
+		hardConstraints []*semver.Constraint // All hard requirement constraints.
+		hardIdx         = -1                 // The index of the first hard requirement encountered.
+		versions        []resolve.Version    // The cached result of client.Versions()
+	)
+	// We only want to call client.Versions() if we actually see a
+	// hard requirement. Maven only checks this file for hard requirements -
+	// soft requirements are downloaded directly.
+
+	// Iterate through to find hard constraints and preference order.
+	for i, req := range requirements {
+		constraint, err := semver.Maven.ParseConstraint(req.Version)
+		if err != nil {
+			return resolve.Version{}, fmt.Errorf("failed parsing version constraint '%s': %w", req, err)
+		}
+
+		if constraint.IsSimple() { // Soft requirement
+			req.VersionType = resolve.Concrete
+			softVersions = append(softVersions, req)
 			continue
 		}
-		matches = slices.DeleteFunc(matches, func(match resolve.Version) bool {
-			for _, v := range matchVersions {
-				if v.VersionKey == match.VersionKey {
-					return false
-				}
+
+		// Hard requirement
+		if hardIdx == -1 {
+			// First hard requirement we've encountered.
+			hardIdx = i
+			// Grab the list of available versions, in descending order.
+			versions, err = r.client.Versions(ctx, req.PackageKey)
+			if err != nil {
+				return resolve.Version{}, err
 			}
-			return true
-		})
+			resolve.SortVersions(versions)
+			slices.Reverse(versions)
+		}
+		// Maven errors if the hard requirement does not match at least one version
+		// in the metadata files. Imitate that behavior here.
+		if !slices.ContainsFunc(versions, func(v resolve.Version) bool { return constraint.Match(v.Version) }) {
+			return resolve.Version{}, fmt.Errorf("found no versions matching the constraint %s", req.Version)
+		}
+		hardConstraints = append(hardConstraints, constraint)
 	}
-	return matches, nil
+
+	// Find the first preferred version that satisfies all constraints.
+	matchesAll := func(ver string) bool {
+		return !slices.ContainsFunc(hardConstraints, func(c *semver.Constraint) bool { return !c.Match(ver) })
+	}
+	for i, vk := range softVersions {
+		if i == hardIdx {
+			// This is the point where a hard requirement would be preferred.
+			// Use a match in the listed versions.
+			if idx := slices.IndexFunc(versions, func(v resolve.Version) bool { return matchesAll(v.Version) }); idx != -1 {
+				return versions[idx], nil
+			}
+			// No match is not an error - there may be an unlisted soft requirement
+			// after this that satisfies the constraints.
+		}
+
+		if matchesAll(vk.Version) {
+			// The soft requirement satisfies hard constraints.
+			// Only now do we check if the soft requirement actually exists.
+			return r.client.Version(ctx, vk)
+		}
+	}
+
+	if len(softVersions) == hardIdx {
+		// Hard requirement was at end of list - find a match.
+		if idx := slices.IndexFunc(versions, func(v resolve.Version) bool { return matchesAll(v.Version) }); idx != -1 {
+			return versions[idx], nil
+		}
+	}
+
+	return resolve.Version{}, errNoMatch
 }
 
 func (r *resolver) imports(ctx context.Context, ver resolve.VersionKey, opt importsOpt) (deps []dependency, err error) {

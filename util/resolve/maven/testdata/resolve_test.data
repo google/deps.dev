@@ -313,6 +313,7 @@ group:bob
 	2.17.1
 	2.20.0
 	3.0.0-beta1
+	4.0.0
 group:chuck
 	1.0.0
 		group:bob@[2.17.1,2.20.0]

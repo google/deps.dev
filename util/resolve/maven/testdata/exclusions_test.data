@@ -17,7 +17,7 @@ alice:alice
 	1.0.0
 		bob:bob@1.0.0
 		MavenExclusions eve:eve,franck:*,*:george,*:lea,mick:*|chuck:chuck@1.0.0
-		MavenExclusions *:*|dave:dave@2.0.0
+		MavenExclusions *:*|dave:dave@1.0.0
 bob:bob
 	1.0.0
 		jacob:jacob@1.0.0
@@ -50,7 +50,7 @@ noa:noa
 	1.0.0
 		oren:oren@1.0.0
 		george:george@1.0.0
-		paul:paul@2.0.0
+		paul:paul@1.0.0
 paul:paul
 	1.0.0
 -- END

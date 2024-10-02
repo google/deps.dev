@@ -1,0 +1,89 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+-- Graph versionSelection1
+group:bob 1.0
+	selector|group:chuck@1.0 1.0
+	selector|group:dave@2.0 2.0
+-- END
+
+-- Graph versionSelection2
+group:alice 1.0
+	selector|group:bob@1.0 1.0
+		selector|group:chuck@1.0 1.0
+	selector|group:dave@1.0 2.0
+-- END
+
+-- Graph versionSelection3
+group:alice 2.0
+	selector|group:bob@2.0 2.0
+		selector|group:chuck@2.0 2.0
+	selector|group:dave@[1,) 2.0
+-- END
+
+-- Graph unlistedVersions1
+group:alice 1.0
+	selector|group:bob@1.0 1.0
+	selector|group:chuck@3.0 3.0
+-- END
+
+-- Graph unlistedVersions2
+group:alice 2.0
+	selector|group:bob@2.0 2.0
+	selector|group:chuck@2.0 2.0
+-- END
+
+-- Graph unlistedVersions3
+group:alice 3.0
+	selector|group:bob@3.0 3.0
+	selector|group:chuck@(0,) 2.0
+-- END
+
+-- Graph unlistedVersions4
+group:alice 4.0
+	selector|group:bob@2.0 2.0
+	selector|group:chuck@(0,) 2.0
+-- END
+
+-- Graph unlistedVersions5
+group:alice 5.0
+	selector|group:bob@3.0 3.0
+	selector|group:chuck@3.0 3.0
+-- END
+
+-- Graph unlistedVersions6
+group:alice 6.0
+	selector|group:bob@4.0 4.0
+	selector|group:chuck@3.0 2.0
+-- END
+
+-- Graph unlistedVersions7
+group:alice 7.0
+	selector|group:bob@5.0 5.0
+	selector|group:chuck@3.0 3.0
+-- END
+
+-- Graph unlistedVersions8
+group:alice 8.0
+	selector|group:bob@6.0 6.0
+		selector|group:dave@1.0 1.0
+	selector|group:chuck@(0,) 1.0
+-- END
+
+-- Graph unlistedVersions9
+group:alice 9.0
+	selector|group:bob@6.0 6.0
+		selector|group:dave@1.0 1.0
+	selector|group:chuck@(1,) 1.1
+-- END

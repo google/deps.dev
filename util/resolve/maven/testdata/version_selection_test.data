@@ -1,0 +1,173 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+Testing version selection rules observed from experimenting with Maven.
+When encountering multiple requirements for a package, select the earliest (BFS) encountered version that satisfies all hard requirements.
+e.g. {order encountered} -> selected version
+{1.0, [2.0,3.0]} -> 3.0
+{1.0, 2.0, [2.0,3.0]} -> 2.0
+{[1.0,), 1.0, (,2.0]} -> 2.0
+-- Universe versionSelection
+group:alice
+	1.0
+		group:bob@1.0
+		group:dave@1.0
+	2.0
+		group:bob@2.0
+		group:dave@[1,)
+group:bob
+	1.0
+		group:chuck@1.0
+		group:dave@2.0
+	2.0
+		group:chuck@2.0
+		group:dave@1.0
+group:chuck
+	1.0
+		group:dave@[2,3]
+	2.0
+		group:dave@(,2]
+group:dave
+	1.0
+	2.0
+	3.0
+-- END
+
+-- Test versionSelection1
+Resolve group:bob 1.0
+Universe versionSelection
+Graph versionSelection1
+-- END
+
+-- Test versionSelection2
+Resolve group:alice 1.0
+Universe versionSelection
+Graph versionSelection2
+-- END
+
+-- Test versionSelection3
+Resolve group:alice 2.0
+Universe versionSelection
+Graph versionSelection3
+-- END
+
+Unlisted versions (not in maven-metadata.xml) are not selected by hard requirements.
+However, they are considered to be within the range of a hard requirement.
+'Blocked' versions are removed from Versions() when running the tests to simulate being unlisted.
+-- Universe unlistedVersions
+group:alice
+	1.0
+		group:chuck@3.0
+		group:bob@1.0
+	2.0
+		group:chuck@2.0
+		group:bob@2.0
+	3.0
+		group:chuck@(0,)
+		group:bob@3.0
+	4.0
+		group:chuck@(0,)
+		group:bob@2.0
+	5.0
+		group:chuck@3.0
+		group:bob@3.0
+	6.0
+		group:chuck@3.0
+		group:bob@4.0
+	7.0
+		group:chuck@3.0
+		group:bob@5.0
+	8.0
+		group:chuck@(0,)
+		group:bob@6.0
+	9.0
+		group:chuck@(1,)
+		group:bob@6.0
+group:bob
+	1.0
+		group:chuck@2.0
+	2.0
+		group:chuck@3.0
+	3.0
+		group:chuck@(1,)
+	4.0
+		group:chuck@(,3)
+	5.0
+		group:chuck@9999999
+	6.0
+		group:chuck@1.1
+		group:dave@1.0
+group:chuck
+	1.0
+	Blocked|1.1
+	2.0
+	Blocked|3.0
+group:dave
+	1.0
+		group:chuck@(,2)
+-- END
+
+-- Test unlistedVersions1
+Resolve group:alice 1.0
+Universe unlistedVersions
+Graph unlistedVersions1
+-- END
+
+-- Test unlistedVersions2
+Resolve group:alice 2.0
+Universe unlistedVersions
+Graph unlistedVersions2
+-- END
+
+-- Test unlistedVersions3
+Resolve group:alice 3.0
+Universe unlistedVersions
+Graph unlistedVersions3
+-- END
+
+-- Test unlistedVersions4
+Resolve group:alice 4.0
+Universe unlistedVersions
+Graph unlistedVersions4
+-- END
+
+-- Test unlistedVersions5
+Resolve group:alice 5.0
+Universe unlistedVersions
+Graph unlistedVersions5
+-- END
+
+-- Test unlistedVersions6
+Resolve group:alice 6.0
+Universe unlistedVersions
+Graph unlistedVersions6
+-- END
+
+-- Test unlistedVersions7
+Resolve group:alice 7.0
+Universe unlistedVersions
+Graph unlistedVersions7
+-- END
+
+-- Test unlistedVersions8
+Resolve group:alice 8.0
+Universe unlistedVersions
+Graph unlistedVersions8
+-- END
+
+-- Test unlistedVersions9
+Resolve group:alice 9.0
+Universe unlistedVersions
+Graph unlistedVersions9
+-- END
