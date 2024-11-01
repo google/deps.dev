@@ -220,22 +220,22 @@ message GetPackageRequest {
 message Package {
   // The name of the package. Note that it may differ from the name in the
   // request, due to canonicalization.
-  PackageKey package_key = 1;
+  PackageKey packageKey = 1;
 
   message Version {
     // The name of the version. Note that the package name may differ from the
     // name in the request, due to canonicalization.
-    VersionKey version_key = 1;
+    VersionKey versionKey = 1;
 
     // The time when this package version was published, if available, as
     // reported by the package management authority.
-    google.protobuf.Timestamp published_at = 3;
+    google.protobuf.Timestamp publishedAt = 3;
 
     // If true, this is the default version of the package: the version that is
     // installed when no version is specified. The precise meaning of this is
     // system-specific, but it is commonly the version with the greatest
     // version number, ignoring pre-release versions.
-    bool is_default = 2;
+    bool isDefault = 2;
   }
 
   // The available versions of the package.
@@ -252,17 +252,17 @@ message Version {
   // The name of the package version. Note that the package and version name
   // may differ from names specified in requests, if applicable, due to
   // canonicalization.
-  VersionKey version_key = 1;
+  VersionKey versionKey = 1;
 
   // The time when this package version was published, if available, as
   // reported by the package management authority.
-  google.protobuf.Timestamp published_at = 6;
+  google.protobuf.Timestamp publishedAt = 6;
 
   // If true, this is the default version of the package: the version that is
   // installed when no version is specified. The precise meaning of this is
   // system-specific, but it is commonly the version with the greatest version
   // number, ignoring pre-release versions.
-  bool is_default = 2;
+  bool isDefault = 2;
 
   // The licenses governing the use of this package version.
   //
@@ -287,7 +287,7 @@ message Version {
   //
   // Note that this field does not include advisories that affect dependencies
   // of this package version.
-  repeated AdvisoryKey advisory_keys = 4;
+  repeated AdvisoryKey advisoryKeys = 4;
 
   // Links declared by or derived from package version metadata, to external
   // web resources such as a homepage or source code repository. Note that
@@ -295,7 +295,7 @@ message Version {
   repeated Link links = 5;
 
   // SLSA provenances for this version if they are available.
-  repeated SLSAProvenance slsa_provenances = 7;
+  repeated SLSAProvenance slsaProvenances = 7;
 
   // URLs for the package management registries this package version is
   // available from.
@@ -305,15 +305,15 @@ message Version {
 
   message Project {
     // The identifier for the project.
-    ProjectKey project_key = 1;
+    ProjectKey projectKey = 1;
     // How the mapping between project and package version was discovered.
-    ProjectRelationProvenance relation_provenance = 2;
+    ProjectRelationProvenance relationProvenance = 2;
     // What the relationship between the project and the package version is.
-    ProjectRelationType relation_type = 3;
+    ProjectRelationType relationType = 3;
   }
 
   // Projects that are related to this package version.
-  repeated Project related_projects = 10;
+  repeated Project relatedProjects = 10;
 }
 
 // GetRequirementsRequest identifies a version for which to return
@@ -751,13 +751,13 @@ message GetProjectPackageVersionsRequest {
 message ProjectPackageVersions {
   message Version {
     // The identifier for the version.
-    VersionKey version_key = 1;
+    VersionKey VersionKey = 1;
     // The SLSA provenance statements that link the version to the project.
-    repeated SLSAProvenance slsa_provenances = 2;
+    repeated SLSAProvenance slsaProvenances = 2;
     // What the relationship between the project and the package version is.
-    ProjectRelationType relation_type = 3;
+    ProjectRelationType relationType = 3;
     // How the mapping between project and package version was discovered.
-    ProjectRelationProvenance relation_provenance = 4;
+    ProjectRelationProvenance relationProvenance = 4;
   }
 
   // The versions that were built from the source code contained in this
