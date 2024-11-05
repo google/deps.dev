@@ -93,6 +93,15 @@ service Insights {
     };
   }
 
+  // GetCapabilityRequest returns counts for direct and indirect calls to
+  // Capslock capabilities for a given package version.
+  // Currently only available for Go.
+  rpc GetCapabilities(GetCapabilitiesRequest) returns (Capabilities) {
+    option (google.api.http) = {
+      get: "/v3alpha/systems/{version_key.system}/packages/{version_key.name}/versions/{version_key.version}:capabilities"
+    };
+  }
+
   // GetProject returns information about projects hosted by GitHub, GitLab, or
   // BitBucket, when known to us.
   rpc GetProject(GetProjectRequest) returns (Project) {
@@ -796,6 +805,29 @@ message Dependents {
 
   // The number of packages known to depend indirectly on this package version.
   uint32 indirect_dependent_count = 3;
+}
+
+// GetCapabilitiesRequest identifies a package version for which to return
+// capabilities.
+message GetCapabilitiesRequest {
+  VersionKey version_key = 1;
+}
+
+// Capabilities holds identified capabilities and callpaths for a package version.
+message Capabilities {
+  // Capabilities stores the capabilities identified for the package.
+  message Capability {
+    // A Capslock capability, indicating that the packages uses this capability.
+    string capability = 1;
+    // The number of calls from this package directly to this capability.
+    uint32 direct_count = 2;
+    // The number of calls from this package to the capability via another
+    // package.
+    uint32 indirect_count = 3;
+  }
+  // The Capslock capabilities associated with a package, along with the number
+  // of direct and indirect callpaths to this capability.
+  repeated Capability capabilities = 1;
 }
 
 // GetProjectRequest identifies a project for which to return information.
