@@ -67,6 +67,8 @@ Example applications written in Go can be found in the `examples` directory:
 Note that these are community built tools and unsupported by the core deps.dev maintainers.
 
 - [`edoardottt/depsdev`](https://github.com/edoardottt/depsdev) CLI client (and Golang module) for deps.dev API.
+- [`safedep/vet`](https://github.com/safedep/vet) CLI tool for policy driven vetting of open source dependencies
+  using deps.dev API as a data source.
 
 ## Data
 
