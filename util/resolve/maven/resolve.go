@@ -180,7 +180,7 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 		},
 	}
 
-	fetchRepos, depRepos := parseRegistries(ver.AttrSet)
+	defaultRegistry, fetchRepos, depRepos := parseRegistries(ver.AttrSet)
 	if len(depRepos) > 0 {
 		v.repositories = append([]string(nil), depRepos...)
 		v.repositories = append(v.repositories, fetchRepos...)
@@ -291,9 +291,7 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 			if !hasMulti || multi {
 				// Only need to check if we don't already know if multiple
 				// registries are required.
-				registries, _ := parseRegistries(match.AttrSet)
-				// TODO: revisit the logic here once we support injecting
-				// the registry configuration.
+				_, registries, _ := parseRegistries(match.AttrSet)
 				// Attributes having no registries means the package only
 				// available in the default registry.
 				keep := len(registries) == 0
@@ -303,13 +301,21 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 						keep = true
 						break
 					}
-					if u, err := url.Parse(reg); err == nil {
-						if u.Host == "repo.maven.apache.org" && strings.Trim(u.Path, "/") == "maven2" {
-							// This is on Maven Central, keep it
-							keep = true
-							break
+
+					if defaultRegistry == "" {
+						// If default registry is not set, assume it's Maven Central.
+						if u, err := url.Parse(reg); err == nil {
+							if u.Host == "repo.maven.apache.org" && strings.Trim(u.Path, "/") == "maven2" {
+								// This is on Maven Central, keep it
+								keep = true
+								break
+							}
 						}
+					} else if reg == defaultRegistry {
+						keep = true
+						break
 					}
+
 					for _, rep := range cur.repositories {
 						// It can be reached, keep it.
 						if reg == rep {
@@ -374,7 +380,7 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 				mergeExclusions(d.exclusions, cur.exclusions)
 				n.exclusions = d.exclusions
 			}
-			_, registries := parseRegistries(match.AttrSet)
+			_, _, registries := parseRegistries(match.AttrSet)
 			// Add the list of declared repositories in the version to the list
 			// of reachable repositories.
 			if len(registries) > 0 {
@@ -606,14 +612,16 @@ func (r *resolver) isExcluded(excl map[string]bool, v resolve.VersionKey) (bool,
 	return excl[fields[0]+":*"] || excl["*:"+fields[1]], nil
 }
 
-func parseRegistries(a versionpkg.AttrSet) (fetch []string, dep []string) {
+func parseRegistries(a versionpkg.AttrSet) (defaultRegistry string, fetch []string, dep []string) {
 	r, ok := a.GetAttr(versionpkg.Registries)
 	if !ok {
-		return nil, nil
+		return "", nil, nil
 	}
 	for _, rr := range strings.Split(r, "|") {
 		rr := strings.TrimSpace(rr)
-		if reg, ok := strings.CutPrefix(rr, "dep:"); ok {
+		if reg, ok := strings.CutPrefix(rr, "default:"); ok {
+			defaultRegistry = reg
+		} else if reg, ok := strings.CutPrefix(rr, "dep:"); ok {
 			dep = append(dep, reg)
 		} else {
 			fetch = append(fetch, rr)
