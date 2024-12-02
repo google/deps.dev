@@ -3,12 +3,8 @@ name: Run Go Tests
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'util/'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'util/'
 
 jobs:
   run_go_tests:
