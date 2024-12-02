@@ -1,0 +1,35 @@
+name: Run Go Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'util/'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'util/'
+
+jobs:
+  run_go_tests:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+    - name: Set up Go
+      uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+      with:
+        go-version: stable
+
+    - name: Run tests in maven
+      working-directory: ./util/maven
+      run: go test ./...
+
+    - name: Run tests in resolve
+      working-directory: ./util/semver
+      run: go test ./...
+
+    - name: Run tests in semver
+      working-directory: ./util/semver
+      run: go test ./...
