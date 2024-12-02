@@ -27,7 +27,7 @@ jobs:
       run: go test ./...
 
     - name: Run tests in resolve
-      working-directory: ./util/semver
+      working-directory: ./util/resolve
       run: go test ./...
 
     - name: Run tests in semver
