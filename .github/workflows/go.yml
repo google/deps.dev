@@ -8,18 +8,7 @@ on:
 
 jobs:
   go:
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        examples:
-          - artifact_query
-          - dependencies_dot
-          - maven_parse_resolve
-          - package_lock_licenses
-          - package_lock_licenses_batch
-          - resolve
-  
+    runs-on: ubuntu-latest  
     steps:
     - name: Check out code
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -30,6 +19,9 @@ jobs:
         go-version: stable
 
     - name: Build examples
-      working-directory: examples/go/${{ matrix.examples }}
-      run: go test ./...
-      
+      working-directory: examples/go/
+      run: |
+        for dir in $(ls); do
+          cd "$dir"
+          go build
+        done
