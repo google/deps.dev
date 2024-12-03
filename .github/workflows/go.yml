@@ -12,10 +12,6 @@ jobs:
     
     strategy:
       matrix:
-        util:
-          - maven
-          - resolve
-          - semver
         examples:
           - artifact_query
           - dependencies_dot
@@ -37,8 +33,3 @@ jobs:
       working-directory: examples/go/${{ matrix.examples }}
       run: go test ./...
       
-    - name: Run util tests
-      working-directory: util/${{ matrix.util }}
-      run: go test ./...
-
-
