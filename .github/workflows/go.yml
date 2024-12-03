@@ -24,4 +24,14 @@ jobs:
         for dir in $(ls -d */); do
           cd "$dir"
           go build
+          cd ..
+        done
+
+    - name: Run util tests
+      working-directory: util/
+      run: |
+        for dir in $(ls -d */); do
+          cd "$dir"
+          go test ./...
+          cd ..
         done
