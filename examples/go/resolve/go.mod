@@ -14,7 +14,7 @@ require (
 )
 
 require (
-	deps.dev/util/maven v0.0.0-20240322043601-ff53416fec6a // indirect
+	deps.dev/util/maven v0.0.0-20241203055422-1ee2cd4be494 // indirect
 	deps.dev/util/semver v0.0.0-20240109040450-1e316b822bc4 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	golang.org/x/net v0.24.0 // indirect
