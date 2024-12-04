@@ -20,18 +20,8 @@ jobs:
 
     - name: Build examples
       working-directory: examples/go/
-      run: |
-        for dir in $(ls -d */); do
-          cd "$dir"
-          go build
-          cd ..
-        done
+      run: find . -name 'go.mod' -execdir go build \;
 
     - name: Run util tests
       working-directory: util/
-      run: |
-        for dir in $(ls -d */); do
-          cd "$dir"
-          go test ./...
-          cd ..
-        done
+      run: find . -name 'go.mod' -execdir go test ./... \;
