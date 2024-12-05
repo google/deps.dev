@@ -18,14 +18,10 @@ jobs:
       with:
         go-version: stable
 
-    - name: Run tests in maven
-      working-directory: ./util/maven
-      run: go test ./...
+    - name: Build examples
+      working-directory: examples/go/
+      run: find . -name 'go.mod' -execdir go build \;
 
-    - name: Run tests in resolve
-      working-directory: ./util/resolve
-      run: go test ./...
-
-    - name: Run tests in semver
-      working-directory: ./util/semver
-      run: go test ./...
+    - name: Run util tests
+      working-directory: util/
+      run: find . -name 'go.mod' -execdir go test ./... \;

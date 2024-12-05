@@ -1,7 +1,7 @@
 deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7 h1:dleK4xoNCfxlfknQNPR1DmSdVErIAWlEzxtTImCqWXI=
 deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7/go.mod h1:k3RHZwAw7ijqoXmVDvcO7ikeTwTC4jtmhCDathV+IKE=
-deps.dev/util/maven v0.0.0-20240508074152-8a0b6d3a5b11 h1:Pj5eDqVZUx/CdWEAef6sb/xCOI/wwg7G+saoYMHGOW8=
-deps.dev/util/maven v0.0.0-20240508074152-8a0b6d3a5b11/go.mod h1:SBW3EribdkZYk6zxi5oVn/ZECvi4ixb7EGgEWfSimNk=
+deps.dev/util/maven v0.0.0-20241203055422-1ee2cd4be494 h1:owERvoPo5Ma5nMlBFXRNji18xF0DpvzAQd+TRv1CVBw=
+deps.dev/util/maven v0.0.0-20241203055422-1ee2cd4be494/go.mod h1:SBW3EribdkZYk6zxi5oVn/ZECvi4ixb7EGgEWfSimNk=
 deps.dev/util/resolve v0.0.0-20240611045547-af20eef0f1eb h1:BE7E7Ekn8OibNRzYeTLM7vsRplskWxjj9vNumfio6Vw=
 deps.dev/util/resolve v0.0.0-20240611045547-af20eef0f1eb/go.mod h1:XXi6yRYqhtxw5DvGX/mbG6fHSLn8OgoPowNd8EAxDgk=
 deps.dev/util/semver v0.0.0-20240109040450-1e316b822bc4 h1:RDmJe2F67jB7ovkbd28Pdpw3vEYUi2tWV5RlOHlxByk=
