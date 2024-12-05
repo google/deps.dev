@@ -29,7 +29,7 @@ type Dependency struct {
 	Classifier String      `xml:"classifier,omitempty"`
 	Scope      String      `xml:"scope,omitempty"`
 	Exclusions []Exclusion `xml:"exclusions>exclusion,omitempty"`
-	Optional   BoolString  `xml:"optional,omitempty"`
+	Optional   FalsyBool   `xml:"optional,omitempty"`
 }
 
 type Exclusion struct {
