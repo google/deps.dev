@@ -94,13 +94,17 @@ func (sys System) ParseConstraint(str string) (retC *Constraint, retErr error) {
 // in the packaging system. The syntax is system-independent. Trimmed of leading
 // and trailing spaces, the syntax is a list of comma-separated spans inside a
 // braces:
+//
 //	{span,span,...}
+//
 // There are no extraneous spaces. The string "{}" is the empty set and matches
 // nothing.
 // Spans are formatted according to their rank:
+//
 //	An empty span: <empty>
 //	A single version: 1.2.3-alpha
 //	A span between two versions: [1.2.3:2.3.4]
+//
 // In the last case, a bracket will be ( or ) if the span is open on the
 // corresponding side. On the right-hand side of a span, a number (major, minor,
 // patch) may be replaced with ∞ to represent a value greater than all numeric
@@ -178,11 +182,13 @@ func (p *constraintParser) constraint() (*Constraint, error) {
 }
 
 /*
-	orList = span // See value method below.
-		| andList
-		| orList '||' andList // NPM, Default only.
-		| orList ',' andList // Maven and NuGet only.
-	span = VERSION ' ' '-' ' ' VERSION // NPM, Default only. Spaces required.
+orList = span // See value method below.
+
+	| andList
+	| orList '||' andList // NPM, Default only.
+	| orList ',' andList // Maven and NuGet only.
+
+span = VERSION ' ' '-' ' ' VERSION // NPM, Default only. Spaces required.
 */
 func (p *constraintParser) orList() Set {
 	sys := p.Constraint.sys
@@ -230,7 +236,6 @@ func (p *constraintParser) orList() Set {
 	andList = value
 		| andList value
 		| andList ',' value // If comma is supported for AND.
-
 
 If the value is a span, it must be the only item in the list.
 See the value method below.
@@ -424,6 +429,7 @@ func (p *constraintParser) value() (spans []span, hyphenated, valid bool) {
 
 /*
 setRange parses a version range in Maven/NuGet syntax for constraints.
+
 	range = VERSION
 		| '[' VERSION ']'
 		| lbra opVersion ',' opVersion rbra
