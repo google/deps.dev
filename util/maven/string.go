@@ -50,12 +50,12 @@ func (s *String) interpolate(dictionary map[string]string) bool {
 	return ok
 }
 
-// TrusyBool represents a string field that holds a boolean value,
+// TruthyBool represents a string field that holds a boolean value,
 // and the default value is true.
 // TrusyBool may contain placeholders which need to be interpolated.
-type TrusyBool String
+type TruthyBool String
 
-func (tb *TrusyBool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+func (tb *TruthyBool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	var str string
 	err := d.DecodeElement(&str, &start)
 	if err != nil {
@@ -65,23 +65,23 @@ func (tb *TrusyBool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error 
 	// Maven accepts only "", "true", "false" or a placeholder "${...}".
 	str = strings.TrimSpace(str)
 	if strings.Contains(str, "${") && strings.Contains(str, "}") {
-		*tb = TrusyBool(str)
+		*tb = TruthyBool(str)
 		return nil
 	}
 	if ss := strings.ToLower(str); ss == "true" || ss == "false" || ss == "" {
-		*tb = TrusyBool(ss)
+		*tb = TruthyBool(ss)
 		return nil
 	}
 	return fmt.Errorf("unrecognized boolean %q", str)
 }
 
-func (tb *TrusyBool) interpolate(dictionary map[string]string) bool {
+func (tb *TruthyBool) interpolate(dictionary map[string]string) bool {
 	result, ok := interpolating(string(*tb), dictionary, make(map[string]bool))
-	*tb = TrusyBool(result)
+	*tb = TruthyBool(result)
 	return ok
 }
 
-func (tb *TrusyBool) Boolean() bool {
+func (tb *TruthyBool) Boolean() bool {
 	if *tb == "" {
 		return true
 	}
