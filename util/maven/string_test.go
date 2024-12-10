@@ -35,7 +35,7 @@ func TestString(t *testing.T) {
 
 func TestTrusyBoolString(t *testing.T) {
 	var got struct {
-		Str TrusyBool `xml:"bool"`
+		Str TruthyBool `xml:"bool"`
 	}
 	err := xml.Unmarshal([]byte(`<xml><bool>haha</bool></xml>`), &got)
 	if err == nil {
@@ -44,7 +44,7 @@ func TestTrusyBoolString(t *testing.T) {
 
 	tests := []struct {
 		xml      String
-		want     TrusyBool
+		want     TruthyBool
 		wantBool bool
 	}{
 		{"<xml><bool> true </bool></xml>", "true", true},
