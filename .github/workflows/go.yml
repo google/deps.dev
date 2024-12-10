@@ -18,6 +18,9 @@ jobs:
       with:
         go-version: stable
 
+    - name: Gofmt
+      run: gofmt -l .
+
     - name: Build examples
       working-directory: examples/go/
       run: find . -name 'go.mod' -execdir go build \;
