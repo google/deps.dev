@@ -475,9 +475,7 @@ message Version {
   // SLSA provenance) for all systems.
   repeated SLSAProvenance slsa_provenances = 7;
 
-  // Attestations for this package version. Additional fields may be populate
-
-  // depending on 'type' field.
+  // Attestations for this package version.
   repeated Attestation attestations = 14;
 
   // URLs for the package management registries this package version is

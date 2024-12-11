@@ -1135,7 +1135,7 @@ type Version struct {
 	// versions. See the 'attestations' field for more attestations (including
 	// SLSA provenance) for all systems.
 	SlsaProvenances []*SLSAProvenance `protobuf:"bytes,7,rep,name=slsa_provenances,json=slsaProvenances,proto3" json:"slsa_provenances,omitempty"`
-	// depending on 'type' field.
+	// Attestations for this package version.
 	Attestations []*Attestation `protobuf:"bytes,14,rep,name=attestations,proto3" json:"attestations,omitempty"`
 	// URLs for the package management registries this package version is
 	// available from.
