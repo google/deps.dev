@@ -105,7 +105,7 @@ func main() {
 
 	// Traverse the dependency tree and find its set of unique package versions,
 	// including the root.
-	versions := map[Version]*VersionResponse{Version{pl.Name, pl.Version}: new(VersionResponse)}
+	versions := map[Version]*VersionResponse{{pl.Name, pl.Version}: new(VersionResponse)}
 	toVisit := []NPMDependency{{Version: pl.Version, Dependencies: pl.Dependencies}}
 	for len(toVisit) > 0 {
 		it := toVisit[0]
