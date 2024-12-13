@@ -33,7 +33,7 @@ func TestString(t *testing.T) {
 	}
 }
 
-func TestTrusyBoolString(t *testing.T) {
+func TestTruthyBool(t *testing.T) {
 	var got struct {
 		Str TruthyBool `xml:"bool"`
 	}
@@ -66,7 +66,7 @@ func TestTrusyBoolString(t *testing.T) {
 	}
 }
 
-func TestFalsyBoolString(t *testing.T) {
+func TestFalsyBool(t *testing.T) {
 	var got struct {
 		Str FalsyBool `xml:"bool"`
 	}

@@ -106,7 +106,7 @@ func (p *PluginManagement) merge(parent PluginManagement) {
 
 type Plugin struct {
 	ProjectKey
-	Inherited    TrusyBool    `xml:"inherited,omitempty"`
+	Inherited    TruthyBool    `xml:"inherited,omitempty"`
 	Dependencies []Dependency `xml:"dependencies>dependency,omitempty"`
 }
 
@@ -215,7 +215,7 @@ func (r *Repository) interpolate(properties map[string]string) bool {
 }
 
 type RepositoryPolicy struct {
-	Enabled TrusyBool `xml:"enabled"`
+	Enabled TruthyBool `xml:"enabled"`
 }
 
 func (rp *RepositoryPolicy) interpolate(properties map[string]string) bool {

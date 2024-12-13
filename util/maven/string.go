@@ -52,7 +52,7 @@ func (s *String) interpolate(dictionary map[string]string) bool {
 
 // TruthyBool represents a string field that holds a boolean value,
 // and the default value is true.
-// TrusyBool may contain placeholders which need to be interpolated.
+// TruthyBool may contain placeholders which need to be interpolated.
 type TruthyBool String
 
 func (tb *TruthyBool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
