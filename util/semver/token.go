@@ -86,7 +86,7 @@ var byteType = [...]uint8{
 }
 
 var operators = []map[string]tokType{
-	DefaultSystem: map[string]tokType{
+	DefaultSystem: {
 		"=":  tokEqual,
 		">":  tokGreater,
 		">=": tokGreaterEqual,
@@ -100,7 +100,7 @@ var operators = []map[string]tokType{
 		"-":  tokHyphen,
 	},
 
-	Cargo: map[string]tokType{
+	Cargo: {
 		"=":  tokEqual,
 		">":  tokGreater,
 		">=": tokGreaterEqual,
@@ -111,7 +111,7 @@ var operators = []map[string]tokType{
 		",":  tokComma,
 	},
 
-	NPM: map[string]tokType{
+	NPM: {
 		"=":  tokEqual,
 		">":  tokGreater,
 		">=": tokGreaterEqual,
@@ -124,17 +124,17 @@ var operators = []map[string]tokType{
 		"-":  tokHyphen,
 	},
 
-	Go: map[string]tokType{},
+	Go: {},
 
-	Maven: map[string]tokType{
+	Maven: {
 		",": tokComma,
 	},
 
-	NuGet: map[string]tokType{
+	NuGet: {
 		",": tokComma,
 	},
 
-	PyPI: map[string]tokType{
+	PyPI: {
 		"==": tokEqual,
 		">":  tokGreater,
 		">=": tokGreaterEqual,
@@ -145,7 +145,7 @@ var operators = []map[string]tokType{
 		",":  tokComma,
 	},
 
-	RubyGems: map[string]tokType{
+	RubyGems: {
 		"=":  tokEqual,
 		">":  tokGreater,
 		">=": tokGreaterEqual,

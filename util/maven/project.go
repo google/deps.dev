@@ -106,7 +106,7 @@ func (p *PluginManagement) merge(parent PluginManagement) {
 
 type Plugin struct {
 	ProjectKey
-	Inherited    TruthyBool    `xml:"inherited,omitempty"`
+	Inherited    TruthyBool   `xml:"inherited,omitempty"`
 	Dependencies []Dependency `xml:"dependencies>dependency,omitempty"`
 }
 

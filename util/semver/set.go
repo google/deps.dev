@@ -231,7 +231,7 @@ func (s *Set) Intersect(t Set) error {
 	}
 	if len(out) == 0 {
 		// An empty list means everything, so we need an explicitly empty span.
-		out = []span{span{rank: empty}}
+		out = []span{{rank: empty}}
 	}
 	var err error
 	s.span, err = canon(out)
