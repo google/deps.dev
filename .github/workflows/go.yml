@@ -24,6 +24,4 @@ jobs:
 
     - name: Run util tests
       working-directory: util/
-      env:
-          ACTIONS_STEP_DEBUG: true
-      run: find . -name 'go.mod' -execdir go test ./... \;
+      run: for DIR in $(find . -name 'go.mod'); do cd $(dirname $DIR); go test ./... || exit 1; cd -; done
