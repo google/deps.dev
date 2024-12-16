@@ -20,8 +20,10 @@ jobs:
 
     - name: Build examples
       working-directory: examples/go/
-      run: find . -name 'go.mod' -execdir go build \; && false
+      run: find . -name 'go.mod' -execdir go build \;
 
     - name: Run util tests
       working-directory: util/
-      run: find . -name 'go.mod' -execdir go test ./... \; && false
+      env:
+          ACTIONS_STEP_DEBUG: true
+      run: find . -name 'go.mod' -execdir go test ./... \;
