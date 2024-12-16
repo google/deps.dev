@@ -818,6 +818,8 @@ type Attestation struct {
 	unknownFields protoimpl.UnknownFields
 
 	// The type of attestation.
+	// One of https://slsa.dev/provenance/v0.2, https://slsa.dev/provenance/v1,
+	// https://docs.pypi.org/attestations/publish/v1.
 	Type string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
 	// The URL of the attestation if there is one.
 	Url string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
@@ -826,10 +828,9 @@ type Attestation struct {
 	// the bundle was verified using the
 	// [sigstore-go](https://github.com/sigstore/sigstore-go) library.
 	Verified bool `protobuf:"varint,3,opt,name=verified,proto3" json:"verified,omitempty"`
-	// Set if type is:
-	// - https://slsa.dev/provenance/v0.2
-	// - https://slsa.dev/provenance/v1
-	// - https://docs.pypi.org/attestations/publish/v1
+	// Only set if type is https://slsa.dev/provenance/v0.2,
+	// https://slsa.dev/provenance/v1,
+	// https://docs.pypi.org/attestations/publish/v1.
 	// The source code repository used to build the version.
 	SourceRepository string `protobuf:"bytes,4,opt,name=source_repository,json=sourceRepository,proto3" json:"source_repository,omitempty"`
 	// The commit of the source code repository the version was built from.

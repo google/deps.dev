@@ -320,7 +320,9 @@ message SLSAProvenance {
 // Attestation represents a generic attestation. Fields are populated based
 // on 'type'.
 message Attestation {
-   // The type of attestation.
+  // The type of attestation.
+  // One of https://slsa.dev/provenance/v0.2, https://slsa.dev/provenance/v1,
+  // https://docs.pypi.org/attestations/publish/v1.
   string type = 1;
   // The URL of the attestation if there is one.
   string url = 2;
@@ -330,10 +332,9 @@ message Attestation {
   // [sigstore-go](https://github.com/sigstore/sigstore-go) library.
   bool verified = 3;
 
-  // Set if type is:
-  // - https://slsa.dev/provenance/v0.2
-  // - https://slsa.dev/provenance/v1
-  // - https://docs.pypi.org/attestations/publish/v1
+  // Only set if type is https://slsa.dev/provenance/v0.2,
+  // https://slsa.dev/provenance/v1,
+  // https://docs.pypi.org/attestations/publish/v1.
   // The source code repository used to build the version.
   string source_repository = 4;
   // The commit of the source code repository the version was built from.
