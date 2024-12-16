@@ -20,7 +20,7 @@ jobs:
 
     - name: Build examples
       working-directory: examples/go/
-      run: find . -name 'go.mod' -execdir go build \;
+      run: for DIR in $(find . -name 'go.mod'); do cd $(dirname $DIR); go build || exit 1; cd -; done
 
     - name: Run util tests
       working-directory: util/
