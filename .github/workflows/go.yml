@@ -17,11 +17,20 @@ jobs:
       uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
       with:
         go-version: stable
+      
+    - name: Check formatting
+      run: |
+        gofmt -w -s .
+        if [[ -n $(git diff --exit-code) ]]; then
+          echo "Go files were not formatted correctly:"
+          git diff
+          exit 1
+        fi
 
     - name: Build examples
       working-directory: examples/go/
-      run: find . -name 'go.mod' -execdir go build \;
+      run: for DIR in $(find . -name 'go.mod'); do cd $(dirname $DIR); go build || exit 1; cd -; done
 
     - name: Run util tests
       working-directory: util/
-      run: find . -name 'go.mod' -execdir go test ./... \;
+      run: for DIR in $(find . -name 'go.mod'); do cd $(dirname $DIR); go test ./... || exit 1; cd -; done
