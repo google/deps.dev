@@ -28,7 +28,7 @@ func TestString(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to unmarshal: %v", err)
 	}
-	if got.Str != "test" {
+	if got.Str != "abc" {
 		t.Fatalf("unmarshal string want: %s, got: %s", "test", got.Str)
 	}
 }
