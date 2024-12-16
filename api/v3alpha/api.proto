@@ -121,9 +121,8 @@ service Insights {
 
   // GetProjectPackageVersions returns known mappings between the requested
   // project and package versions.
-  // At most 1500 package versions are returned. Mappings which were derived from
-  // a [SLSA provenance attestation](https://slsa.dev/spec/v1.0/provenance)
-  // are served first.
+  // At most 1500 package versions are returned. Mappings which were derived
+  // from attestations are served first.
   rpc GetProjectPackageVersions(GetProjectPackageVersionsRequest) returns (ProjectPackageVersions) {
     option (google.api.http) = {
       get: "/v3alpha/projects/{project_key.id}:packageversions"
@@ -318,6 +317,30 @@ message SLSAProvenance {
   bool verified = 4;
 }
 
+// Attestation represents a generic attestation. Fields are populated based
+// on 'type'.
+message Attestation {
+  // The type of attestation.
+  // One of https://slsa.dev/provenance/v0.2, https://slsa.dev/provenance/v1,
+  // https://docs.pypi.org/attestations/publish/v1.
+  string type = 1;
+  // The URL of the attestation if there is one.
+  string url = 2;
+  // The attestation has been cryptographically verified by deps.dev.
+  // For attestations distributed in a Sigstore bundle, this field indicates
+  // the bundle was verified using the
+  // [sigstore-go](https://github.com/sigstore/sigstore-go) library.
+  bool verified = 3;
+
+  // Only set if type is https://slsa.dev/provenance/v0.2,
+  // https://slsa.dev/provenance/v1,
+  // https://docs.pypi.org/attestations/publish/v1.
+  // The source code repository used to build the version.
+  string source_repository = 4;
+  // The commit of the source code repository the version was built from.
+  string commit = 5;
+}
+
 // GetPackageRequest identifies a package for which to return information.
 message GetPackageRequest {
   PackageKey package_key = 1;
@@ -447,8 +470,14 @@ message Version {
   // these links are not verified for correctness.
   repeated Link links = 5;
 
-  // SLSA provenances for this version if they are available.
+  // SLSA provenance information for this package version. Extracted from a
+  // SLSA provenance attestation. This is only populated for npm package
+  // versions. See the 'attestations' field for more attestations (including
+  // SLSA provenance) for all systems.
   repeated SLSAProvenance slsa_provenances = 7;
+
+  // Attestations for this package version.
+  repeated Attestation attestations = 14;
 
   // URLs for the package management registries this package version is
   // available from.
@@ -1004,6 +1033,11 @@ enum ProjectRelationProvenance {
   // This project contains the package version (Go specific).
   GO_ORIGIN = 2;
 
+  // There is a [PyPI Publish
+  // attestation](https://docs.pypi.org/attestations/publish/v1/) that links
+  // this package version to this project.
+  PYPI_PUBLISH_ATTESTATION = 3;
+
   // The package version's metadata contains an unverified link to this project.
   UNVERIFIED_METADATA = 10;
 }
@@ -1016,8 +1050,12 @@ message ProjectPackageVersions {
   message Version {
     // The identifier for the version.
     VersionKey version_key = 1;
-    // The SLSA provenance statements that link the version to the project.
+    // The SLSA provenance statements that link the version to the project. This
+    // is only populated for npm package versions. See the 'attestations' field
+    // for more attestations (including SLSA provenance) for all systems.
     repeated SLSAProvenance slsa_provenances = 2;
+    // Attestations that link the version to the project.
+    repeated Attestation attestations = 5;
     // What the relationship between the project and the package version is.
     ProjectRelationType relation_type = 3;
     // How the mapping between project and package version was discovered.
