@@ -1,7 +1,6 @@
 module deps.dev/api/v3alpha
 
 go 1.20
-toolchain go1.22.5
 
 require (
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
