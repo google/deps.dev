@@ -3,6 +3,7 @@ module github.com/google/deps.dev/examples/go/resolve
 go 1.21.1
 
 replace (
+	deps.dev/util/maven => ../../../util/maven
 	deps.dev/util/resolve => ../../../util/resolve
 	deps.dev/util/semver => ../../../util/semver
 )
