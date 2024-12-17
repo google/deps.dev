@@ -1,7 +1,6 @@
 module deps.dev/util/resolve
 
 go 1.21.1
-toolchain go1.22.5
 
 replace (
 	deps.dev/util/maven => ../maven
