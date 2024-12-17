@@ -1,7 +1,6 @@
 module github.com/google/deps.dev/examples/go/resolve
 
 go 1.21.1
-toolchain go1.22.5
 
 replace (
 	deps.dev/util/resolve => ../../../util/resolve
