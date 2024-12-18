@@ -1,6 +1,6 @@
 module deps.dev/util/maven
 
-go 1.21.1
+go 1.23
 
 replace deps.dev/util/semver => ../semver
 
