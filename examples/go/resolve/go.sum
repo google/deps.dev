@@ -1,7 +1,5 @@
 deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7 h1:dleK4xoNCfxlfknQNPR1DmSdVErIAWlEzxtTImCqWXI=
 deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7/go.mod h1:k3RHZwAw7ijqoXmVDvcO7ikeTwTC4jtmhCDathV+IKE=
-deps.dev/util/maven v0.0.0-20241203055422-1ee2cd4be494 h1:owERvoPo5Ma5nMlBFXRNji18xF0DpvzAQd+TRv1CVBw=
-deps.dev/util/maven v0.0.0-20241203055422-1ee2cd4be494/go.mod h1:SBW3EribdkZYk6zxi5oVn/ZECvi4ixb7EGgEWfSimNk=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
 github.com/golang/protobuf v1.5.3 h1:KhyjKVUg7Usr/dYsdSqoFveMYd5ko72D+zANwlG1mmg=
 github.com/golang/protobuf v1.5.3/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=
