@@ -201,7 +201,7 @@ func mavenRequirementsToProject(pk maven.ProjectKey, req *pb.Requirements_Maven)
 				Type:       maven.String(d.Type),
 				Classifier: maven.String(d.Classifier),
 				Scope:      maven.String(d.Scope),
-				Optional:   maven.BoolString(d.Optional),
+				Optional:   maven.FalsyBool(d.Optional),
 				Exclusions: exs,
 			})
 		}
@@ -226,8 +226,8 @@ func mavenRequirementsToProject(pk maven.ProjectKey, req *pb.Requirements_Maven)
 				ID:        maven.String(r.Id),
 				URL:       maven.String(r.Url),
 				Layout:    maven.String(r.Layout),
-				Releases:  maven.RepositoryPolicy{Enabled: maven.String(r.ReleasesEnabled)},
-				Snapshots: maven.RepositoryPolicy{Enabled: maven.String(r.SnapshotsEnabled)},
+				Releases:  maven.RepositoryPolicy{Enabled: maven.TruthyBool(r.ReleasesEnabled)},
+				Snapshots: maven.RepositoryPolicy{Enabled: maven.TruthyBool(r.SnapshotsEnabled)},
 			})
 		}
 		return result
@@ -236,7 +236,7 @@ func mavenRequirementsToProject(pk maven.ProjectKey, req *pb.Requirements_Maven)
 	var profiles []maven.Profile
 	for _, p := range req.Profiles {
 		activation := maven.Activation{
-			ActiveByDefault: maven.BoolString(p.Activation.ActiveByDefault),
+			ActiveByDefault: maven.FalsyBool(p.Activation.ActiveByDefault),
 		}
 		if p.Activation.Jdk != nil {
 			activation.JDK = maven.String(p.Activation.Jdk.Jdk)

@@ -264,7 +264,7 @@ func TestDepType(t *testing.T) {
 
 	tests := []struct {
 		typ, scope maven.String
-		optional   maven.BoolString
+		optional   maven.FalsyBool
 		exclusions []maven.Exclusion
 		want       dep.Type
 	}{
