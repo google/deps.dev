@@ -35,7 +35,7 @@ type Profile struct {
 // Activation contains information to decide if a build profile is activated or not.
 // https://maven.apache.org/guides/introduction/introduction-to-profiles.html#details-on-profile-activation=
 type Activation struct {
-	ActiveByDefault BoolString         `xml:"activeByDefault,omitempty"`
+	ActiveByDefault FalsyBool          `xml:"activeByDefault,omitempty"`
 	JDK             String             `xml:"jdk,omitempty"`
 	OS              ActivationOS       `xml:"os,omitempty"`
 	Property        ActivationProperty `xml:"property,omitempty"`
@@ -185,7 +185,7 @@ func (p *Project) MergeProfiles(jdk string, os ActivationOS) (err error) {
 		if act {
 			activeProfiles = append(activeProfiles, prof)
 		}
-		if prof.Activation.ActiveByDefault == "true" {
+		if prof.Activation.ActiveByDefault.Boolean() {
 			defaultProfiles = append(defaultProfiles, prof)
 		}
 	}

@@ -33,9 +33,9 @@ func TestString(t *testing.T) {
 	}
 }
 
-func TestBoolString(t *testing.T) {
+func TestTruthyBool(t *testing.T) {
 	var got struct {
-		Str BoolString `xml:"bool"`
+		Str TruthyBool `xml:"bool"`
 	}
 	err := xml.Unmarshal([]byte(`<xml><bool>haha</bool></xml>`), &got)
 	if err == nil {
@@ -43,13 +43,14 @@ func TestBoolString(t *testing.T) {
 	}
 
 	tests := []struct {
-		xml  String
-		want BoolString
+		xml      String
+		want     TruthyBool
+		wantBool bool
 	}{
-		{"<xml><bool> true </bool></xml>", "true"},
-		{"<xml><bool>TRue</bool></xml>", "true"},
-		{"<xml><bool>FalSE</bool></xml>", "false"},
-		{"<xml><bool></bool></xml>", ""},
+		{"<xml><bool> true </bool></xml>", "true", true},
+		{"<xml><bool>TRue</bool></xml>", "true", true},
+		{"<xml><bool>FalSE</bool></xml>", "false", false},
+		{"<xml><bool></bool></xml>", "", true},
 	}
 	for _, test := range tests {
 		err = xml.Unmarshal([]byte(test.xml), &got)
@@ -57,7 +58,43 @@ func TestBoolString(t *testing.T) {
 			t.Errorf("failed to unmarshal: %v", err)
 		}
 		if got.Str != test.want {
-			t.Fatalf("unmarshal string want: %s, got: %s", test.want, got.Str)
+			t.Errorf("unmarshal string want: %s, got: %s", test.want, got.Str)
+		}
+		if got.Str.Boolean() != test.wantBool {
+			t.Errorf("Boolean(): got %v, want: %v", got.Str.Boolean(), test.wantBool)
+		}
+	}
+}
+
+func TestFalsyBool(t *testing.T) {
+	var got struct {
+		Str FalsyBool `xml:"bool"`
+	}
+	err := xml.Unmarshal([]byte(`<xml><bool>haha</bool></xml>`), &got)
+	if err == nil {
+		t.Errorf("expected error %v but got %v", fmt.Errorf("unrecognized boolean"), err)
+	}
+
+	tests := []struct {
+		xml      String
+		want     FalsyBool
+		wantBool bool
+	}{
+		{"<xml><bool> true </bool></xml>", "true", true},
+		{"<xml><bool>TRue</bool></xml>", "true", true},
+		{"<xml><bool>FalSE</bool></xml>", "false", false},
+		{"<xml><bool></bool></xml>", "", false},
+	}
+	for _, test := range tests {
+		err = xml.Unmarshal([]byte(test.xml), &got)
+		if err != nil {
+			t.Errorf("failed to unmarshal: %v", err)
+		}
+		if got.Str != test.want {
+			t.Errorf("unmarshal string want: %s, got: %s", test.want, got.Str)
+		}
+		if got.Str.Boolean() != test.wantBool {
+			t.Errorf("Boolean(): got %v, want: %v", got.Str.Boolean(), test.wantBool)
 		}
 	}
 }
