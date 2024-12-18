@@ -1,6 +1,6 @@
 module github.com/google/deps.dev/examples/go/maven_parse_resolve
 
-go 1.21.1
+go 1.23
 
 require (
 	deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7
