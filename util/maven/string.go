@@ -50,32 +50,80 @@ func (s *String) interpolate(dictionary map[string]string) bool {
 	return ok
 }
 
-// BoolString represents a string field that holds a boolean value.
-// BoolString may contain placeholders which need to be interpolated.
-type BoolString string
+// TruthyBool represents a string field that holds a boolean value,
+// and the default value is true.
+// TruthyBool may contain placeholders which need to be interpolated.
+type TruthyBool String
 
-func (bs *BoolString) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+func (tb *TruthyBool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	var str string
 	err := d.DecodeElement(&str, &start)
 	if err != nil {
 		return err
 	}
+
+	// Maven accepts only "", "true", "false" or a placeholder "${...}".
 	str = strings.TrimSpace(str)
 	if strings.Contains(str, "${") && strings.Contains(str, "}") {
-		*bs = BoolString(str)
+		*tb = TruthyBool(str)
 		return nil
 	}
 	if ss := strings.ToLower(str); ss == "true" || ss == "false" || ss == "" {
-		*bs = BoolString(ss)
+		*tb = TruthyBool(ss)
 		return nil
 	}
 	return fmt.Errorf("unrecognized boolean %q", str)
 }
 
-func (bs *BoolString) interpolate(dictionary map[string]string) bool {
-	result, ok := interpolating(string(*bs), dictionary, make(map[string]bool))
-	*bs = BoolString(result)
+func (tb *TruthyBool) interpolate(dictionary map[string]string) bool {
+	result, ok := interpolating(string(*tb), dictionary, make(map[string]bool))
+	*tb = TruthyBool(result)
 	return ok
+}
+
+func (tb *TruthyBool) Boolean() bool {
+	if *tb == "" {
+		return true
+	}
+	return *tb == "true"
+}
+
+// FalsyBool represents a string field that holds a boolean value,
+// and the default value is false.
+// FalsyBool may contain placeholders which need to be interpolated.
+type FalsyBool String
+
+func (fb *FalsyBool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var str string
+	err := d.DecodeElement(&str, &start)
+	if err != nil {
+		return err
+	}
+
+	// Maven accepts only "", "true", "false" or a placeholder "${...}".
+	str = strings.TrimSpace(str)
+	if strings.Contains(str, "${") && strings.Contains(str, "}") {
+		*fb = FalsyBool(str)
+		return nil
+	}
+	if ss := strings.ToLower(str); ss == "true" || ss == "false" || ss == "" {
+		*fb = FalsyBool(ss)
+		return nil
+	}
+	return fmt.Errorf("unrecognized boolean %q", str)
+}
+
+func (fb *FalsyBool) interpolate(dictionary map[string]string) bool {
+	result, ok := interpolating(string(*fb), dictionary, make(map[string]bool))
+	*fb = FalsyBool(result)
+	return ok
+}
+
+func (fb *FalsyBool) Boolean() bool {
+	if *fb == "" {
+		return false
+	}
+	return *fb == "true"
 }
 
 // interpolating resolves all property placeholders in s with their
