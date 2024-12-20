@@ -16,7 +16,6 @@ package versiontest
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	"deps.dev/util/resolve/version"
@@ -102,7 +101,7 @@ func TestParseStringErrors(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if _, err := ParseString(c.s); !reflect.DeepEqual(err, c.err) {
+		if _, err := ParseString(c.s); err.Error() != c.err.Error() {
 			t.Errorf("unexpected error for %s:\n got: %v\nwant: %v", c.s, err, c.err)
 		}
 	}
