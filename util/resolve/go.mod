@@ -12,7 +12,7 @@ require (
 	deps.dev/util/maven v0.0.0-20240322043601-ff53416fec6a
 	deps.dev/util/semver v0.0.0-20240109040450-1e316b822bc4
 	github.com/google/go-cmp v0.6.0
-	google.golang.org/grpc v1.69.0
+	google.golang.org/grpc v1.69.2
 )
 
 require (
