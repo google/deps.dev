@@ -18,12 +18,11 @@ Package spdx handles SPDX identifiers and license expressions.
 SPDX, or Software Package Data Exchange, is a standard for specifying software
 metadata in a machine-readable format.
 
-License Expressions
+# License Expressions
 
 This package parses expressions such as "(LGPL-2.1 OR MIT)" and can match and
 manipulate them. The syntax of these expressions is documented at
 https://spdx.dev/spdx-specification-21-web-version (Appendix IV).
-
 */
 package spdx
 
@@ -392,12 +391,14 @@ func (p *leParser) parseLicenseExpression() (*LicenseExpression, error) {
 // parseCompoundExpression parses a compound-expression production.
 //
 // compound-expression =  1*1(simple-expression /
-//		 simple-expression "WITH" license-exception-id /
-//		 compound-expression "AND" compound-expression /
-//		 compound-expression "OR" compound-expression ) /
-//		 "(" compound-expression ")" )
+//
+//	simple-expression "WITH" license-exception-id /
+//	compound-expression "AND" compound-expression /
+//	compound-expression "OR" compound-expression ) /
+//	"(" compound-expression ")" )
 //
 // The order of precedence is:
+//
 //	WITH
 //	AND
 //	OR
