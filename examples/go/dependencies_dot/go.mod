@@ -1,3 +1,3 @@
 module github.com/google/deps.dev/examples/go/dependencies_dot
 
-go 1.23
+go 1.23.4
