@@ -1,5 +1,7 @@
 # deps.dev API
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/google/deps.dev/badge)](https://scorecard.dev/viewer/?uri=github.com/google/deps.dev)
+
 [deps.dev](https://deps.dev/) is a service developed and hosted by Google to
 help developers better understand the structure, construction, and security of
 open source software packages.
