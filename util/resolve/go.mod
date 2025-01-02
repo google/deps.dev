@@ -1,6 +1,6 @@
 module deps.dev/util/resolve
 
-go 1.23
+go 1.23.4
 
 replace (
 	deps.dev/util/maven => ../maven
