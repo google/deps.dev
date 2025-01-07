@@ -54,7 +54,7 @@ func TestSortVersions(t *testing.T) {
 			})
 			SortVersions(got)
 			if diff := cmp.Diff(got, vs); diff != "" {
-				t.Errorf("SortVersions:\n(- got, + want):\n%s", diff)
+				t.Errorf("SortVersions:\n(-got, +want):\n%s", diff)
 			}
 		}
 	}
@@ -117,7 +117,7 @@ func TestSortNPMDependencies(t *testing.T) {
 			})
 			SortDependencies(got)
 			if diff := cmp.Diff(got, want); diff != "" {
-				t.Errorf("SortDependencies:\n(- got, + want):\n%s", diff)
+				t.Errorf("SortDependencies:\n(-got, +want):\n%s", diff)
 			}
 		}
 	}
@@ -265,7 +265,7 @@ func TestMatchNPMRequirement(t *testing.T) {
 			got = []Version{}
 		}
 		if diff := cmp.Diff(got, c.want); diff != "" {
-			t.Errorf("matchNPMRequirement(%v):\n(- got, + want):\n%s", c.req, diff)
+			t.Errorf("matchNPMRequirement(%v):\n(-got, +want):\n%s", c.req, diff)
 		}
 	}
 }

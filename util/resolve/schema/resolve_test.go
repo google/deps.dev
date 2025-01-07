@@ -37,7 +37,7 @@ name1 v1
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("unexpected graph:\n(- got, + want):\n%s", diff)
+		t.Errorf("unexpected graph:\n(-got, +want):\n%s", diff)
 	}
 }
 
@@ -58,7 +58,7 @@ label: name1 v1
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("unexpected graph:\n(- got, + want):\n%s", diff)
+		t.Errorf("unexpected graph:\n(-got, +want):\n%s", diff)
 	}
 }
 
@@ -94,7 +94,7 @@ name1 v1
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("unexpected graph:\n(- got, + want):\n%s", diff)
+		t.Errorf("unexpected graph:\n(-got, +want):\n%s", diff)
 	}
 }
 
@@ -136,7 +136,7 @@ name1 v1
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("unexpected graph:\n(- got, + want):\n%s", diff)
+		t.Errorf("unexpected graph:\n(-got, +want):\n%s", diff)
 	}
 }
 
@@ -179,7 +179,7 @@ func TestSchema_ScopedNames(t *testing.T) {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("unexpected graph:\n(- got, + want):\n%s", diff)
+		t.Errorf("unexpected graph:\n(-got, +want):\n%s", diff)
 	}
 }
 
@@ -359,7 +359,7 @@ alice 1
 				t.Fatalf("ParseResolve(%q): %v", s, err)
 			}
 			if diff := cmp.Diff(g, gg); diff != "" {
-				t.Errorf("g != ParseResolve(g.String()):\n(- g, + ParseResolve):\n%s", diff)
+				t.Errorf("g != ParseResolve(g.String()):\n(-g, +ParseResolve):\n%s", diff)
 			}
 		})
 	}

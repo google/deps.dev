@@ -55,7 +55,7 @@ func TestParseData(t *testing.T) {
 	}
 	g1, g2 := a.Graph["alice"], a.Graph["alice2"]
 	if d := cmp.Diff(g1, g2); d != "" {
-		t.Logf("Mismatching parsed graphs:(- alice, + alice1):\n%s", d)
+		t.Logf("Mismatching parsed graphs:(-alice, +alice1):\n%s", d)
 	}
 
 	if got, want := len(a.Test), 2; got != want {
@@ -98,7 +98,7 @@ func TestParseData(t *testing.T) {
 
 	got, want := a.Test[0].Flags, map[string]bool{"flag1": true, "flag2": true}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("Unexpected test flags:\n(- got, + want):\n%s", diff)
+		t.Errorf("Unexpected test flags:\n(-got, +want):\n%s", diff)
 	}
 
 	// Multiverse with overlap.

@@ -249,7 +249,7 @@ func TestMavenRequirements(t *testing.T) {
 		},
 	}
 	if d := cmp.Diff(want, got); d != "" {
-		t.Errorf("mavenRequirements:\n(- want, + got):\n%s", d)
+		t.Errorf("mavenRequirements:\n(-want, +got):\n%s", d)
 	}
 }
 

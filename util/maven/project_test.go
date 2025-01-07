@@ -781,6 +781,6 @@ func TestInterpolate(t *testing.T) {
 	}
 	proj.Interpolate()
 	if diff := cmp.Diff(proj, want); diff != "" {
-		t.Errorf("interpolate:\n(- got, + want):\n%s", diff)
+		t.Errorf("interpolate:\n(-got, +want):\n%s", diff)
 	}
 }

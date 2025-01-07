@@ -66,7 +66,7 @@ func TestAttrSetForEachAttr(t *testing.T) {
 			got[key] = value
 		})
 		if diff := cmp.Diff(got, test); diff != "" {
-			t.Errorf("(%+v).ForEachAttr:\n(- got, + want):\n%s", a, diff)
+			t.Errorf("(%+v).ForEachAttr:\n(-got, +want):\n%s", a, diff)
 		}
 	}
 }
