@@ -104,7 +104,12 @@ func TestParseStringErrors(t *testing.T) {
 
 	for _, c := range cases {
 		_, err := ParseString(c.s)
-		if diff := cmp.Diff(err, c.err, cmpopts.EquateErrors()); diff != "" {
+		if diff := cmp.Diff(err, c.err, cmp.Comparer(func(x, y error) bool {
+			if x == nil || y == nil {
+				return x == nil && y == nil
+			}
+			return x.Error() == y.Error()
+		})); diff != "" {
 			t.Errorf("unexpected error for %s:\n(-got, +want):\n%s", c.s, diff)
 		}
 	}
