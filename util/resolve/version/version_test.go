@@ -15,7 +15,6 @@
 package version
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -66,7 +65,7 @@ func TestAttrSetForEachAttr(t *testing.T) {
 			}
 			got[key] = value
 		})
-		if diff := cmp.Diff(got, want); diff != "" {
+		if diff := cmp.Diff(got, test); diff != "" {
 			t.Errorf("(%+v).ForEachAttr:\n(- got, + want):\n%s", a, diff)
 		}
 	}

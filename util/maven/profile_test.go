@@ -486,6 +486,6 @@ func TestMergeProfiles(t *testing.T) {
 	}
 	proj.Profiles = nil
 	if diff := cmp.Diff(proj, want); diff != "" {
-		t.Errorf("mergeProfiles does not have match result:\n(- got, + want):\n%s", diff)
+		t.Fatalf("mergeProfiles does not have match result:\n(- got, + want):\n%s", diff)
 	}
 }

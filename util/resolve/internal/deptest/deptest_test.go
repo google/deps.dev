@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"deps.dev/util/resolve/dep"
 )
@@ -144,7 +145,7 @@ func TestParseStringErrors(t *testing.T) {
 
 	for _, c := range cases {
 		_, err := ParseString(c.s)
-		if diff := cmp.Diff(err, c.err); diff != "" {
+		if diff := cmp.Diff(err, c.err, cmpopts.EquateErrors()); diff != "" {
 			t.Errorf("unexpected error for %s:\n(- got, + want):\n%s", c.s, diff)
 		}
 	}

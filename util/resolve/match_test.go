@@ -16,7 +16,6 @@ package resolve
 
 import (
 	"math/rand"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -266,7 +265,7 @@ func TestMatchNPMRequirement(t *testing.T) {
 			got = []Version{}
 		}
 		if diff := cmp.Diff(got, c.want); diff != "" {
-			t.Errorf("unexpected error for %s:\n(- got, + want):\n%s", c.req, diff)
+			t.Errorf("matchNPMRequirement(%v):\n(- got, + want):\n%s", c.req, diff)
 		}
 	}
 }

@@ -16,7 +16,6 @@ package resolvetest
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -99,7 +98,7 @@ func TestParseData(t *testing.T) {
 
 	got, want := a.Test[0].Flags, map[string]bool{"flag1": true, "flag2": true}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("Unexpected test flags:\n(- got, + want):\n%s", got, want)
+		t.Errorf("Unexpected test flags:\n(- got, + want):\n%s", diff)
 	}
 
 	// Multiverse with overlap.

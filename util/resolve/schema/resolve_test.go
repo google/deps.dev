@@ -16,7 +16,6 @@ package schema
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
