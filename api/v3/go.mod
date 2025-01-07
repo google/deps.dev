@@ -1,6 +1,6 @@
 module deps.dev/api/v3
 
-go 1.23
+go 1.23.4
 
 require (
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
