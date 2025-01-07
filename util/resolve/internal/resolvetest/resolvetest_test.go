@@ -97,8 +97,9 @@ func TestParseData(t *testing.T) {
 		t.Fatalf("Unexpected graph name: got %q, want %q", got, want)
 	}
 
-	if got, want := a.Test[0].Flags, map[string]bool{"flag1": true, "flag2": true}; !reflect.DeepEqual(got, want) {
-		t.Fatalf("Unexpected test flags,\n got %v\nwant %v", got, want)
+	got, want := a.Test[0].Flags, map[string]bool{"flag1": true, "flag2": true}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("Unexpected test flags:\n(- got, + want):\n%s", got, want)
 	}
 
 	// Multiverse with overlap.

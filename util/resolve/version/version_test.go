@@ -17,6 +17,8 @@ package version
 import (
 	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func newAttrSet(pairs ...any) AttrSet {
@@ -64,8 +66,8 @@ func TestAttrSetForEachAttr(t *testing.T) {
 			}
 			got[key] = value
 		})
-		if !reflect.DeepEqual(got, test) {
-			t.Errorf("(%+v).ForEachAttr:\n got: %v\nwant: %v", a, got, test)
+		if diff := cmp.Diff(got, want); diff != "" {
+			t.Errorf("(%+v).ForEachAttr:\n(- got, + want):\n%s", a, diff)
 		}
 	}
 }

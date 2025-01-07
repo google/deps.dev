@@ -130,8 +130,8 @@ func TestMavenVersion(t *testing.T) {
 			VersionKey: vk,
 			AttrSet:    test.attr,
 		}
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("Version(%v):\ngot: %v\nwant: %v\n", vk, got, want)
+		if diff := cmp.Diff(got, want); diff != "" {
+			t.Errorf("Version(%v):\n(- got, + want):\n%s", vk, diff)
 		}
 	}
 }

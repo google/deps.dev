@@ -68,6 +68,6 @@ func TestMetadata(t *testing.T) {
 		t.Fatalf("failed to unmarshal input: %v", err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("unmarshal input got: %v,\n want: %v", got, want)
+		t.Errorf("unmarshal input:\n(- got, + want):\n%s", diff)
 	}
 }

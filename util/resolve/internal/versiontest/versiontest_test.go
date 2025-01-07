@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"deps.dev/util/resolve/version"
+	"github.com/google/go-cmp/cmp"
 )
 
 func buildAttr(args ...any) version.AttrSet {
@@ -101,8 +102,9 @@ func TestParseStringErrors(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if _, err := ParseString(c.s); err.Error() != c.err.Error() {
-			t.Errorf("unexpected error for %s:\n got: %v\nwant: %v", c.s, err, c.err)
+		_, err := ParseString(c.s)
+		if diff := cmp.Diff(err, c.err); diff != "" {
+			t.Errorf("unexpected error for %s:\n(- got, + want):\n%s", c.s, diff)
 		}
 	}
 }

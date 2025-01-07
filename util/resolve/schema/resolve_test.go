@@ -19,6 +19,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"deps.dev/util/resolve"
 	"deps.dev/util/resolve/dep"
 )
@@ -35,8 +37,8 @@ name1 v1
 	if err := want.Canon(); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("unexpected graph, got\n%v\nwant\n%v", got, want)
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected graph:\n(- got, + want):\n%s", diff)
 	}
 }
 
@@ -56,8 +58,8 @@ label: name1 v1
 	if err := want.Canon(); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("unexpected graph, got\n%v\nwant\n%v", got, want)
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected graph:\n(- got, + want):\n%s", diff)
 	}
 }
 
@@ -92,8 +94,8 @@ name1 v1
 	if err := want.Canon(); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("unexpected graph, got\n%v\nwant\n%v", got, want)
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected graph:\n(- got, + want):\n%s", diff)
 	}
 }
 
@@ -134,8 +136,8 @@ name1 v1
 	if err := want.Canon(); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("unexpected graph, got\n%v\nwant\n%v", got, want)
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected graph:\n(- got, + want):\n%s", diff)
 	}
 }
 
@@ -177,8 +179,8 @@ func TestSchema_ScopedNames(t *testing.T) {
 	if err := want.Canon(); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("unexpected graph, got\n%v\nwant\n%v", got, want)
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected graph:\n(- got, + want):\n%s", diff)
 	}
 }
 
@@ -357,8 +359,8 @@ alice 1
 			if err != nil {
 				t.Fatalf("ParseResolve(%q): %v", s, err)
 			}
-			if !reflect.DeepEqual(g, gg) {
-				t.Fatalf("g != ParseResolve(g.String()): got:\n%s\nwant:\n%s\n", gg, g)
+			if diff := cmp.Diff(g, gg); diff != "" {
+				t.Errorf("g != ParseResolve(g.String()):\n(- g, + ParseResolve):\n%s", diff)
 			}
 		})
 	}
