@@ -6,7 +6,7 @@ require (
 	deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7
 	deps.dev/util/maven v0.0.0-20241203055422-1ee2cd4be494
 	deps.dev/util/resolve v0.0.0-20240611045547-af20eef0f1eb
-	google.golang.org/grpc v1.69.0
+	google.golang.org/grpc v1.69.2
 )
 
 require (
