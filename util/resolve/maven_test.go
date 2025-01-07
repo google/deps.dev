@@ -130,7 +130,7 @@ func TestMavenVersion(t *testing.T) {
 			AttrSet:    test.attr,
 		}
 		if diff := cmp.Diff(got, want); diff != "" {
-			t.Errorf("Version(%v):\n(- got, + want):\n%s", vk, diff)
+			t.Errorf("Version(%v):\n(-got, +want):\n%s", vk, diff)
 		}
 	}
 }

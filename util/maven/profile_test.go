@@ -100,7 +100,7 @@ func TestProfile(t *testing.T) {
 		t.Fatalf("failed to unmarshal input: %v", err)
 	}
 	if diff := cmp.Diff(project.Profiles, want); diff != "" {
-		t.Errorf("unmarshal profiles:\n(- got, + want):\n%s", diff)
+		t.Errorf("unmarshal profiles:\n(-got, +want):\n%s", diff)
 	}
 }
 

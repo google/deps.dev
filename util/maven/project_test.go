@@ -596,7 +596,7 @@ func TestMergeParent(t *testing.T) {
 	}
 	proj2.MergeParent(parent)
 	if diff := cmp.Diff(proj2, want2); diff != "" {
-		t.Errorf("mergeParent: got %v\n, want %v", proj2, want2)
+		t.Errorf("mergeParent:\n(-got, +want):\n%s", diff)
 	}
 }
 
