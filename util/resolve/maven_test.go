@@ -271,8 +271,8 @@ func TestDepType(t *testing.T) {
 		{"jar", "test", "true", nil, dep.NewType(dep.Test, dep.Opt)},
 		{"", "import", "", nil, type1},
 		{"pom", "compile", "", []maven.Exclusion{
-			{"org.example", "abc"},
-			{"org.exclude", "*"},
+			{GroupID: "org.example", ArtifactID: "abc"},
+			{GroupID: "org.exclude", ArtifactID: "*"},
 		}, type2},
 	}
 
