@@ -169,7 +169,7 @@ func (r *resolver) Resolve(ctx context.Context, vk resolve.VersionKey) (*resolve
 		}
 		cur.processed = true
 		if debug {
-			log.Print("Current " + r.treeNodeString(cur))
+			log.Printf("Current " + r.treeNodeString(cur))
 		}
 		insQueue = insQueue[:0]
 		// BFS in lexicographic order of the requirements.
