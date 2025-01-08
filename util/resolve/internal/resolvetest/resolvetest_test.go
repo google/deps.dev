@@ -55,7 +55,7 @@ func TestParseData(t *testing.T) {
 	}
 	g1, g2 := a.Graph["alice"], a.Graph["alice2"]
 	if d := cmp.Diff(g1, g2); d != "" {
-		t.Logf("Mismatching parsed graphs:(-alice, +alice1):\n%s", d)
+		t.Logf("Mismatching parsed graphs:(-alice, +alice2):\n%s", d)
 	}
 
 	if got, want := len(a.Test), 2; got != want {

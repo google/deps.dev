@@ -312,7 +312,7 @@ func testMatch(t *testing.T, matchPrerelease bool, tests []matchTest, testVersio
 					// them here, but the goldens will notice if they're
 					// missing incorrectly, and if the test fails we'll see
 					// this message
-					t.Log("bad version in testMatch " + vs)
+					t.Logf("bad version in testMatch: %s", vs)
 					continue
 				}
 				var matched bool
