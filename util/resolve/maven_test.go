@@ -16,7 +16,6 @@ package resolve
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -130,8 +129,8 @@ func TestMavenVersion(t *testing.T) {
 			VersionKey: vk,
 			AttrSet:    test.attr,
 		}
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("Version(%v):\ngot: %v\nwant: %v\n", vk, got, want)
+		if diff := cmp.Diff(got, want); diff != "" {
+			t.Errorf("Version(%v):\n(-got, +want):\n%s", vk, diff)
 		}
 	}
 }
@@ -250,7 +249,7 @@ func TestMavenRequirements(t *testing.T) {
 		},
 	}
 	if d := cmp.Diff(want, got); d != "" {
-		t.Errorf("mavenRequirements:\n(- want, + got):\n%s", d)
+		t.Errorf("mavenRequirements:\n(-want, +got):\n%s", d)
 	}
 }
 

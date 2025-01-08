@@ -100,7 +100,7 @@ func TestProfile(t *testing.T) {
 		t.Fatalf("failed to unmarshal input: %v", err)
 	}
 	if diff := cmp.Diff(project.Profiles, want); diff != "" {
-		t.Errorf("unmarshal profiles: got %v, want %v", project.Profiles, want)
+		t.Errorf("unmarshal profiles:\n(-got, +want):\n%s", diff)
 	}
 }
 
@@ -486,6 +486,6 @@ func TestMergeProfiles(t *testing.T) {
 	}
 	proj.Profiles = nil
 	if diff := cmp.Diff(proj, want); diff != "" {
-		t.Fatalf("mergeProfiles does not have match result:\n got %v\n want%v\n", proj, want)
+		t.Fatalf("mergeProfiles does not have match result:\n(-got, +want):\n%s", diff)
 	}
 }

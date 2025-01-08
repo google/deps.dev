@@ -92,6 +92,6 @@ func TestPropertyMap(t *testing.T) {
 		t.Fatalf("failed to make property map: %v", err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("property map mistmatch: got %v want %v", got, want)
+		t.Errorf("property map mistmatch:\n(-got, +want):\n%s", diff)
 	}
 }
