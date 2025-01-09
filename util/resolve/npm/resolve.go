@@ -169,7 +169,7 @@ func (r *resolver) Resolve(ctx context.Context, vk resolve.VersionKey) (*resolve
 		}
 		cur.processed = true
 		if debug {
-			log.Printf("Current " + r.treeNodeString(cur))
+			log.Printf("Current %s", r.treeNodeString(cur))
 		}
 		insQueue = insQueue[:0]
 		// BFS in lexicographic order of the requirements.
@@ -183,9 +183,6 @@ func (r *resolver) Resolve(ctx context.Context, vk resolve.VersionKey) (*resolve
 			var wouldPick resolve.Version
 			if len(dvers) > 0 {
 				wouldPick = dvers[len(dvers)-1]
-				if err != nil {
-					return nil, err
-				}
 			}
 			if debug {
 				if wouldPick.VersionKey == (resolve.VersionKey{}) {
