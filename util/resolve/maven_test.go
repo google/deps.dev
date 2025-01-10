@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/grpc"
 
-	pb "deps.dev/api/v3"
+	pb "deps.dev/api/v3alpha"
 	"deps.dev/util/maven"
 	"deps.dev/util/resolve/dep"
 	"deps.dev/util/resolve/version"
