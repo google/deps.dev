@@ -20,7 +20,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	pb "deps.dev/api/v3"
+	pb "deps.dev/api/v3alpha"
 	"deps.dev/util/resolve/internal/deptest"
 )
 
