@@ -33,7 +33,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	pb "deps.dev/api/v3"
+	pb "deps.dev/api/v3alpha"
 	"deps.dev/util/resolve"
 	"deps.dev/util/resolve/dep"
 	"deps.dev/util/resolve/npm"
