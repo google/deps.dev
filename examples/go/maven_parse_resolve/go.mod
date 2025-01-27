@@ -6,7 +6,7 @@ require (
 	deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7
 	deps.dev/util/maven v0.0.0-20241203055422-1ee2cd4be494
 	deps.dev/util/resolve v0.0.0-20240611045547-af20eef0f1eb
-	google.golang.org/grpc v1.69.4
+	google.golang.org/grpc v1.70.0
 )
 
 require (
@@ -15,5 +15,5 @@ require (
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.35.1 // indirect
+	google.golang.org/protobuf v1.35.2 // indirect
 )
