@@ -56,15 +56,10 @@ func main() {
 		os.Exit(1)
 	}
 	tarArchive := flag.Arg(0)
-	b, err := findFile(tarArchive, "oci-layout")
-	if err != nil {
-		log.Fatalf("%v\nAre you using a docker client version >=25.0 to save the image?", err)
-	}
-
 	// Check that the tar declares itself to to be OCI 1.0.0 compliant.
 	var layout ociLayout
-	if err := json.Unmarshal(b, &layout); err != nil {
-		log.Fatalf("Unmarshaling oci-layout: %v", err)
+	if err := findFile(tarArchive, "oci-layout", &layout); err != nil {
+		log.Fatalf("%v\nAre you using a docker client version >=25.0 to save the image?", err)
 	}
 	if layout.ImageLayoutVersion != "1.0.0" {
 		log.Fatalf("The oci-layout file lists version %v which is not supported.", layout.ImageLayoutVersion)
@@ -72,32 +67,24 @@ func main() {
 
 	// Find the manifest(s) for the image. There may be multiple.
 	var idx index
-	if err := json.Unmarshal(b, &idx); err != nil {
-		log.Fatalf("unmarshaling index.json: %v", err)
+	if err := findFile(tarArchive, "index.json", &idx); err != nil {
+		log.Fatalf("%v", err)
 	}
 	fmt.Printf("%d manifest(s) found\n", len(idx.Manifests))
 
 	// For each manifest, look up the base image(s).
 	for _, m := range idx.Manifests {
 		// Read the manifest file, which contains the config digest.
-		id, _ := strings.CutPrefix(m.Digest, "sha256:")
-		b, err := findFile(tarArchive, fmt.Sprintf("blobs/sha256/%s", id))
-		if err != nil {
-			log.Fatalf("%v", err)
-		}
 		var mt manifest
-		if err := json.Unmarshal(b, &mt); err != nil {
-			log.Fatalf("Unmarshaling manifest: %v", err)
+		id, _ := strings.CutPrefix(m.Digest, "sha256:")
+		if err := findFile(tarArchive, fmt.Sprintf("blobs/sha256/%s", id), &mt); err != nil {
+			log.Fatalf("%v", err)
 		}
 		// Read the config file, which contains the diff IDs.
-		id, _ = strings.CutPrefix(mt.Config.Digest, "sha256:")
-		b, err = findFile(tarArchive, fmt.Sprintf("blobs/sha256/%s", id))
-		if err != nil {
-			log.Fatalf("%v", err)
-		}
 		var c config
-		if err := json.Unmarshal(b, &c); err != nil {
-			log.Fatalf("Unmarshaling config: %v", err)
+		id, _ = strings.CutPrefix(mt.Config.Digest, "sha256:")
+		if err := findFile(tarArchive, fmt.Sprintf("blobs/sha256/%s", id), &c); err != nil {
+			log.Fatalf("%v", err)
 		}
 		// For each chain ID, query the deps.dev api to determine
 		// whether it's a known base image.
@@ -159,10 +146,10 @@ type config struct {
 
 // findFile looks for the file with the specified filename in the specified
 // tarArchive.
-func findFile(tarArchive string, filename string) ([]byte, error) {
+func findFile(tarArchive string, filename string, v any) error {
 	f, err := os.Open(tarArchive)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	tr := tar.NewReader(f)
 	var b []byte
@@ -174,15 +161,16 @@ func findFile(tarArchive string, filename string) ([]byte, error) {
 		if hdr.Name == filename {
 			b, err = io.ReadAll(io.Reader(tr))
 			if err != nil {
-				return nil, err
+				return err
 			}
 			break
 		}
 	}
 	if len(b) == 0 {
-		return nil, fmt.Errorf("No %s in tar archive", filename)
+		return fmt.Errorf("No %s in tar archive", filename)
 	}
-	return b, nil
+
+	return json.Unmarshal(b, v)
 }
 
 // makeChainIDs computes the chain ID for each prefix of layers. An OCI chain
