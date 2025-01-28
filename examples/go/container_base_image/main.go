@@ -55,8 +55,8 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	filename := flag.Arg(0)
-	b, err := findFile(filename, "oci-layout")
+	tarArchive := flag.Arg(0)
+	b, err := findFile(tarArchive, "oci-layout")
 	if err != nil {
 		log.Fatalf("%v\nAre you using a docker client version >=25.0 to save the image?", err)
 	}
@@ -81,7 +81,7 @@ func main() {
 	for _, m := range idx.Manifests {
 		// Read the manifest file, which contains the config digest.
 		id, _ := strings.CutPrefix(m.Digest, "sha256:")
-		b, err := findFile(filename, fmt.Sprintf("blobs/sha256/%s", id))
+		b, err := findFile(tarArchive, fmt.Sprintf("blobs/sha256/%s", id))
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
@@ -91,7 +91,7 @@ func main() {
 		}
 		// Read the config file, which contains the diff IDs.
 		id, _ = strings.CutPrefix(mt.Config.Digest, "sha256:")
-		b, err = findFile(filename, fmt.Sprintf("blobs/sha256/%s", id))
+		b, err = findFile(tarArchive, fmt.Sprintf("blobs/sha256/%s", id))
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
