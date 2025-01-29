@@ -55,6 +55,9 @@ Example applications written in Go can be found in the `examples` directory:
 
 - [`artifact_query`](examples/go/artifact_query) shows how to query the
   deps.dev HTTP API by file content hash.
+- [`container_base_image`](examples/go/container_base_image) shows how to
+  compute the Chain ID from an OCI container image and use the deps.dev HTTP
+  API to identify base image(s).
 - [`dependencies_dot`](examples/go/dependencies_dot) fetches a resolved
   dependency graph from the deps.dev HTTP API and renders it in the DOT
   language used by Graphviz.
