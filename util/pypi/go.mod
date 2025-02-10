@@ -1,6 +1,6 @@
 module deps.dev/util/pypi
 
-go 1.23
+go 1.23.4
 
 replace deps.dev/util/semver => ../semver
 
