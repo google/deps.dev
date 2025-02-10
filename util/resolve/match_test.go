@@ -16,9 +16,10 @@ package resolve
 
 import (
 	"math/rand"
-	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"deps.dev/util/resolve/dep"
 	"deps.dev/util/resolve/version"
@@ -52,8 +53,8 @@ func TestSortVersions(t *testing.T) {
 				got[i], got[j] = got[j], got[i]
 			})
 			SortVersions(got)
-			if !reflect.DeepEqual(got, vs) {
-				t.Errorf("SortVersions:\nwant: %v\n got: %v", vs, got)
+			if diff := cmp.Diff(got, vs); diff != "" {
+				t.Errorf("SortVersions:\n(-got, +want):\n%s", diff)
 			}
 		}
 	}
@@ -115,8 +116,8 @@ func TestSortNPMDependencies(t *testing.T) {
 				got[i], got[j] = got[j], got[i]
 			})
 			SortDependencies(got)
-			if !reflect.DeepEqual(got, want) {
-				t.Errorf("SortDependencies:\n got: %v\nwant %v", got, want)
+			if diff := cmp.Diff(got, want); diff != "" {
+				t.Errorf("SortDependencies:\n(-got, +want):\n%s", diff)
 			}
 		}
 	}
@@ -263,8 +264,8 @@ func TestMatchNPMRequirement(t *testing.T) {
 		if got == nil {
 			got = []Version{}
 		}
-		if !reflect.DeepEqual(got, c.want) {
-			t.Errorf("matchNPMRequirement(%v):\nwant: %v\n got: %v", c.req, c.want, got)
+		if diff := cmp.Diff(got, c.want); diff != "" {
+			t.Errorf("matchNPMRequirement(%v):\n(-got, +want):\n%s", c.req, diff)
 		}
 	}
 }

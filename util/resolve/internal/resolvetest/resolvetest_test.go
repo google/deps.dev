@@ -16,7 +16,6 @@ package resolvetest
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -56,7 +55,7 @@ func TestParseData(t *testing.T) {
 	}
 	g1, g2 := a.Graph["alice"], a.Graph["alice2"]
 	if d := cmp.Diff(g1, g2); d != "" {
-		t.Logf("Mismatching parsed graphs:(- alice, + alice1):\n%s", d)
+		t.Logf("Mismatching parsed graphs:(-alice, +alice2):\n%s", d)
 	}
 
 	if got, want := len(a.Test), 2; got != want {
@@ -97,8 +96,9 @@ func TestParseData(t *testing.T) {
 		t.Fatalf("Unexpected graph name: got %q, want %q", got, want)
 	}
 
-	if got, want := a.Test[0].Flags, map[string]bool{"flag1": true, "flag2": true}; !reflect.DeepEqual(got, want) {
-		t.Fatalf("Unexpected test flags,\n got %v\nwant %v", got, want)
+	got, want := a.Test[0].Flags, map[string]bool{"flag1": true, "flag2": true}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("Unexpected test flags:\n(-got, +want):\n%s", diff)
 	}
 
 	// Multiverse with overlap.

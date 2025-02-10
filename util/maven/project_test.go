@@ -207,7 +207,7 @@ func TestProject(t *testing.T) {
 		t.Fatalf("failed to unmarshal input: %v", err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("unmarshal input: got %v\n, want %v", got, want)
+		t.Errorf("unmarshal input:\n(- got, + want):\n%s", diff)
 	}
 }
 
@@ -596,7 +596,7 @@ func TestMergeParent(t *testing.T) {
 	}
 	proj2.MergeParent(parent)
 	if diff := cmp.Diff(proj2, want2); diff != "" {
-		t.Errorf("mergeParent: got %v\n, want %v", proj2, want2)
+		t.Errorf("mergeParent:\n(-got, +want):\n%s", diff)
 	}
 }
 
@@ -781,6 +781,6 @@ func TestInterpolate(t *testing.T) {
 	}
 	proj.Interpolate()
 	if diff := cmp.Diff(proj, want); diff != "" {
-		t.Errorf("interpolate: got %v\n, want %v", proj, want)
+		t.Errorf("interpolate:\n(-got, +want):\n%s", diff)
 	}
 }

@@ -120,9 +120,6 @@ func (fb *FalsyBool) interpolate(dictionary map[string]string) bool {
 }
 
 func (fb *FalsyBool) Boolean() bool {
-	if *fb == "" {
-		return false
-	}
 	return *fb == "true"
 }
 

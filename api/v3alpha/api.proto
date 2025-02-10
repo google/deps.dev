@@ -207,6 +207,22 @@ service Insights {
       body: "*"
     };
   }
+
+  // QueryContainerImages searches for container image repositories on
+  // DockerHub that match the requested OCI Chain ID. At most 1000 image
+  // repositories are returned.
+  //
+  // An image repository is identifier (eg. 'tensorflow') that refers to
+  // a collection of images.
+  //
+  // An OCI Chain ID is a hashed encoding of an ordered sequence of OCI
+  // layers. For further details see the [OCI Chain ID
+  // spec](https://github.com/opencontainers/image-spec/blob/main/config.md#layer-chainid).
+  rpc QueryContainerImages(QueryContainerImagesRequest) returns (QueryContainerImagesResult) {
+    option (google.api.http) = {
+      get: "/v3alpha/querycontainerimages/{chain_id}"
+    };
+  }
 }
 
 // System identifies a package management system.
@@ -1194,4 +1210,22 @@ message PurlLookupBatchResult {
   // If set, this batch is not the full result set. This page token
   // may be used to fetch more results in a subsequent request.
   string next_page_token = 2;
+}
+
+// QueryContainerImagesRequest contains an OCI Chain ID to search for.
+message QueryContainerImagesRequest {
+  // An OCI Chain ID referring to an ordered sequence of OCI layers.
+  string chain_id = 1;
+}
+
+// QueryContainerImagesResults contains repositories corresponding to the
+// queried OCI Chain ID.
+message QueryContainerImagesResult {
+  message Result {
+    // An image repository (eg. 'tensorflow') referring to collection of
+    // images.
+    string repository = 1;
+  }
+  // The query results. At most 1000 results are returned.
+  repeated Result results = 1;
 }
