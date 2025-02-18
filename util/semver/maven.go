@@ -387,7 +387,7 @@ func compareMavenQualifier(a, b string) int {
 // is not a number, it returns -1.
 func (m *mavenExtension) num(i int) int64 {
 	if i >= len(m.elems) {
-		return -1
+		return 0
 	}
 	str := m.elems[i].str
 	// By the rules of building elements, we know that if the
