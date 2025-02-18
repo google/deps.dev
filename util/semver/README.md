@@ -3,7 +3,15 @@
 The semver package implements parsing, ordering, and matching of versions, as
 defined by [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html),
 with support for extensions and quirks implemented by a number of package
-management systems, including Go and npm.
+management systems, including:
+- Cargo
+- Go
+- Maven
+- NPM
+- NuGet
+- PyPI
+- RubyGems
+- Composer
 
 For a detailed description of what is supported, see `version.go`.
 
