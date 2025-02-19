@@ -232,11 +232,13 @@ func TestMavenDifference(t *testing.T) {
 		diff Diff
 	}{
 		{"1", "1", 0, Same},
+		{"1", "1.0.0", 0, Same},
 		{"1.2", "1.2", 0, Same},
 		{"1.2.3", "1.2.3", 0, Same},
 		{"2", "1", 1, DiffMajor},
 		{"1.3", "1.2", 1, DiffMinor},
 		{"1.2.4", "1.2.3", 1, DiffPatch},
+		{"1.0.1", "1.0.0", 1, DiffPatch},
 		{"1.a", "1.b", -1, DiffOther},
 	}
 	for _, test := range tests {
