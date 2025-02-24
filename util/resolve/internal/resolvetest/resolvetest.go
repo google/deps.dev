@@ -115,7 +115,6 @@ const (
 	startBlockGraph    = "-- graph "
 	startBlockTest     = "-- test "
 	endBlock           = "-- end"
-	optionPrototext    = "prototext"
 	prefixTestUniverse = "universe "
 	prefixTestResolve  = "resolve "
 	prefixTestGraph    = "graph "
