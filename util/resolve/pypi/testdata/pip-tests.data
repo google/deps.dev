@@ -1,0 +1,873 @@
+This file contains translated versions of some of the tests found at
+https://github.com/pypa/pip/blob/master/tests/yaml/
+
+Pip starts resolving with a set of requirements to install rather than the
+single concrete version expected by our resolvers. To line up pip's tests with
+how our resolvers are structured we insert a root package with a version for
+each case using the same graph. Each version imports the requirements pip is
+called with.
+
+TODO: get the two tests that are too large to copy out: large.yml and huge.yml
+TODO: use pip to generate the target output rather than doing it manually.
+
+From "simple.yml"
+-- Universe simple
+root
+	0.0.1
+		simple@
+	0.0.2
+		simple@
+		dep@
+	0.0.3
+		base@
+	0.0.4
+		dep@
+		simple@==0.1.0
+simple
+	0.1.0
+	0.2.0
+base
+	0.1.0
+		dep@
+dep
+	0.1.0
+-- END
+
+-- Graph simple-a
+root 0.0.1
+	simple@ 0.2.0
+-- END
+
+-- Graph simple-b
+root 0.0.2
+	simple@ 0.2.0
+	dep@ 0.1.0
+-- END
+
+-- Graph simple-c
+root 0.0.3
+	base@ 0.1.0
+		dep@ 0.1.0
+-- END
+
+-- Graph simple-d
+root 0.0.4
+	dep@ 0.1.0
+	simple@==0.1.0 0.1.0
+-- END
+
+-- Test simple-a
+Resolve root 0.0.1
+Universe simple
+Graph simple-a
+-- END
+
+-- Test simple-b
+Resolve root 0.0.2
+Universe simple
+Graph simple-b
+-- END
+
+-- Test simple-c
+Resolve root 0.0.3
+Universe simple
+Graph simple-c
+-- END
+
+-- Test simple-d
+Resolve root 0.0.4
+Universe simple
+Graph simple-d
+-- END
+
+From "trivial.yml"
+-- Universe trivial
+root
+	0.0.1
+		a@
+		b@
+	0.0.2
+		a@
+		b@
+		c@
+a
+	0.1.0
+b
+	0.2.0
+c
+	0.3.0
+-- END
+
+-- Graph trivial-a
+root 0.0.1
+	a@ 0.1.0
+	b@ 0.2.0
+-- END
+
+-- Graph trivial-b
+root 0.0.2
+	a@ 0.1.0
+	b@ 0.2.0
+	c@ 0.3.0
+-- END
+
+-- Test trivial-a
+Resolve root 0.0.1
+Universe trivial
+Graph trivial-a
+-- END
+
+-- Test trivial-b
+Resolve root 0.0.2
+Universe trivial
+Graph trivial-b
+-- END
+
+From "non_pinned.yml"
+-- Universe non_pinned
+root
+	0.0.1
+		A@>=2.0.0
+	0.0.2
+		A@<2.0.0
+A
+	1.0.0
+		B@<2.0.0
+	2.0.0
+		B@<3.0.0
+B
+	1.0.0
+	2.0.0
+	2.1.0
+	3.0.0
+-- END
+
+-- Graph non_pinned-a
+root 0.0.1
+	A@>=2.0.0 2.0.0
+		B@<3.0.0 2.1.0
+-- END
+
+-- Graph non_pinned-b
+root 0.0.2
+	A@<2.0.0 1.0.0
+		B@<2.0.0 1.0.0
+-- END
+
+-- Test non_pinned-a
+Resolve root 0.0.1
+Universe non_pinned
+Graph non_pinned-a
+-- END
+
+-- Test non_pinned-b
+Resolve root 0.0.2
+Universe non_pinned
+Graph non_pinned-b
+-- END
+
+From "pinned.yml"
+-- Universe pinned
+root
+	0.0.1
+		B@
+	0.0.2
+		B@==2.0.0
+	0.0.3
+		B@==1.0.0
+A
+	1.0.0
+	2.0.0
+B
+	1.0.0
+		A@==1.0.0
+	2.0.0
+		A@==2.0.0
+-- END
+
+-- Graph pinned-a
+root 0.0.1
+	B@ 2.0.0
+		A@==2.0.0 2.0.0
+-- END
+
+-- Graph pinned-b
+root 0.0.2
+	B@==2.0.0 2.0.0
+		A@==2.0.0 2.0.0
+-- END
+
+-- Graph pinned-c
+root 0.0.3
+	B@==1.0.0 1.0.0
+		A@==1.0.0 1.0.0
+-- END
+
+-- Test pinned-a
+Resolve root 0.0.1
+Universe pinned
+Graph pinned-a
+-- END
+
+-- Test pinned-b
+Resolve root 0.0.2
+Universe pinned
+Graph pinned-b
+-- END
+
+-- Test pinned-c
+Resolve root 0.0.3
+Universe pinned
+Graph pinned-c
+-- END
+
+From "pip988.yml"
+These tests are about what happens when you run pip repeatedly with different
+constraints to check how it upgrades the whole environment. In particular there
+is a case not reproduced here which would involve directly contradicting earlier
+constraints. This doesn't seem possible, or desirable to reproduce here.
+-- Universe pip988
+root
+	0.0.1
+		C@==1.0.0
+	0.0.2
+		C@==1.0.0
+		B@==1.0.0
+	0.0.3
+		C@==1.0.0
+		B@==1.0.0
+		A@==1.0.0
+A
+	1.0.0
+		B@>=1.0.0
+		C@>=1.0.0
+	2.0.0
+		B@>=2.0.0
+		C@>=1.0.0
+B
+	1.0.0
+		C@>=1.0.0
+	2.0.0
+		C@>=2.0.0
+C
+	1.0.0
+	2.0.0
+-- END
+
+-- Graph pip988-a
+root 0.0.1
+	C@==1.0.0 1.0.0
+-- END
+
+-- Graph pip988-b
+root 0.0.2
+	1: C@==1.0.0 1.0.0
+	B@==1.0.0 1.0.0
+		$1@>=1.0.0
+-- END
+
+-- Graph pip988-c
+root 0.0.3
+	A@==1.0.0 1.0.0
+		$1@>=1.0.0
+		$2@>=1.0.0
+	1: B@==1.0.0 1.0.0
+		$2@>=1.0.0
+	2: C@==1.0.0 1.0.0
+-- END
+
+-- Test pip988-a
+Resolve root 0.0.1
+Universe pip988
+Graph pip988-a
+-- END
+
+-- Test pip988-b
+Resolve root 0.0.2
+Universe pip988
+Graph pip988-b
+-- END
+
+-- Test pip988-c
+Resolve root 0.0.3
+Universe pip988
+Graph pip988-c
+-- END
+
+From "poetry2298.yml"
+-- Universe poetry2298
+root
+	0.0.1
+		poetry@
+poetry
+	1.0.5
+		zappa@==0.51.0
+		sphinx@==3.0.1
+zappa
+	0.51.0
+		boto3@
+sphinx
+	3.0.1
+		docutils@
+boto3
+	1.4.5
+		botocore@~=1.5.0
+botocore
+	1.5.92
+		docutils@<0.16
+docutils
+	0.15.0
+	0.16.0
+-- END
+
+-- Graph poetry2298
+root 0.0.1
+	poetry@ 1.0.5
+		zappa@==0.51.0 0.51.0
+			boto3@ 1.4.5
+				botocore@~=1.5.0 1.5.92
+					1: docutils@<0.16 0.15.0
+		sphinx@==3.0.1 3.0.1
+			$1@
+-- END
+
+-- Test poetry2298
+Resolve root 0.0.1
+Universe poetry2298
+Graph poetry2298
+-- END
+
+From "overlap1.yml"
+-- Universe overlap1
+root
+	0.0.1
+		myapp@
+	0.0.2
+		fussy@
+	0.0.3
+		capridous@
+myapp
+	0.2.4
+		fussy@
+		capridous@
+fussy
+	3.8.0
+		requests@>=1.2.0,<3
+capridous
+	1.1.0
+		requests@>=1.0.3,<2
+requests
+	1.0.1
+	1.0.3
+	1.1.0
+	1.2.0
+	1.3.0
+	2.1.0
+	3.2.0
+-- END
+
+-- Graph overlap1-a
+root 0.0.1
+	myapp@ 0.2.4
+		fussy@ 3.8.0
+			1: requests@>=1.2.0,<3 1.3.0
+		capridous@ 1.1.0
+			$1@>=1.0.3,<2
+-- END
+
+-- Graph overlap1-b
+root 0.0.2
+	fussy@ 3.8.0
+		requests@>=1.2.0,<3 2.1.0
+-- END
+
+-- Graph overlap1-c
+root 0.0.3
+	capridous@ 1.1.0
+		requests@>=1.0.3,<2 1.3.0
+-- END
+
+-- Test overlap1-a
+Resolve root 0.0.1
+Universe overlap1
+Graph overlap1-a
+-- END
+
+-- Test overlap1-b
+Resolve root 0.0.2
+Universe overlap1
+Graph overlap1-b
+-- END
+
+-- Test overlap1-c
+Resolve root 0.0.3
+Universe overlap1
+Graph overlap1-c
+-- END
+
+From "fallback.yml"
+-- Universe fallback
+root
+	0.0.1
+		A@
+A
+	0.8.0
+	1.0.0
+		B@==1.0.0
+		C@==1.0.0
+B
+	1.0.0
+		D@==1.0.0
+C
+	1.0.0
+		D@==2.0.0
+D
+	1.0.0
+	2.0.0
+-- END
+
+-- Graph fallback
+root 0.0.1
+	A@ 0.8.0
+-- END
+
+-- Test fallback
+Resolve root 0.0.1
+Universe fallback
+Graph fallback
+Flag backtrack
+-- END
+
+From "backtrack.yml"
+-- Universe backtrack
+root
+	0.0.1
+		A@
+A
+	1.0.0
+		B@==1.0.0
+	2.0.0
+		B@==2.0.0
+		C@==1.0.0
+	3.0.0
+		B@==3.0.0
+		C@==2.0.0
+	4.0.0
+		B@==4.0.0
+		C@==3.0.0
+	5.0.0
+		B@==5.0.0
+		C@==4.0.0
+	6.0.0
+		B@==6.0.0
+		C@==5.0.0
+	7.0.0
+		B@==7.0.0
+		C@==6.0.0
+	8.0.0
+		B@==8.0.0
+		C@==7.0.0
+B
+	1.0.0
+		C@==1.0.0
+	2.0.0
+		C@==2.0.0
+	3.0.0
+		C@==3.0.0
+	4.0.0
+		C@==4.0.0
+	5.0.0
+		C@==5.0.0
+	6.0.0
+		C@==6.0.0
+	7.0.0
+		C@==7.0.0
+	8.0.0
+		C@==8.0.0
+C
+	1.0.0
+	2.0.0
+	3.0.0
+	4.0.0
+	5.0.0
+	6.0.0
+	7.0.0
+	8.0.0
+-- END
+
+-- Graph backtrack
+root 0.0.1
+	A@ 1.0.0
+		B@==1.0.0 1.0.0
+			C@==1.0.0 1.0.0
+-- END
+
+-- Test backtrack
+Resolve root 0.0.1
+Universe backtrack
+Graph backtrack
+Flag backtrack
+-- END
+
+From "conflict_1.yml"
+-- Universe conflict_1
+root
+	0.0.1
+		A@
+	0.0.2
+		B@==1.0.0
+		B@
+	0.0.3
+		B@==1.0.0
+		B@==2.0.0
+	0.0.4
+		B@==1.5.0
+	0.0.5
+		A@==2.0.0
+A
+	1.0.0
+		B@==1.0.0
+		B@==2.0.0
+B
+	1.0.0
+	2.0.0
+-- END
+
+-- Graph incompatible
+ERROR: incompatible requirements
+-- END
+
+-- Graph no-matches
+ERROR: no matching distribution
+-- END
+
+-- Graph conflict_1-a
+root 0.0.1
+	A@ 1.0.0
+		B@==2.0.0 2.0.0
+-- END
+
+This test is not really a test of pip's resolver, it's a test of pip's install
+command. Pip will happily resolve to A 1.0.0 and B 2.0.0 and only prints a
+warning to stderr in the final stages of the install command when it double
+checks that what it has just done made sense. Notably this is the only error
+test which allows pip to exit 0, all of the others expect code 1.
+
+It isn't clear how we should treat this error, so for now just make sure our
+resolver finds the same versions pip does with this input.
+TODO: represent the expected error in this case somehow.
+-- Test conflict_1-a
+Resolve root 0.0.1
+Universe conflict_1
+Graph conflict_1-a
+-- END
+
+-- Graph conflict_1-b
+root 0.0.2
+	1: B@==1.0.0 1.0.0
+	$1@
+-- END
+
+-- Test conflict_1-b
+Resolve root 0.0.2
+Universe conflict_1
+Graph conflict_1-b
+-- END
+
+
+-- Test conflict_1-c
+Resolve root 0.0.3
+Universe conflict_1
+Graph incompatible
+Flag error
+-- END
+
+
+-- Test conflict_1-d
+Resolve root 0.0.4
+Universe conflict_1
+Graph no-matches
+Flag error
+-- END
+
+
+-- Test conflict_1-e
+Resolve root 0.0.5
+Universe conflict_1
+Graph no-matches
+Flag error
+-- END
+
+From "conflict_2.yml"
+-- Universe conflict_2
+root
+	0.0.1
+		virtualenv@
+	0.0.2
+		six@<1.12
+		virtualenv@==20.0.2
+virtualenv
+	20.0.2
+		six@>=1.12.0,<2
+six
+	1.11
+	1.12
+	1.13
+-- END
+
+-- Graph conflict_2-a
+root 0.0.1
+	virtualenv@ 20.0.2
+		six@>=1.12.0,<2 1.13
+-- END
+
+-- Test conflict_2-a
+Resolve root 0.0.1
+Universe conflict_2
+Graph conflict_2-a
+-- END
+
+-- Test conflict_2-b
+Resolve root 0.0.2
+Universe conflict_2
+Graph incompatible
+Flag error
+-- END
+
+From "conflict_3.yml"
+-- Universe conflict_3
+root
+	0.0.1
+		A@
+A
+	1.0.0
+		B@==1.0.0
+		C@==2.0.0
+B
+	1.0.0
+		C@==1.0.0
+C
+	1.0.0
+	2.0.0
+-- END
+
+-- Test conflict_3
+Resolve root 0.0.1
+Universe conflict_3
+Graph no-matches
+Flag error
+-- END
+
+From "conflicting_diamond.yml"
+-- Universe conflicting_diamond
+root
+	0.0.1
+		A@
+A
+	1.0.0
+		B@==1.0.0
+		C@==1.0.0
+B
+	1.0.0
+		D@==1.0.0
+C
+	1.0.0
+		D@==2.0.0
+D
+	1.0.0
+	2.0.0
+-- END
+
+-- Graph conflict
+ERROR: conflicting dependencies
+-- END
+
+-- Test conflicting_diamond
+Resolve root 0.0.1
+Universe conflicting_diamond
+Graph conflict
+Flag error
+-- END
+
+From "conflicting_triangle.yml"
+-- Universe conflicting_triangle
+root
+	0.0.1
+		A@
+		B@
+A
+	1.0.0
+		C@==1.0.0
+B
+	1.0.0
+		C@==2.0.0
+C
+	1.0.0
+	2.0.0
+-- END
+
+This one is a bit odd: pip would install A 1.0.0 and C 1.0.0, but still print
+a warning. We should probably replicate this with a B node containing an error.
+-- Test conflicting_triangle
+Resolve root 0.0.1
+Universe conflicting_triangle
+Graph incompatible
+Flag error
+-- END
+
+From "circular.yml"
+-- Universe circular
+root
+	0.0.1
+		A@
+	0.0.2
+		B@
+	0.0.3
+		C@
+	0.0.4
+		D@
+A
+	1.0.0
+		B@==1.0.0
+B
+	1.0.0
+		C@==1.0.0
+C
+	1.0.0
+		D@==1.0.0
+D
+	1.0.0
+		A@==1.0.0
+-- END
+
+-- Graph circular-a
+root 0.0.1
+	1: A@ 1.0.0
+		B@==1.0.0 1.0.0
+			C@==1.0.0 1.0.0
+				D@==1.0.0 1.0.0
+					$1@==1.0.0
+-- END
+
+-- Graph circular-b
+root 0.0.2
+	1: B@ 1.0.0
+		C@==1.0.0 1.0.0
+			D@==1.0.0 1.0.0
+				A@==1.0.0 1.0.0
+					$1@==1.0.0
+-- END
+
+-- Graph circular-c
+root 0.0.3
+	1: C@ 1.0.0
+		D@==1.0.0 1.0.0
+			A@==1.0.0 1.0.0
+				B@==1.0.0 1.0.0
+					$1@==1.0.0
+-- END
+
+-- Graph circular-d
+root 0.0.4
+	1: D@ 1.0.0
+		A@==1.0.0 1.0.0
+			B@==1.0.0 1.0.0
+				C@==1.0.0 1.0.0
+					$1@==1.0.0
+-- END
+
+-- Test circular-a
+Resolve root 0.0.1
+Universe circular
+Graph circular-a
+-- END
+
+-- Test circular-b
+Resolve root 0.0.2
+Universe circular
+Graph circular-b
+-- END
+
+-- Test circular-c
+Resolve root 0.0.3
+Universe circular
+Graph circular-c
+-- END
+
+-- Test circular-d
+Resolve root 0.0.4
+Universe circular
+Graph circular-d
+-- END
+
+From "extras.yml"
+-- Universe extras
+root
+	0.0.1
+		B@
+	0.0.2
+		C@
+	0.0.3
+		A@
+A
+	1.0.0
+		B@==1.0.0
+		C@==1.0.0
+B
+	1.0.0
+		EnabledDependencies extra_1|D@==1.0.0
+C
+	1.0.0
+		EnabledDependencies extra_2|D@==1.0.0
+D
+	1.0.0
+		Environment extra=="extra_1"|E@==1.0.0
+		Environment extra=="extra_2"|F@==1.0.0
+E
+	1.0.0
+F
+	1.0.0
+-- END
+
+-- Graph extras-a
+root 0.0.1
+	B@ 1.0.0
+		EnabledDependencies extra_1|D@==1.0.0 1.0.0
+			Environment extra=="extra_1"|E@==1.0.0 1.0.0
+-- END
+
+-- Graph extras-b
+root 0.0.2
+	C@ 1.0.0
+		EnabledDependencies extra_2|D@==1.0.0 1.0.0
+			Environment extra=="extra_2"|F@==1.0.0 1.0.0
+-- END
+
+-- Graph extras-c
+root 0.0.3
+	A@ 1.0.0
+		B@==1.0.0 1.0.0
+			1: EnabledDependencies extra_1|D@==1.0.0 1.0.0
+				Environment extra=="extra_1"|E@==1.0.0 1.0.0
+				Environment extra=="extra_2"|F@==1.0.0 1.0.0
+		C@==1.0.0 1.0.0
+			EnabledDependencies extra_2|$1@==1.0.0
+-- END
+
+-- Test extras-a
+Resolve root 0.0.1
+Universe extras
+Graph extras-a
+-- END
+
+-- Test extras-b
+Resolve root 0.0.2
+Universe extras
+Graph extras-b
+-- END
+
+-- Test extras-c
+Resolve root 0.0.3
+Universe extras
+Graph extras-c
+-- END

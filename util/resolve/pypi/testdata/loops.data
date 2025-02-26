@@ -1,0 +1,56 @@
+A universe to test a few different kinds of loops.
+-- Universe loops
+direct
+	0.0.1
+		direct@
+	0.0.2
+		direct@
+
+indirect
+	0.0.1
+		dep@
+	0.0.2
+		dep@
+dep
+	0.0.1
+		indirect@
+direct-dep
+	0.0.1
+		direct@
+-- END
+
+-- Test direct-lowest
+Resolve direct 0.0.1
+Universe loops
+Graph direct-lowest
+-- END
+
+-- Test direct-highest
+Resolve direct 0.0.2
+Universe loops
+Graph direct-highest
+-- END
+
+-- Test indirect-lowest
+Resolve indirect 0.0.1
+Universe loops
+Graph indirect-lowest
+-- END
+
+-- Test indirect-highest
+Resolve indirect 0.0.2
+Universe loops
+Graph indirect-highest
+-- END
+
+-- Test not-root-indirect
+Resolve dep 0.0.1
+Universe loops
+Graph not-root-indirect
+-- END
+
+-- Test not-root-direct
+Resolve direct-dep 0.0.1
+Universe loops
+Graph not-root-direct
+-- END

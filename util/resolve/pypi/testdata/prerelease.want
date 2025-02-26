@@ -1,0 +1,34 @@
+-- Graph prerelease-1
+root 0.0.1
+├─ 1: a@==1.0.0.alpha0 1.0.0.alpha0
+└─ b@==1.0.0 1.0.0
+   └─ $1@<2.0.0
+-- END
+
+-- Graph prerelease-2
+root 0.0.2
+├─ 1: a@<=1.0.0.alpha1 1.0.0.alpha1
+└─ b@==2.0.0 2.0.0
+   └─ $1@
+-- END
+
+-- Graph prerelease-3
+root 0.0.3
+├─ 1: a@<=1.0.0.alpha1 1.0.0.alpha1
+└─ b@==3.0.0 3.0.0
+   └─ $1@>0.9.9
+-- END
+
+-- Graph prerelease-4
+root 0.0.4
+├─ 1: a@<=9.9.9.rc9 1.0.0.alpha1
+└─ b@==4.0.0 4.0.0
+   └─ $1@<1.0.1
+-- END
+
+-- Graph prerelease-5
+ERROR: rpc error: code = Unknown desc = running "sh": exit status 1 (stderr: ERROR: Cannot install root and root==0.0.5 because these package versions have conflicting dependencies.
+ERROR: ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/user_guide/#fixing-conflicting-dependencies
+ERROR: )
+root 0.0.5
+-- END

@@ -1,0 +1,49 @@
+1: direct 0.0.1
+└─ $1@
+-- Graph direct-lowest
+1: direct 0.0.1
+└─ $1@
+-- END
+
+1: direct 0.0.2
+└─ $1@
+-- Graph direct-highest
+1: direct 0.0.2
+└─ $1@
+-- END
+
+1: indirect 0.0.1
+└─ dep@ 0.0.1
+   └─ $1@
+-- Graph indirect-lowest
+1: indirect 0.0.1
+└─ dep@ 0.0.1
+   └─ $1@
+-- END
+
+1: indirect 0.0.2
+└─ dep@ 0.0.1
+   └─ $1@
+-- Graph indirect-highest
+1: indirect 0.0.2
+└─ dep@ 0.0.1
+   └─ $1@
+-- END
+
+1: dep 0.0.1
+└─ indirect@ 0.0.2
+   └─ $1@
+-- Graph not-root-indirect
+1: dep 0.0.1
+└─ indirect@ 0.0.2
+   └─ $1@
+-- END
+
+direct-dep 0.0.1
+└─ 1: direct@ 0.0.2
+   └─ $1@
+-- Graph not-root-direct
+direct-dep 0.0.1
+└─ 1: direct@ 0.0.2
+   └─ $1@
+-- END

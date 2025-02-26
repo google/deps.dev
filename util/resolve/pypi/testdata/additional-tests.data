@@ -1,0 +1,217 @@
+This file contains tests designed to go beyond pip's own test suite.
+
+This test case is impossible to resolve, but requires a few levels of
+backtracking to prove it. Trying to pin C always fails because of its
+dependency on the non-existent D. However, the resolver has to try all
+configurations of A and B to determine there is no way to avoid C.
+This caused an infinite loop in pip version 20.3b1.
+-- Universe excessive-backtracking
+root
+	0.0.1
+		A@
+A
+	1.0.0
+		B@
+		C@
+	2.0.0
+		B@
+		C@
+B
+	1.0.0
+	2.0.0
+C
+	1.0.0
+		D@
+-- END
+
+-- Graph excessive-backtracking
+ERROR: incompatible requirements
+-- END
+
+-- Test excessive-backtracking
+Resolve root 0.0.1
+Universe excessive-backtracking
+Graph excessive-backtracking
+Flag error
+-- END
+
+While resolving we have to collect the union of all the requested extras
+so that we can correctly filter dependencies. This requires carrying
+around some additional data structures which have to be dealt with fairly
+carefully so we don't carry unnecessary extras back during backtracking.
+This test requires backtracking to solve and during the backtrack it should
+remove a requested extra.
+-- Universe backtrack-extras
+root
+	0.0.1
+		A@
+A
+	1.0.0
+		B@
+		EnabledDependencies 002|C@>1.0.0
+B
+	1.0.0
+	2.0.0
+		EnabledDependencies 001|C@==1.0.0
+C
+	1.0.0
+		Environment extra=="001"|D@<1.0.0
+	2.0.0
+		Environment extra=="002"|D@==1.0.0
+D
+	0.0.0
+	1.0.0
+-- END
+
+
+-- Graph backtrack-extras
+root 0.0.1
+	A@ 1.0.0
+		B@ 1.0.0
+		EnabledDependencies 002|C@>1.0.0 2.0.0
+			Environment extra=="002"|D@==1.0.0 1.0.0
+-- END
+
+-- Test backtrack-extras
+Resolve root 0.0.1
+Universe backtrack-extras
+Graph backtrack-extras
+-- END
+
+This test will first use an open constraint to pin a version of package B, but
+will later find a stricter requirement forcing it to downgrade. The dependency
+on D is not removed and will affect the choice of E, even though D should be
+filtered out of the final graph.
+-- Universe drop-requirements
+A
+	0.0.0
+		B@
+		C@
+B
+	0.0.0
+	0.0.1
+		D@
+C
+	0.0.0
+		B@<0.0.1
+		E@
+D
+	0.0.0
+		E@==0.0.0
+E
+	0.0.0
+	0.0.1
+-- END
+
+-- Graph drop-requirements
+A 0.0.0
+	1: B@ 0.0.0
+	C@ 0.0.0
+		$1@<0.0.1
+		E@ 0.0.0
+-- END
+
+-- Test drop-requirements
+Resolve A 0.0.0
+Universe drop-requirements
+Graph drop-requirements
+-- END
+
+A graph that exercises the environment marker filtering, ensuring the same list
+of dependencies should be requested and filtered in a couple of different ways.
+This illustrates a (fixed) bug we had mutating the cached result from the
+Imports resolve client method.
+-- Universe many-extras
+A
+	0.0.0
+		B@
+B
+	0.0.0
+		EnabledDependencies "D"|C@
+	0.0.1
+		EnabledDependencies "D-plus"|C@
+C
+	0.0.0
+		Environment python_version<"3.0"|nope@
+		Environment extra=="D"|D@
+		Environment extra=="D-plus"|D@
+		Environment extra=="D-plus"|E@
+E
+	0.0.0
+		non-existent@
+D
+	0.0.0
+-- END
+
+-- Graph many-extras
+A 0.0.0
+	B@ 0.0.0
+		EnabledDependencies "D"|C@ 0.0.0
+			Environment extra=="D"|D@ 0.0.0
+-- END
+
+-- Test many-extras
+Resolve A 0.0.0
+Universe many-extras
+Graph many-extras
+-- END
+
+This test is similar to drop-requirements, but ends up with one or more orphaned
+packages due to the dangling requirements. These include loops, which check that
+the final filtering stage (hasRouteToRoot) behaves safely.
+-- Universe orphaned-loops
+A
+	0.0.0
+		B@<=0.0.1
+		C@
+	0.0.1
+		B@
+		C@
+B
+	0.0.0
+	0.0.1
+		D@
+	0.0.2
+		E@
+C
+	0.0.0
+		B@<0.0.1
+D
+	0.0.0
+		D@
+E
+	0.0.0
+		F@
+F
+	0.0.0
+		G@
+G
+	0.0.0
+		E@
+-- END
+
+-- Graph orphaned-direct-loop
+A 0.0.0
+	1: B@<=0.0.1 0.0.0
+	C@ 0.0.0
+		$1@<0.0.1
+-- END
+
+-- Test orphaned-direct-loop
+Resolve A 0.0.0
+Universe orphaned-loops
+Graph orphaned-direct-loop
+-- END
+
+-- Graph orphaned-indirect-loop
+A 0.0.1
+	1: B@ 0.0.0
+	C@ 0.0.0
+		$1@<0.0.1
+-- END
+
+-- Test orphaned-indirect-loop
+Resolve A 0.0.1
+Universe orphaned-loops
+Graph orphaned-indirect-loop
+-- END
