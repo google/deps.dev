@@ -367,7 +367,7 @@ var environmentVariables = map[string]markerVar{
 	"implementation_name":            platformVar("implementation_name"),
 	"implementation_version":         platformVar("implementation_version"),
 	// extra is special: its value can only be known at resolution time.
-	"extra": markerVar{name: "extra"},
+	"extra": {name: "extra"},
 }
 
 // platformVar creates a markerVar for one of the pre-defined names, looking it
