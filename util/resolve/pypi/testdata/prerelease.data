@@ -1,0 +1,145 @@
+Test what happens when the graph contains a requirement that can only be matched
+by a pre-release version, but also includes requirements on the same package
+that, by default, would not allow pre-releases.
+-- Universe prerelease
+root
+	0.0.1
+		a@==1.0.0.alpha0
+		b@==1.0.0
+	0.0.2
+		a@<=1.0.0.alpha1
+		b@==2.0.0
+	0.0.3
+		a@<=1.0.0.alpha1
+		b@==3.0.0
+	0.0.4
+		a@<=9.9.9.rc9
+		b@==4.0.0
+	0.0.5
+		a@<2.0.0,>0.9.9
+		b@==5.0.0
+a
+	0.9.9
+	1.0.0.alpha0
+	1.0.0.alpha1
+	1.0.1
+	2.0.0
+b
+	1.0.0
+		a@<2.0.0
+	2.0.0
+		a@
+	3.0.0
+		a@>0.9.9
+	4.0.0
+		a@<1.0.1
+	5.0.0
+		a@<1.0.1
+-- END
+
+Simple case: one constraint on A can only be satisfied with a
+pre-release, the other does not accept pre-releases by default.
+-- Test prerelease-1
+Resolve root 0.0.1
+Universe prerelease
+Graph prerelease-1
+-- END
+
+One requirement on A allows pre-releases explicitly, but is also satisfied by
+one of the normal versions. The other is completely open, so it is possible
+to satisfy both with a normal version but it won't be the default for either
+requirement in isolation.
+-- Test prerelease-2
+Resolve root 0.0.2
+Universe prerelease
+Graph prerelease-2
+-- END
+
+One requirement on A allows pre-releases explicitly, but is also
+satisfied by one of the normal versions. The other does not allow
+pre-releases explicitly, but together the two requirements can only be
+satisfied by a pre-release version.
+-- Test prerelease-3
+Resolve root 0.0.3
+Universe prerelease
+Graph prerelease-3
+-- END
+
+One requirement on A allows pre-releases explicitly, but the highest
+version that satisfies it is not a pre-release. The other requirement
+does not explicitly allow pre-releases, but the highest satisfying
+version would be a pre-release.
+-- Test prerelease-4
+Resolve root 0.0.4
+Universe prerelease
+Graph prerelease-4
+-- END
+
+No pre-releases anywhere in the requirements, should skip the pre-release
+versions even though they would be the highest match. In this case that
+makes the resolution impossible, even though there are pre-release versions
+that would work.
+-- Test prerelease-5
+Resolve root 0.0.5
+Universe prerelease
+Graph prerelease-5
+Flag error
+-- END
+
+Test for the root cause of , an issue where the values in the cache
+of matching versions that include pre-releases could be corrupted just by trying
+to compute pre-release matches for other constraints on the same package. This
+was because the function that handled re-matching requirements that needed to
+admit pre-releases would cache references to a slice that was already cached
+inside the resolve.Client. Subsequent calls could then shuffle the values in the
+larger slice from the resolve.Client, changing the cached values.
+
+This test exercises this situation by:
+- Forcing pre-release matching for "c" with "root"'s direct requrement on c.
+- Making sure the latest versions of "a" and "b" have incompatible requirements,
+  to cause at leat one step of backtracking, so the resolver tries to reuse a
+  cached value.
+- Having a couple of requirements with a slightly different lower bound; this
+  ensures the matching will shuffle different items into the first few elements
+  of the large resolve.Client's cached version slice, changing the values in the
+  cached sub-slices.
+
+The result is that prior to the fix this test passes when run with a standard
+resolve.Client and fails (with an invalid graph) when run with a caching client.
+-- Universe prerelease-cache
+root
+	0.0.1
+		a@
+		b@
+		c@>1.0.0a0
+a
+	1.0.0
+		c@>=1.0.2,<1.2.0
+	1.0.1
+		c@>1.0.2,<1.2.1
+b
+	1.0.0
+		c@>1.0.1,<=1.2.1
+	1.0.1
+		c@<1.0.2
+c
+	1.0.0
+	1.0.1
+	1.0.2
+	1.2.0
+-- END
+
+-- Graph prerelease-cache
+root 0.0.1
+	a@ 1.0.1
+		$1@>1.0.2,<1.2.1
+	b@ 1.0.0
+		$1@>1.0.1,<=1.2.1
+	1: c@>1.0.0a0 1.2.0
+-- END
+
+-- Test prerelease-cache
+Resolve root 0.0.1
+Universe prerelease-cache
+Graph prerelease-cache
+-- END

@@ -41,6 +41,7 @@ const (
 	UnknownSystem = System(apipb.System_SYSTEM_UNSPECIFIED)
 	NPM           = System(apipb.System_NPM)
 	Maven         = System(apipb.System_MAVEN)
+	PyPI          = System(apipb.System_PYPI)
 )
 
 // Semver returns the corresponding semver.System.
@@ -50,6 +51,8 @@ func (s System) Semver() semver.System {
 		return semver.NPM
 	case Maven:
 		return semver.Maven
+	case PyPI:
+		return semver.PyPI
 	}
 	return semver.DefaultSystem
 }
