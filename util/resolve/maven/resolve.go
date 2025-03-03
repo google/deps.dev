@@ -214,6 +214,7 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 
 		var opt importsOpt
 		if first {
+			// TODO: make the allowed types of imports configurable
 			opt = testImports | optImports | providedImports
 		}
 		imps, err := r.imports(ctx, cur.VersionKey, opt)
