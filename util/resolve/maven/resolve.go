@@ -522,6 +522,7 @@ func (r *resolver) imports(ctx context.Context, ver resolve.VersionKey, opt impo
 		d := dependency{
 			RequirementVersion: imp,
 		}
+		d.Type = imp.Type.Clone()
 		if s, ok := imp.Type.GetAttr(dep.MavenExclusions); ok {
 			d.exclusions = parseExclusions(s)
 		}

@@ -48,13 +48,13 @@ group:alice 1.0
 
 -- Graph optional01
 group:alice 1.0
-└─ selector|group:bob@ 1.0
+└─ selector opt|group:bob@ 1.0
    └─ selector|group:chuck@ 1.0
 -- END
 
 -- Graph ignoreTest01
 group:alice 1.0
-└─ selector|group:bob@ 1.0
+└─ selector test|group:bob@ 1.0
    └─ selector|group:chuck@ 1.0
 -- END
 
