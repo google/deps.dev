@@ -14,13 +14,13 @@ require (
 	deps.dev/util/pypi v0.0.0-20250307021655-d811e36f9cad
 	deps.dev/util/semver v0.0.0-20241230231135-52b7655a522f
 	github.com/google/go-cmp v0.7.0
-	google.golang.org/grpc v1.70.0
+	google.golang.org/grpc v1.71.0
 )
 
 require (
-	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/net v0.34.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.35.2 // indirect
+	google.golang.org/protobuf v1.36.4 // indirect
 )
