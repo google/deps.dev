@@ -37,6 +37,7 @@ import (
 
 	"deps.dev/util/resolve"
 	"deps.dev/util/resolve/dep"
+	"deps.dev/util/resolve/pypi/internal/lru"
 	"deps.dev/util/semver"
 )
 
@@ -73,12 +74,18 @@ func debugf(rc resolve.Client, pattern string, args ...any) {
 }
 
 type resolver struct {
-	client resolve.Client
+	client               resolve.Client
+	markerCache          *lru.Cache[string, marker]
+	constraintCache      *lru.Cache[resolve.VersionKey, *semver.Constraint]
+	prereleaseMatchCache *lru.Cache[resolve.VersionKey, []resolve.Version]
 }
 
 func NewResolver(rc resolve.Client) resolve.Resolver {
 	return &resolver{
-		client: rc,
+		client:               rc,
+		markerCache:          lru.New[string, marker](10000),
+		constraintCache:      lru.New[resolve.VersionKey, *semver.Constraint](10000),
+		prereleaseMatchCache: lru.New[resolve.VersionKey, []resolve.Version](10000),
 	}
 }
 
@@ -94,9 +101,12 @@ func (r *resolver) Resolve(ctx context.Context, vk resolve.VersionKey) (*resolve
 	}
 
 	p := &provider{
-		rc:          r.client,
-		rootPackage: vk.PackageKey,
-		rootVersion: vk,
+		rc:                   r.client,
+		markerCache:          r.markerCache,
+		constraintCache:      r.constraintCache,
+		prereleaseMatchCache: r.prereleaseMatchCache,
+		rootPackage:          vk.PackageKey,
+		rootVersion:          vk,
 	}
 
 	// The root of a pip resolution is just the current working directory
@@ -259,6 +269,13 @@ type provider struct {
 	// userRequested holds the order of the direct dependencies, used when
 	// prioritizing them.
 	userRequested map[resolve.PackageKey]int
+	// markerCache caches parsed environment markers.
+	markerCache *lru.Cache[string, marker]
+	// constraintCache caches parsed semver constraints.
+	constraintCache *lru.Cache[resolve.VersionKey, *semver.Constraint]
+	// prereleaseMatchCache caches matching versions that include
+	// prereleases.
+	prereleaseMatchCache *lru.Cache[resolve.VersionKey, []resolve.Version]
 
 	rootVersion resolve.VersionKey
 	rootPackage resolve.PackageKey
@@ -452,6 +469,11 @@ func (p *provider) matchingVersionsWithPrereleases(ctx context.Context, req reso
 		return p.matchingVersions(ctx, req)
 	}
 
+	mvs, ok := p.prereleaseMatchCache.Get(req)
+	if ok {
+		return getVersionKeys(mvs), nil
+	}
+
 	vs, err := p.rc.Versions(ctx, req.PackageKey)
 	if err != nil {
 		return nil, err
@@ -463,7 +485,7 @@ func (p *provider) matchingVersionsWithPrereleases(ctx context.Context, req reso
 
 	debugf(p.rc, "filtering %v by %v\n", vs, constraint)
 
-	mvs, err := filterSlice(vs, func(v resolve.Version) (bool, error) {
+	mvs, err = filterSlice(vs, func(v resolve.Version) (bool, error) {
 		if v.VersionType != resolve.Concrete {
 			return false, nil
 		}
@@ -486,6 +508,7 @@ func (p *provider) matchingVersionsWithPrereleases(ctx context.Context, req reso
 	})
 	debugf(p.rc, "got %v\n", mvs)
 	mvs = slices.Clone(mvs)
+	p.prereleaseMatchCache.Add(req, mvs)
 	return getVersionKeys(mvs), nil
 }
 
@@ -506,10 +529,15 @@ func (p *provider) matchesPrerelease(req resolve.VersionKey) bool {
 }
 
 func (p *provider) getConstraint(v resolve.VersionKey) (*semver.Constraint, error) {
+	c, ok := p.constraintCache.Get(v)
+	if ok {
+		return c, nil
+	}
 	c, err := semver.PyPI.ParseConstraint(v.Version)
 	if err != nil {
 		return nil, err
 	}
+	p.constraintCache.Add(v, c)
 	return c, nil
 }
 
@@ -583,10 +611,15 @@ func (p *provider) getDependencies(ctx context.Context, v resolve.VersionKey, ex
 }
 
 func (p *provider) parseMarker(raw string) (marker, error) {
+	cached, ok := p.markerCache.Get(raw)
+	if ok {
+		return cached, nil
+	}
 	m, err := parseMarker(raw)
 	if err != nil {
 		return nil, err
 	}
+	p.markerCache.Add(raw, m)
 	return m, nil
 }
 

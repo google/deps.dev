@@ -13,6 +13,7 @@ require (
 	deps.dev/util/maven v0.0.0-20240322043601-ff53416fec6a
 	deps.dev/util/pypi v0.0.0-20250307021655-d811e36f9cad
 	deps.dev/util/semver v0.0.0-20241230231135-52b7655a522f
+	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
 	github.com/google/go-cmp v0.7.0
 	google.golang.org/grpc v1.71.0
 )
