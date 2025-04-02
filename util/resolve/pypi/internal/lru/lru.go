@@ -48,7 +48,9 @@ func (c *Cache[K, V]) Add(k K, v V) {
 		// No change in size.
 		return
 	}
+
 	if len(c.m) < c.maxSize {
+		// The key is new, and there is space in the cache.
 		c.m[k] = c.l.Push(cacheEntry[K, V]{k: k, v: v})
 		return
 	}
@@ -62,6 +64,10 @@ func (c *Cache[K, V]) Add(k K, v V) {
 	c.l.MoveToFront(ln)
 }
 
+// Get returns the value associated with the given key from the cache, as well
+// as a boolean indicating whether the key was found.
+// It also moves the accessed item to the front of the LRU list, indicating it
+// was recently used.
 func (c *Cache[K, V]) Get(k K) (v V, ok bool) {
 	ln, ok := c.m[k]
 	if !ok {
