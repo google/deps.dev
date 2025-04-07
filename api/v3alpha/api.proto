@@ -148,11 +148,11 @@ service Insights {
   // specified by name, content hash, or both. If a hash was specified in the
   // request, it returns the artifacts that matched the hash.
   //
-  // Querying by content hash is currently supported for npm, Cargo, Maven, and
-  // NuGet. It is typical for hash queries to return many results; hashes are
-  // matched against multiple release artifacts (such as JAR files) that
-  // comprise package versions, and any given artifact may appear in several
-  // package versions.
+  // Querying by content hash is currently supported for npm, Cargo, Maven,
+  // NuGet, PyPI and RubyGems. It is typical for hash queries to return many
+  // results; hashes are matched against multiple release artifacts (such as
+  // JAR files) that comprise package versions, and any given artifact may
+  // appear in several package versions.
   rpc Query(QueryRequest) returns (QueryResult) {
     option (google.api.http) = {
       // Request fields are passed as query parameters.
@@ -229,6 +229,7 @@ service Insights {
 enum System {
   SYSTEM_UNSPECIFIED = 0;
   GO = 1;
+  RUBYGEMS = 2;
   NPM = 3;
   CARGO = 4;
   MAVEN = 6;
@@ -440,9 +441,9 @@ message Version {
   // information, this field is empty. When more than one license is listed,
   // their relationship is unspecified.
   //
-  // For Cargo, Maven, npm, NuGet, and PyPI, license information is read from
-  // the package metadata. For Go, license information is determined using the
-  // [licensecheck](https://github.com/google/licensecheck) package.
+  // For Cargo, Maven, npm, NuGet, PyPI, and RubyGems, license information is
+  // read from the package metadata. For Go, license information is determined
+  // using the [licensecheck](https://github.com/google/licensecheck) package.
   //
   // License information is not intended to be legal advice, and you should
   // independently verify the license or terms of any software for your own
@@ -450,9 +451,9 @@ message Version {
   repeated string licenses = 3;
 
   message License {
-    // For Cargo, Maven, npm, NuGet, and PyPI, this field holds the license as
-    // specified by the package author in the package metadata. For Go, it
-    // holds license information as determined using the
+    // For Cargo, Maven, npm, NuGet, PyPI, and RubyGems, this field holds the
+    // license as specified by the package author in the package metadata. For
+    // Go, it holds license information as determined using the
     // [licensecheck](https://github.com/google/licensecheck) package.
     string license = 1;
 
@@ -498,7 +499,7 @@ message Version {
   // URLs for the package management registries this package version is
   // available from.
   // Only set for systems that use a central repository for package
-  // distribution: Cargo, Maven, npm, NuGet, and PyPI.
+  // distribution: Cargo, Maven, npm, NuGet, PyPI, and RubyGems.
   repeated string registries = 8;
 
   message Project {
@@ -753,6 +754,26 @@ message Requirements {
   // Any string field may contain references to properties, and the properties
   // are not interpolated.
   Maven maven = 3;
+
+  message RubyGems {
+    message Dependency {
+      // The name of the package.
+      string name = 1;
+      // The requirement on the package.
+      string requirement = 2;
+    }
+    // The list of runtime dependencies.
+    repeated Dependency runtime_dependencies = 1;
+    // The list of development dependencies.
+    repeated Dependency dev_dependencies = 2;
+  }
+  // The RubyGems-specific representation of the version's requirements.
+  //
+  // Note that the term "dependency" is used here to mean "a single unresolved
+  // requirement" to be consistent with how the term is used in the npm
+  // ecosystem. This is different to how it is used elsewhere in the deps.dev
+  // API.
+  RubyGems rubygems = 4;
 }
 
 // GetDependenciesRequest identifies a package version for which to return
