@@ -229,6 +229,7 @@ service Insights {
 enum System {
   SYSTEM_UNSPECIFIED = 0;
   GO = 1;
+  RUBYGEMS = 2;
   NPM = 3;
   CARGO = 4;
   MAVEN = 6;
