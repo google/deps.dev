@@ -127,10 +127,10 @@ func (r *resolver) Resolve(ctx context.Context, vk resolve.VersionKey) (*resolve
 	}
 	p.userRequested = direct
 
-	// Pip stops after two million iterations, so we will limit ourselves in
-	// the same way.
-	// TODO: this is a lot of iterations, determine the impact of bringing it down.
-	const maxRounds = 1000000
+	// Pip stops after 200k iterations, so we will limit ourselves in the same
+	// way.
+	// https://github.com/pypa/pip/blob/main/src/pip/_internal/resolution/resolvelib/resolver.py#L95
+	const maxRounds = 200000
 	res := resolution{p: p}
 	state, err := res.resolve(ctx, deps, maxRounds)
 	if err != nil {
