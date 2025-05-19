@@ -15,7 +15,7 @@ require (
 	deps.dev/util/semver v0.0.0-20241230231135-52b7655a522f
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
 	github.com/google/go-cmp v0.7.0
-	google.golang.org/grpc v1.72.0
+	google.golang.org/grpc v1.72.1
 )
 
 require (
