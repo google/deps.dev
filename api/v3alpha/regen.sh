@@ -16,7 +16,7 @@
 # ========================================================================
 
 # This script calls protoc to generate Go client code for the gRPC service
-# defined by api.proto.
+# defined by apiv3alpha.proto.
 #
 # For information about generating client code for other languages and
 # platforms, please see https://grpc.io/docs/
@@ -28,4 +28,4 @@ protoc \
   --go-grpc_out=paths=source_relative:. \
   --proto_path=. \
   --proto_path=../../submodules/googleapis \
-  api.proto
+  apiv3alpha.proto
