@@ -57,7 +57,11 @@ func (c *Constraint) CalculateMinVersion() (*Version, error) {
 	// For pre-releases, we must increment the pre-release identifier.
 	// e.g., >2.0.0-alpha -> 2.0.0-alpha.0
 	// e.g., >2.0.0-alpha.0 -> 2.0.0-alpha.1
+	// Build metadata (after "+") is not considered in version comparison, so it is stripped.
 	fullStr := v.String()
+	if buildIndex := strings.Index(fullStr, "+"); buildIndex != -1 {
+ 		fullStr = fullStr[:buildIndex]
+ 	}
 	preIndex := strings.Index(fullStr, "-")
 	if preIndex == -1 {
 		// This should not happen if IsPrerelease is true.

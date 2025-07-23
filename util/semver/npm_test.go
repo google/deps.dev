@@ -237,6 +237,8 @@ func TestCalculateMinVersion(t *testing.T) {
 		{">=2.0.0-alpha", "2.0.0-alpha"},
 		{">2.0.0-alpha", "2.0.0-alpha.0"},
 		{">2.0.0-alpha.0", "2.0.0-alpha.1"},
+		{">=2.0.0-alpha.0+build.1", "2.0.0-alpha.0+build.1"},
+		{">2.0.0-alpha.0+build.1", "2.0.0-alpha.1"},
 		{"1.0.0 - 2.0.0", "1.0.0"},
 		{"1.1 - 2.0.0", "1.1.0"},
 		{"3.x", "3.0.0"},
