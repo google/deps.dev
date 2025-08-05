@@ -24,6 +24,7 @@ import (
 
 // CalculateMinVersion returns the minimum version that satisfies the constraint. It is parallel to
 // https://github.com/npm/node-semver/blob/main/ranges/min-version.js.
+// This currently only works for NPM.
 func (c *Constraint) CalculateMinVersion() (*Version, error) {
 	if c.sys != NPM {
 		return nil, fmt.Errorf("calculateMinVersion is only supported by NPM")
@@ -39,6 +40,7 @@ func (c *Constraint) CalculateMinVersion() (*Version, error) {
 		return NPM.Parse("0.0.0-0")
 	}
 
+	// This assumes canon was called somewhere, to set span[0] to the minimum version.
 	s := c.set.span[0]
 	v := s.min.copy()
 
@@ -60,8 +62,8 @@ func (c *Constraint) CalculateMinVersion() (*Version, error) {
 	// Build metadata (after "+") is not considered in version comparison, so it is stripped.
 	fullStr := v.String()
 	if buildIndex := strings.Index(fullStr, "+"); buildIndex != -1 {
- 		fullStr = fullStr[:buildIndex]
- 	}
+		fullStr = fullStr[:buildIndex]
+	}
 	preIndex := strings.Index(fullStr, "-")
 	if preIndex == -1 {
 		// This should not happen if IsPrerelease is true.
