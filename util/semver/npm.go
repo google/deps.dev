@@ -16,7 +16,6 @@ package semver
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -26,6 +25,7 @@ import (
 // https://github.com/npm/node-semver/blob/main/ranges/min-version.js.
 // This currently only works for NPM.
 func (c *Constraint) CalculateMinVersion() (*Version, error) {
+	minNonBuildVersion, _ := NPM.Parse("0.0.0")
 	if c.sys != NPM {
 		return nil, fmt.Errorf("calculateMinVersion is only supported by NPM")
 	}
@@ -35,9 +35,9 @@ func (c *Constraint) CalculateMinVersion() (*Version, error) {
 	}
 
 	// The empty string constraint "" means "any version", for which the lowest
-	// is "0.0.0-0".
+	// is "0.0.0".
 	if c.String() == "" {
-		return NPM.Parse("0.0.0-0")
+		return minNonBuildVersion, nil
 	}
 
 	// This assumes canon was called somewhere, to set span[0] to the minimum version.
@@ -45,7 +45,14 @@ func (c *Constraint) CalculateMinVersion() (*Version, error) {
 	v := s.min.copy()
 
 	// The lower bound is inclusive, so it's the minimum version.
+	// Use 0.0.0 instead of 0.0.0-0 as the minimum value, to be consistent with
+	// NPM's implementation.
+	// See https://github.com/npm/node-semver/blob/main/ranges/min-version.js and
+	// https://github.com/npm/node-semver/blob/main/ranges/min-version.js.
 	if !s.minOpen {
+		if v.String() == "0.0.0-0" {
+			return minNonBuildVersion, nil
+		}
 		return v, nil
 	}
 
@@ -56,35 +63,13 @@ func (c *Constraint) CalculateMinVersion() (*Version, error) {
 		return v, nil
 	}
 
-	// For pre-releases, we must increment the pre-release identifier.
-	// e.g., >2.0.0-alpha -> 2.0.0-alpha.0
-	// e.g., >2.0.0-alpha.0 -> 2.0.0-alpha.1
+	// For pre-releases, we must increment the pre-release identifier by adding a ".0".
 	// Build metadata (after "+") is not considered in version comparison, so it is stripped.
 	fullStr := v.String()
 	if buildIndex := strings.Index(fullStr, "+"); buildIndex != -1 {
 		fullStr = fullStr[:buildIndex]
 	}
-	preIndex := strings.Index(fullStr, "-")
-	if preIndex == -1 {
-		// This should not happen if IsPrerelease is true.
-		return nil, fmt.Errorf("internal error: IsPrerelease is true but no '-' in version string %q", fullStr)
-	}
-	base := fullStr[:preIndex]
-	pre := fullStr[preIndex+1:]
-
-	parts := strings.Split(pre, ".")
-	lastPart := parts[len(parts)-1]
-	num, err := strconv.Atoi(lastPart)
-	var newPre string
-	if err == nil {
-		// Last part is numeric, so we increment it.
-		parts[len(parts)-1] = strconv.Itoa(num + 1)
-		newPre = strings.Join(parts, ".")
-	} else {
-		// Last part is non-numeric, so we append ".0".
-		newPre = pre + ".0"
-	}
-	v, err = NPM.Parse(base + "-" + newPre)
+	v, err := NPM.Parse(fullStr + ".0")
 	if err != nil {
 		return nil, err
 	}
