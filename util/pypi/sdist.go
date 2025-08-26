@@ -62,6 +62,8 @@ var installRequiresPattern = regexp.MustCompile(`install_requires[ \t]*=`)
 // SdistMetadata attempts to read metadata out of the supplied reader assuming
 // it contains an sdist. The reader should be either a tar or a zip file,
 // the extension of the supplied filename will be used to distinguish.
+// Note that when the setup.py or setup.cfg holds dependencies, SdistMetadata
+// returns an UnsupportedError and partial metadata results.
 func SdistMetadata(ctx context.Context, fileName string, r io.Reader) (*Metadata, error) {
 	// setupPy and setupCFG indicate whether we have found dependency information
 	// in a setup.py or setup.cfg.
@@ -155,12 +157,12 @@ func SdistMetadata(ctx context.Context, fileName string, r io.Reader) (*Metadata
 		// install_requires line in a setup.py or setup.cfg file then
 		// report and error; we can't handle those dependencies yet.
 		case setupCFG:
-			return nil, UnsupportedError{
+			return &meta, UnsupportedError{
 				msg:         "dependencies in setup.cfg, not in PKG-INFO",
 				packageType: "sdist",
 			}
 		case setupPy:
-			return nil, UnsupportedError{
+			return &meta, UnsupportedError{
 				msg:         "dependencies in setup.py, not in PKG-INFO",
 				packageType: "sdist",
 			}
