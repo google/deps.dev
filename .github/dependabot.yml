@@ -6,16 +6,29 @@
 version: 2
 updates:
   - package-ecosystem: "gomod"
-    directories: 
+    directories:
       - "/api/*"
       - "/examples/go/*"
       - "/util/*"
     schedule:
       interval: "weekly"
-
+    groups:
+      go:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
     # Workflow files stored in the default location of `.github/workflows`. (You don't need to specify `/.github/workflows` for `directory`. You can use `directory: "/"`.)
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
