@@ -11,7 +11,7 @@ replace (
 require (
 	deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7
 	deps.dev/util/resolve v0.0.0-20240312000934-38ffc8dd1d92
-	google.golang.org/grpc v1.75.0
+	google.golang.org/grpc v1.75.1
 )
 
 require (
@@ -21,5 +21,5 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.36.8 // indirect
+	google.golang.org/protobuf v1.36.9 // indirect
 )
