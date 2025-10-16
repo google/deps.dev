@@ -54,7 +54,7 @@ service Insights {
   }
 
   // GetDependencies returns a resolved dependency graph for the given package
-  // version. Dependencies are currently available for Go, npm, Cargo, Maven
+  // version. Dependencies are currently available for npm, Cargo, Maven
   // and PyPI.
   //
   // Dependencies are the resolution of the requirements (dependency
@@ -794,6 +794,10 @@ enum ProjectRelationProvenance {
   // attestation](https://docs.pypi.org/attestations/publish/v1/) that links
   // this package version to this project.
   PYPI_PUBLISH_ATTESTATION = 3;
+
+  // There is a RubyGems Publish attestation that links this package version to
+  // this project.
+  RUBYGEMS_PUBLISH_ATTESTATION = 4;
 
   // The package version's metadata contains an unverified link to this project.
   UNVERIFIED_METADATA = 10;
