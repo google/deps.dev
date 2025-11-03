@@ -314,8 +314,8 @@ func (p *Project) InterpolateRepositories() error {
 		return err
 	}
 
-	for _, r := range p.Repositories {
-		r.interpolate(properties)
+	for i := range p.Repositories {
+		p.Repositories[i].interpolate(properties)
 	}
 
 	return nil
