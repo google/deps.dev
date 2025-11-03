@@ -483,16 +483,14 @@ var constraintMallocTest = []struct {
 func TestCountMallocs(t *testing.T) {
 	for _, mt := range versionMallocTest {
 		mallocs := testing.AllocsPerRun(10000, func() { DefaultSystem.Parse(mt.str) })
-		// TODO: Switch != to > when things have settled.
-		if got, max := mallocs, float64(mt.count); got != max {
-			t.Errorf("Parse(%q): got %v allocs, want %v", mt.str, got, max)
+		if got, max := mallocs, float64(mt.count); got > max {
+			t.Errorf("Parse(%q): got %v allocs, want <= %v", mt.str, got, max)
 		}
 	}
 	for _, mt := range constraintMallocTest {
 		mallocs := testing.AllocsPerRun(10000, func() { DefaultSystem.ParseConstraint(mt.str) })
-		// TODO: Switch != to > when things have settled.
-		if got, max := mallocs, float64(mt.count); got != max {
-			t.Errorf("ParseConstraint(%q): got %v allocs, want %v", mt.str, got, max)
+		if got, max := mallocs, float64(mt.count); got > max {
+			t.Errorf("ParseConstraint(%q): got %v allocs, want <= %v", mt.str, got, max)
 		}
 	}
 }

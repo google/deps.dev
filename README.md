@@ -1,5 +1,7 @@
 # deps.dev API
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/google/deps.dev/badge)](https://scorecard.dev/viewer/?uri=github.com/google/deps.dev)
+
 [deps.dev](https://deps.dev/) is a service developed and hosted by Google to
 help developers better understand the structure, construction, and security of
 open source software packages.
@@ -53,6 +55,9 @@ Example applications written in Go can be found in the `examples` directory:
 
 - [`artifact_query`](examples/go/artifact_query) shows how to query the
   deps.dev HTTP API by file content hash.
+- [`container_base_image`](examples/go/container_base_image) shows how to
+  compute the Chain ID from an OCI container image and use the deps.dev HTTP
+  API to identify base image(s).
 - [`dependencies_dot`](examples/go/dependencies_dot) fetches a resolved
   dependency graph from the deps.dev HTTP API and renders it in the DOT
   language used by Graphviz.

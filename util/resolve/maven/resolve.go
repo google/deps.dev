@@ -214,10 +214,8 @@ func (r *resolver) resolve(ctx context.Context, vk resolve.VersionKey, requireme
 
 		var opt importsOpt
 		if first {
-			// We skip test and optional dependencies, as for a consumer, none
-			// would be included (the optional would be indirect).
-			// https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html#how-do-optional-dependencies-work
-			opt = providedImports
+			// TODO: make the allowed types of imports configurable
+			opt = testImports | optImports | providedImports
 		}
 		imps, err := r.imports(ctx, cur.VersionKey, opt)
 		if err == resolve.ErrNotFound && !first {
@@ -524,6 +522,7 @@ func (r *resolver) imports(ctx context.Context, ver resolve.VersionKey, opt impo
 		d := dependency{
 			RequirementVersion: imp,
 		}
+		d.Type = imp.Type.Clone()
 		if s, ok := imp.Type.GetAttr(dep.MavenExclusions); ok {
 			d.exclusions = parseExclusions(s)
 		}

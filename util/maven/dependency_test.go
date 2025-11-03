@@ -175,6 +175,6 @@ func TestProcessDependencies(t *testing.T) {
 	}
 	proj.ProcessDependencies(getDependencyManagement)
 	if diff := cmp.Diff(proj, want); diff != "" {
-		t.Errorf("processDependencies: got %v\n, want %v", proj, want)
+		t.Errorf("processDependencies:\n(-got, +want):\n%s", diff)
 	}
 }

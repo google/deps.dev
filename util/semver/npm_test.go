@@ -218,3 +218,59 @@ var npmCompareTests = []compareTest{
 func TestNPMCompare(t *testing.T) {
 	testCompare(t, NPM, npmCompareTests)
 }
+
+func TestCalculateMinVersion(t *testing.T) {
+	tests := []struct {
+		c    string
+		want string
+	}{
+		{"*", "0.0.0"},
+		{"", "0.0.0"},
+		{"1.0.0", "1.0.0"},
+		{">=1.0.0", "1.0.0"},
+		{">1.0.0", "1.0.1"},
+		{"<1.0.0", "0.0.0"},
+		{"<=1.0.0", "0.0.0"},
+		{">1.0.0 <2.0.0", "1.0.1"},
+		{">=1.0.0 >=2.0.0 <3.0.0", "2.0.0"},
+		{">=1.0.0 <2.0.0 <3.0.0", "1.0.0"},
+		{">=2.0.0-alpha", "2.0.0-alpha"},
+		{">2.0.0-alpha", "2.0.0-alpha.0"},
+		{">2.0.0-alpha.0", "2.0.0-alpha.0.0"},
+		{">2.0.0-alpha.-2", "2.0.0-alpha.-2.0"},
+		{">2.0.0--", "2.0.0--.0"},
+		{">=2.0.0-alpha.0+build.1", "2.0.0-alpha.0+build.1"},
+		{">2.0.0-alpha.0+build.1", "2.0.0-alpha.0.0"},
+		{"1.0.0 - 2.0.0", "1.0.0"},
+		{"1.1 - 2.0.0", "1.1.0"},
+		{"3.x", "3.0.0"},
+		{"3.1.x", "3.1.0"},
+		{"~1.2.3", "1.2.3"},
+		{"~1.2", "1.2.0"},
+		{"~1", "1.0.0"},
+		{"^1.2.3", "1.2.3"},
+		{"^0.2.3", "0.2.3"},
+		{"^0.0.3", "0.0.3"},
+		{"1.0.0 || 2.0.0", "1.0.0"},
+		{">1.0.0 || 2.0.0", "1.0.1"},
+		{">=3.0.0 || 2.0.0", "2.0.0"},
+		{">=3.0.0 || <2.0.0", "0.0.0"},
+		{">=3.0.0 <4.0.0 || >5.0.0", "3.0.0"},
+		// This test is purposely complex, to make sure that we correctly sort and overlap ranges.
+		// The final value of 0.0.5 comes from the `>0.0.4` clause.
+		{">5.0.0 || <2.0.0 >0.4.0 <1.0.0 >0.5.0 <3.0.0 >0.3.0 || <9.0.0 >0.0.3 <8.0.0 >0.0.2 <7.0.0 >0.0.4 || <9.0.0 >1.0.0 <8.0.0 >2.0.0 <7.0.0 >3.0.0", "0.0.5"},
+	}
+	for _, test := range tests {
+		t.Run(test.c, func(t *testing.T) {
+			c := parseConstraint(t, NPM, test.c)
+			m, err := c.CalculateMinVersion()
+			if err != nil {
+				t.Fatal(err)
+			}
+			wantV := parseVersion(t, NPM, test.want)
+			if !m.equal(wantV) {
+				t.Errorf("calculateMinVersion(%q) = %q; want %q", test.c, m.String(), wantV.String())
+			}
+		})
+	}
+}
