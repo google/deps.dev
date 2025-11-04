@@ -306,3 +306,17 @@ func (p *Project) Interpolate() error {
 
 	return nil
 }
+
+// InterpolateRepositories resolves placeholders in repositories metadata with best effort.
+func (p *Project) InterpolateRepositories() error {
+	properties, err := p.propertyMap()
+	if err != nil {
+		return err
+	}
+
+	for i := range p.Repositories {
+		p.Repositories[i].interpolate(properties)
+	}
+
+	return nil
+}

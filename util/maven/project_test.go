@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestProject(t *testing.T) {
@@ -782,5 +783,94 @@ func TestInterpolate(t *testing.T) {
 	proj.Interpolate()
 	if diff := cmp.Diff(proj, want); diff != "" {
 		t.Errorf("interpolate:\n(-got, +want):\n%s", diff)
+	}
+}
+
+func TestInterpolateRepositories(t *testing.T) {
+	proj := Project{
+		ProjectKey: ProjectKey{
+			GroupID:    "com.example",
+			ArtifactID: "basic",
+			Version:    "1.2.3",
+		},
+		Properties: Properties{
+			Properties: []Property{
+				{Name: "repo.id", Value: "my-repo"},
+				{Name: "repo.url", Value: "https://www.my-repo.example.com"},
+				{Name: "repo.layout", Value: "default"},
+				{Name: "dep.version", Value: "1.0.0"},
+			},
+		},
+		Repositories: []Repository{{
+			ID:     "${repo.id}",
+			URL:    "${repo.url}",
+			Layout: "${repo.layout}",
+			Releases: RepositoryPolicy{
+				Enabled: "true",
+			},
+			Snapshots: RepositoryPolicy{
+				Enabled: "false",
+			},
+		}, {
+			ID:  "another-repo",
+			URL: "https://www.another-repo.example.com",
+		}},
+		Dependencies: []Dependency{{
+			GroupID:    "org.example",
+			ArtifactID: "dep",
+			Version:    "${dep.version}",
+		}},
+	}
+	want := Project{
+		ProjectKey: ProjectKey{
+			GroupID:    "com.example",
+			ArtifactID: "basic",
+			Version:    "1.2.3",
+		},
+		Properties: Properties{
+			Properties: []Property{
+				{Name: "repo.id", Value: "my-repo"},
+				{Name: "repo.url", Value: "https://www.my-repo.example.com"},
+				{Name: "repo.layout", Value: "default"},
+				{Name: "dep.version", Value: "1.0.0"},
+			},
+		},
+		Repositories: []Repository{{
+			ID:     "my-repo",
+			URL:    "https://www.my-repo.example.com",
+			Layout: "default",
+			Releases: RepositoryPolicy{
+				Enabled: "true",
+			},
+			Snapshots: RepositoryPolicy{
+				Enabled: "false",
+			},
+		}, {
+			ID:  "another-repo",
+			URL: "https://www.another-repo.example.com",
+		}},
+		Dependencies: []Dependency{{
+			GroupID:    "org.example",
+			ArtifactID: "dep",
+			Version:    "${dep.version}",
+		}},
+	}
+	if err := proj.InterpolateRepositories(); err != nil {
+		t.Fatalf("InterpolateRepositories() err = %v, want nil", err)
+	}
+	if diff := cmp.Diff(proj, want, cmpopts.EquateEmpty()); diff != "" {
+		t.Errorf("interpolate repositories:\n(-got, +want):\n%s", diff)
+	}
+
+	want.Dependencies = []Dependency{{
+		GroupID:    "org.example",
+		ArtifactID: "dep",
+		Version:    "1.0.0",
+	}}
+	if err := proj.Interpolate(); err != nil {
+		t.Fatalf("Interpolate() err = %v, want nil", err)
+	}
+	if diff := cmp.Diff(proj, want, cmpopts.EquateEmpty()); diff != "" {
+		t.Errorf("interpolate repositories then interpolate:\n(-got, +want):\n%s", diff)
 	}
 }
