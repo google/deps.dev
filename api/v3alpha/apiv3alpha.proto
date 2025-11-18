@@ -63,7 +63,7 @@ service Insights {
   }
 
   // GetDependencies returns a resolved dependency graph for the given package
-  // version. Dependencies are currently available for Go, npm, Cargo, Maven
+  // version. Dependencies are currently available for npm, Cargo, Maven
   // and PyPI.
   //
   // Dependencies are the resolution of the requirements (dependency
@@ -81,7 +81,7 @@ service Insights {
 
   // GetDependents returns information about the number of distinct packages
   // known to depend on the given package version. Dependent counts are
-  // currently available for Go, npm, Cargo, Maven and PyPI.
+  // currently available for npm, Cargo, Maven and PyPI.
   //
   // Dependent counts are derived from the dependency graphs computed by
   // deps.dev, which means that only public dependents are counted. As such,
@@ -218,6 +218,9 @@ service Insights {
   // An OCI Chain ID is a hashed encoding of an ordered sequence of OCI
   // layers. For further details see the [OCI Chain ID
   // spec](https://github.com/opencontainers/image-spec/blob/main/config.md#layer-chainid).
+  // If an image contains empty layers, it is available from this endpoint
+  // under two different chain IDs - one computed by including empty layers in
+  // the calculation and one computed by excluding them.
   rpc QueryContainerImages(QueryContainerImagesRequest) returns (QueryContainerImagesResult) {
     option (google.api.http) = {
       get: "/v3alpha/querycontainerimages/{chain_id}"
@@ -1075,6 +1078,10 @@ enum ProjectRelationProvenance {
   // this package version to this project.
   PYPI_PUBLISH_ATTESTATION = 3;
 
+  // There is a RubyGems Publish attestation that links this package version to
+  // this project.
+  RUBYGEMS_PUBLISH_ATTESTATION = 4;
+
   // The package version's metadata contains an unverified link to this project.
   UNVERIFIED_METADATA = 10;
 }
@@ -1243,6 +1250,9 @@ message QueryContainerImagesRequest {
 // queried OCI Chain ID.
 message QueryContainerImagesResult {
   message Result {
+    // The URL of the upstream registry where the image was available from,
+    // even if fetched from a mirror.
+    string registry = 2;
     // An image repository (eg. 'tensorflow') referring to collection of
     // images.
     string repository = 1;

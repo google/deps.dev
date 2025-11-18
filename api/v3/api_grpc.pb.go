@@ -60,7 +60,7 @@ type InsightsClient interface {
 	// Requirements are the dependency constraints specified by the version.
 	GetRequirements(ctx context.Context, in *GetRequirementsRequest, opts ...grpc.CallOption) (*Requirements, error)
 	// GetDependencies returns a resolved dependency graph for the given package
-	// version. Dependencies are currently available for Go, npm, Cargo, Maven
+	// version. Dependencies are currently available for npm, Cargo, Maven
 	// and PyPI.
 	//
 	// Dependencies are the resolution of the requirements (dependency
@@ -190,7 +190,7 @@ type InsightsServer interface {
 	// Requirements are the dependency constraints specified by the version.
 	GetRequirements(context.Context, *GetRequirementsRequest) (*Requirements, error)
 	// GetDependencies returns a resolved dependency graph for the given package
-	// version. Dependencies are currently available for Go, npm, Cargo, Maven
+	// version. Dependencies are currently available for npm, Cargo, Maven
 	// and PyPI.
 	//
 	// Dependencies are the resolution of the requirements (dependency
