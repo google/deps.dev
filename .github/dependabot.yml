@@ -10,6 +10,8 @@ updates:
       - "/api/*"
       - "/examples/go/*"
       - "/util/*"
+    cooldown:
+      default-days: 14
     schedule:
       interval: "weekly"
     groups:
@@ -23,6 +25,8 @@ updates:
   - package-ecosystem: "github-actions"
     # Workflow files stored in the default location of `.github/workflows`. (You don't need to specify `/.github/workflows` for `directory`. You can use `directory: "/"`.)
     directory: "/"
+    cooldown:
+      default-days: 14
     schedule:
       interval: "weekly"
     groups:
