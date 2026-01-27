@@ -196,6 +196,12 @@ func TestIntersect(t *testing.T) {
 		{strs("[1.0.0:2.0.0]"), strs("[1.0.0:2.0.0)"), "{[1.0.0:2.0.0)}"},
 		{strs("<1.2.3"), strs("<=1.2.3"), "{[0.0.0-0:1.2.3)}"},
 		{strs("<=1.2.3"), strs("<1.2.3"), "{[0.0.0-0:1.2.3)}"},
+
+		// Bug regression: Intersecting [1.0.0, 1.0.0] with (1.0.0, inf) should be empty.
+		// We use <1.0.0 vs 1.0.0 to trigger [0, 1) vs [1, 1].
+		{strs("<1.0.0"), strs("1.0.0"), "{<empty>}"},
+		// We use >1.0.0 vs 1.0.0 to trigger (1, inf) vs [1, 1].
+		{strs(">1.0.0"), strs("1.0.0"), "{<empty>}"},
 	}
 	for _, test := range tests {
 		set1 := Set{DefaultSystem, spans(t, test.s1...)}
