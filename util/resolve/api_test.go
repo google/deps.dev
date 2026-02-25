@@ -262,3 +262,67 @@ func TestNPMDependencies(t *testing.T) {
 		}
 	}
 }
+
+func TestPyPIRequirements(t *testing.T) {
+	req := func(name, version, typ string) RequirementVersion {
+		dt, err := deptest.ParseString(typ)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return RequirementVersion{
+			VersionKey: VersionKey{
+				PackageKey: PackageKey{
+					System: PyPI,
+					Name:   name,
+				},
+				VersionType: Requirement,
+				Version:     version,
+			},
+			Type: dt,
+		}
+	}
+
+	for _, c := range []struct {
+		in  *pb.Requirements_PyPI
+		out []RequirementVersion
+	}{{
+		in:  &pb.Requirements_PyPI{},
+		out: nil,
+	}, {
+		in: &pb.Requirements_PyPI{
+			Dependencies: []*pb.Requirements_PyPI_Dependency{{
+				ProjectName:      "regular",
+				VersionSpecifier: "==1.0.0",
+			}, {
+				ProjectName:      "with-extras",
+				VersionSpecifier: "==2.0.0",
+				Extras:           "extra1,extra2",
+			}, {
+				ProjectName:       "with-marker",
+				VersionSpecifier:  "==3.0.0",
+				EnvironmentMarker: "python_version < '3'",
+			}, {
+				ProjectName:       "with-both",
+				VersionSpecifier:  "==4.0.0",
+				Extras:            "extra3",
+				EnvironmentMarker: "os_name == 'nt'",
+			}},
+		},
+		out: []RequirementVersion{
+			req("regular", "==1.0.0", ""),
+			req("with-extras", "==2.0.0", "EnabledDependencies extra1,extra2"),
+			req("with-marker", "==3.0.0", "Environment \"python_version < '3'\""),
+			req("with-both", "==4.0.0", "EnabledDependencies extra3 Environment \"os_name == 'nt'\""),
+		},
+	}} {
+		client := APIClient{}
+		got, err := client.pypiRequirements(c.in)
+		if err != nil {
+			t.Errorf("pypiRequirements(%v): %v", c.in, err)
+			continue
+		}
+		if d := cmp.Diff(c.out, got); d != "" {
+			t.Errorf("pypiRequirements(%v):\n(- want, + got):\n%s", c.in, d)
+		}
+	}
+}
