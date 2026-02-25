@@ -1,5 +1,5 @@
-deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7 h1:dleK4xoNCfxlfknQNPR1DmSdVErIAWlEzxtTImCqWXI=
-deps.dev/api/v3 v3.0.0-20240311054650-e1e6a3d70fb7/go.mod h1:k3RHZwAw7ijqoXmVDvcO7ikeTwTC4jtmhCDathV+IKE=
+deps.dev/api/v3 v3.0.0-20260225062937-bb3cf65ba738 h1:901QBvj0xb8eVAQMHXsAyw4gWrt1wLFJSw6D2vnbq4g=
+deps.dev/api/v3 v3.0.0-20260225062937-bb3cf65ba738/go.mod h1:+gN+ydvfcDk/mTxWon7Ze4X8gYN/HZxUdt54XWgWcRQ=
 github.com/go-logr/logr v1.4.3 h1:CjnDlHq8ikf6E492q6eKboGOC0T8CDaOvkHCIg8idEI=
 github.com/go-logr/logr v1.4.3/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=
 github.com/go-logr/stdr v1.2.2 h1:hSWxHoqTgW2S2qGc0LTAI563KZ5YKYRhT3MFKZMbjag=

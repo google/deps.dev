@@ -174,8 +174,35 @@ func (a *APIClient) Requirements(ctx context.Context, vk VersionKey) ([]Requirem
 		return a.mavenRequirements(ctx, vk, resp.Maven)
 	case NPM:
 		return a.npmRequirements(vk, resp.Npm)
+	case PyPI:
+		return a.pypiRequirements(resp.Pypi)
 	}
 	return nil, errors.New("unsupported system")
+}
+
+func (a *APIClient) pypiRequirements(reqs *pb.Requirements_PyPI) ([]RequirementVersion, error) {
+	var result []RequirementVersion
+	for _, d := range reqs.GetDependencies() {
+		var t dep.Type
+		if d.Extras != "" {
+			t.AddAttr(dep.EnabledDependencies, d.Extras)
+		}
+		if d.EnvironmentMarker != "" {
+			t.AddAttr(dep.Environment, d.EnvironmentMarker)
+		}
+		result = append(result, RequirementVersion{
+			VersionKey: VersionKey{
+				PackageKey: PackageKey{
+					System: PyPI,
+					Name:   d.ProjectName,
+				},
+				VersionType: Requirement,
+				Version:     d.VersionSpecifier,
+			},
+			Type: t,
+		})
+	}
+	return result, nil
 }
 
 func (a *APIClient) MatchingVersions(ctx context.Context, vk VersionKey) ([]Version, error) {
