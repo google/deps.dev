@@ -44,7 +44,7 @@ service Insights {
 
   // GetRequirements returns the requirements for a given version in a
   // system-specific format. Requirements are currently available for
-  // Maven, npm, NuGet and RubyGems.
+  // Go, Maven, npm, NuGet, RubyGems, PyPI, and Cargo.
   //
   // Requirements are the dependency constraints specified by the version.
   rpc GetRequirements(GetRequirementsRequest) returns (Requirements) {
@@ -539,6 +539,7 @@ message Requirements {
     repeated Repository repositories = 5;
     // The list of profiles.
     repeated Profile profiles = 6;
+    string registry = 7;
   }
   // The Maven-specific representation of the version's requirements.
   //
@@ -564,6 +565,12 @@ message Requirements {
     repeated Dependency runtime_dependencies = 1;
     // The list of development dependencies.
     repeated Dependency dev_dependencies = 2;
+    // Platform identifier for versions with platform specific code.
+    string platform = 3;
+    // The required version of Ruby.
+    string required_ruby_version = 4;
+    // The required version of RubyGems.
+    string required_rubygems_version = 5;
   }
   // The RubyGems-specific representation of the version's requirements.
   //
@@ -572,6 +579,92 @@ message Requirements {
   // ecosystem. This is different to how it is used elsewhere in the deps.dev
   // API.
   RubyGems rubygems = 4;
+
+  message Go {
+    message Dependency {
+      string name = 1;
+      string requirement = 2;
+    }
+    repeated Dependency direct_dependencies = 1;
+    repeated Dependency indirect_dependencies = 2;
+  }
+  // The Go-specific representation of the version's requirements.
+  //
+  // Note that the term "dependency" is used here to mean "a single
+  // requirement" to be consistent with how the term is used in the Go
+  // ecosystem. This is different to how it is used elsewhere in the deps.dev
+  // API.
+  Go go = 5;
+
+  message PyPI {
+    message Dependency {
+      string project_name = 1;
+      string extras = 2;
+      string version_specifier = 3;
+      string environment_marker = 4;
+    }
+    // ExternalDependency represents dependencies that can't be managed by the
+    // Python package manager but must be installed on the consumer's system.
+    message ExternalDependency {
+      string name = 1;
+      string version_specifier = 2;
+      string environment_marker = 3;
+    }
+    // Extra represents Python's extra features/capabilities for this package.
+    // They are enabled in the items under the Requires-Dist.
+    message Extra {
+      string name = 1;
+    }
+    repeated Dependency dependencies = 1;
+    repeated Extra provided_extras = 2;
+    repeated ExternalDependency external_dependencies = 3;
+    string required_python_version = 4;
+  }
+  // The PyPI-specific representation of the version's requirements.
+  //
+  // Note that the term "dependency" is used here to mean "a single
+  // requirement" to be consistent with how the term is used in the Python
+  // ecosystem. This is different to how it is used elsewhere in the deps.dev
+  // API.
+  PyPI pypi = 7;
+
+  message Cargo {
+    // Dependency represents a single dependency entry in a Cargo.toml file.
+    message Dependency {
+      string name = 1;
+      string requirement = 2;
+      // Whether this is a normal dependency, dev-dependency, or
+      // build-dependency.
+      string kind = 3;
+      // Whether this is an optional dependency.
+      bool optional = 4;
+      // The name of the package as it is used in the source code.
+      string package_alias = 5;
+      // Whether the dependency uses its default features.
+      bool uses_default_features = 6;
+      // Features that are enabled on this dependency.
+      repeated string features = 7;
+      // If present, then this dependency is specific to a given platform.
+      string target = 8;
+    }
+
+    message Feature {
+      string name = 1;
+      // List of other features or dependencies that this feature would then
+      // enable.
+      repeated string implies = 2;
+    }
+
+    repeated Dependency dependencies = 1;
+    repeated Feature features = 2;
+  }
+  // The Cargo-specific representation of a crate version's requirements.
+  //
+  // Note that the term "dependency" is used here to mean "a single
+  // requirement" to be consistent with how the term is used in the Cargo
+  // ecosystem. This is different to how it is used elsewhere in the deps.dev
+  // API.
+  Cargo cargo = 8;
 }
 
 // GetDependenciesRequest identifies a package version for which to return
@@ -811,16 +904,16 @@ message ProjectPackageVersions {
   message Version {
     // The identifier for the version.
     VersionKey version_key = 1;
+    // What the relationship between the project and the package version is.
+    ProjectRelationType relation_type = 3;
+    // How the mapping between project and package version was discovered.
+    ProjectRelationProvenance relation_provenance = 4;
     // The SLSA provenance statements that link the version to the project. This
     // is only populated for npm package versions. See the 'attestations' field
     // for more attestations (including SLSA provenance) for all systems.
     repeated SLSAProvenance slsa_provenances = 2;
     // Attestations that link the version to the project.
     repeated Attestation attestations = 5;
-    // What the relationship between the project and the package version is.
-    ProjectRelationType relation_type = 3;
-    // How the mapping between project and package version was discovered.
-    ProjectRelationProvenance relation_provenance = 4;
   }
 
   // The versions that were built from the source code contained in this
