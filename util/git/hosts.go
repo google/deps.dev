@@ -64,32 +64,32 @@ var noop = &noopHostHandler{}
 // canonicalization settings.
 type StandardHostHandler struct {
 	// ForceScheme will replace any URL scheme with its value when set.
-	ForceScheme          string
+	ForceScheme string
 
 	// StripUser will remove the user from the URL when true.
-	StripUser            bool
+	StripUser bool
 
 	// HasTrailingSlash will add a trailing slash to the URL if it doesn't have
 	// one. If false any trailing slash will be removed.
-	HasTrailingSlash     bool
+	HasTrailingSlash bool
 
 	// HasDotGitSuffix will add a .git suffix to the URL if it doesn't have one.
 	// If false any .git suffix will be removed.
-	HasDotGitSuffix      bool
+	HasDotGitSuffix bool
 
 	// PathPrefix is the prefix that is required to be set for a valid git
 	// repository for this host.
-	PathPrefix           string
+	PathPrefix string
 
 	// PathSegments is the number of path segments that are required for a valid
 	// git repository for this host. If 0 there is no restriction. If PathPrefix
 	// is not empty, then only segments after the prefix are considered.
-	PathSegments         int
+	PathSegments int
 
 	// LowerPathSegments is the number of path segments that should be lowercased
 	// following any PathPrefix, during the canonicalization process. This is to
 	// ensure that URLs for case-insensitive hosts are canonicalized correctly.
-	LowerPathSegments    int
+	LowerPathSegments int
 }
 
 // Validate implements the HostHandler interface.
@@ -169,9 +169,9 @@ func (h *StandardHostHandler) Canon(u *url.URL) *url.URL {
 var defaultHostHandler = &StandardHostHandler{
 	ForceScheme:       "https",
 	StripUser:         true,
-	HasDotGitSuffix: true,
+	HasDotGitSuffix:   true,
 	LowerPathSegments: 2,
-	PathSegments:   2,
+	PathSegments:      2,
 }
 
 func init() {
@@ -183,15 +183,15 @@ func init() {
 	RegisterHostHandler("gitee.com", &StandardHostHandler{
 		ForceScheme:       "https",
 		StripUser:         true,
-		HasDotGitSuffix: true,
+		HasDotGitSuffix:   true,
 		LowerPathSegments: 1,
-		PathSegments:   2,
+		PathSegments:      2,
 	})
 	RegisterHostHandler("gitee.cn", &StandardHostHandler{
 		ForceScheme:       "https",
 		StripUser:         true,
-		HasDotGitSuffix: true,
+		HasDotGitSuffix:   true,
 		LowerPathSegments: 1,
-		PathSegments:   2,
+		PathSegments:      2,
 	})
 }
