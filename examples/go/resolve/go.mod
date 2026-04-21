@@ -11,7 +11,7 @@ replace (
 require (
 	deps.dev/api/v3 v3.0.0-20260225062937-bb3cf65ba738
 	deps.dev/util/resolve v0.0.0-20240312000934-38ffc8dd1d92
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 )
 
 require (
