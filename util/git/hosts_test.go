@@ -47,13 +47,13 @@ func TestStandardHostHandler_Validate(t *testing.T) {
 		},
 		{
 			name:    "segments OK",
-			handler: StandardHostHandler{PathSegments: 2},
+			handler: StandardHostHandler{MinPathSegments: 2, MaxPathSegments: 2},
 			url:     "https://example.com/foo/bar",
 			wantErr: false,
 		},
 		{
 			name:    "segments Fail",
-			handler: StandardHostHandler{PathSegments: 3},
+			handler: StandardHostHandler{MinPathSegments: 3, MaxPathSegments: 3},
 			url:     "https://example.com/foo/bar",
 			wantErr: true,
 		},
@@ -71,9 +71,69 @@ func TestStandardHostHandler_Validate(t *testing.T) {
 		},
 		{
 			name:    "prefix and segments OK",
-			handler: StandardHostHandler{PathPrefix: "/git/", PathSegments: 1},
+			handler: StandardHostHandler{PathPrefix: "/git/", MinPathSegments: 1, MaxPathSegments: 1},
 			url:     "https://example.com/git/repo",
 			wantErr: false,
+		},
+		{
+			name:    "min segments OK",
+			handler: StandardHostHandler{MinPathSegments: 2},
+			url:     "https://example.com/foo/bar",
+			wantErr: false,
+		},
+		{
+			name:    "min segments OK (more than min)",
+			handler: StandardHostHandler{MinPathSegments: 2},
+			url:     "https://example.com/foo/bar/baz",
+			wantErr: false,
+		},
+		{
+			name:    "min segments Fail",
+			handler: StandardHostHandler{MinPathSegments: 2},
+			url:     "https://example.com/foo",
+			wantErr: true,
+		},
+		{
+			name:    "max segments OK",
+			handler: StandardHostHandler{MaxPathSegments: 2},
+			url:     "https://example.com/foo/bar",
+			wantErr: false,
+		},
+		{
+			name:    "max segments OK (less than max)",
+			handler: StandardHostHandler{MaxPathSegments: 2},
+			url:     "https://example.com/foo",
+			wantErr: false,
+		},
+		{
+			name:    "max segments Fail",
+			handler: StandardHostHandler{MaxPathSegments: 2},
+			url:     "https://example.com/foo/bar/baz",
+			wantErr: true,
+		},
+		{
+			name:    "range OK (min)",
+			handler: StandardHostHandler{MinPathSegments: 2, MaxPathSegments: 3},
+			url:     "https://example.com/foo/bar",
+			wantErr: false,
+		},
+		{
+			name:    "range OK (max)",
+			handler: StandardHostHandler{MinPathSegments: 2, MaxPathSegments: 3},
+			url:     "https://example.com/foo/bar/baz",
+			wantErr: false,
+		},
+		{
+			name:    "range Fail (less)",
+			handler: StandardHostHandler{MinPathSegments: 2, MaxPathSegments: 3},
+			url:     "https://example.com/foo",
+			wantErr: true,
+		},
+		{
+			name:    "range Fail (more)",
+			handler: StandardHostHandler{MinPathSegments: 2, MaxPathSegments: 3},
+			url:     "https://example.com/foo/bar/baz/qux",
+			wantErr: true,
 		},
 	}
 
@@ -142,6 +202,42 @@ func TestStandardHostHandler_Canon(t *testing.T) {
 			handler: StandardHostHandler{PathPrefix: "/git/", LowerPathSegments: 1},
 			url:     "https://example.com/git/Foo/Bar",
 			want:    "https://example.com/git/foo/Bar",
+		},
+		{
+			name:    "negative lower path segments (-1) 3 segments",
+			handler: StandardHostHandler{LowerPathSegments: -1},
+			url:     "https://example.com/Foo/Bar/Baz",
+			want:    "https://example.com/foo/bar/Baz",
+		},
+		{
+			name:    "negative lower path segments (-1) 2 segments",
+			handler: StandardHostHandler{LowerPathSegments: -1},
+			url:     "https://example.com/Foo/Bar",
+			want:    "https://example.com/foo/Bar",
+		},
+		{
+			name:    "negative lower path segments (-1) 1 segment",
+			handler: StandardHostHandler{LowerPathSegments: -1},
+			url:     "https://example.com/Foo",
+			want:    "https://example.com/Foo",
+		},
+		{
+			name:    "negative lower path segments (-2) 3 segments",
+			handler: StandardHostHandler{LowerPathSegments: -2},
+			url:     "https://example.com/Foo/Bar/Baz",
+			want:    "https://example.com/foo/Bar/Baz",
+		},
+		{
+			name:    "negative lower path segments (-2) 4 segments",
+			handler: StandardHostHandler{LowerPathSegments: -2},
+			url:     "https://example.com/Foo/Bar/Baz/Qux",
+			want:    "https://example.com/foo/bar/Baz/Qux",
+		},
+		{
+			name:    "prefix and negative lower path segments (-1)",
+			handler: StandardHostHandler{PathPrefix: "/git/", LowerPathSegments: -1},
+			url:     "https://example.com/git/Foo/Bar/Baz",
+			want:    "https://example.com/git/foo/bar/Baz",
 		},
 	}
 

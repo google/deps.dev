@@ -2,6 +2,7 @@ package git
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 	"strings"
 )
@@ -81,14 +82,25 @@ type StandardHostHandler struct {
 	// repository for this host.
 	PathPrefix string
 
-	// PathSegments is the number of path segments that are required for a valid
-	// git repository for this host. If 0 there is no restriction. If PathPrefix
+	// MinPathSegments is the minimum number of path segments that are required for a
+	// valid git repository for this host. If 0 there is no restriction. If PathPrefix
 	// is not empty, then only segments after the prefix are considered.
-	PathSegments int
+	MinPathSegments int
+
+	// MaxPathSegments is the maximum number of path segments that are required for a
+	// valid git repository for this host. If 0 there is no restriction. If PathPrefix
+	// is not empty, then only segments after the prefix are considered.
+	MaxPathSegments int
 
 	// LowerPathSegments is the number of path segments that should be lowercased
 	// following any PathPrefix, during the canonicalization process. This is to
 	// ensure that URLs for case-insensitive hosts are canonicalized correctly.
+	//
+	// A zero value means no path segements will be lowercased.
+	// A positive value of N means the first N path segments following the
+	// PathPrefix will be lowercased.
+	// A negative value of -N means all but the last N path segments following
+	// the PathPrefix will be lowercased.
 	LowerPathSegments int
 }
 
@@ -111,8 +123,11 @@ func (h *StandardHostHandler) Validate(u *url.URL) error {
 		segments = strings.Split(path, "/")
 	}
 
-	if h.PathSegments > 0 && len(segments) != h.PathSegments {
-		return fmt.Errorf("incorrect number of path segemnts")
+	if h.MinPathSegments > 0 && len(segments) < h.MinPathSegments {
+		return fmt.Errorf("incorrect number of path segments: got %d, want at least %d", len(segments), h.MinPathSegments)
+	}
+	if h.MaxPathSegments > 0 && len(segments) > h.MaxPathSegments {
+		return fmt.Errorf("incorrect number of path segments: got %d, want at most %d", len(segments), h.MaxPathSegments)
 	}
 	return nil
 }
@@ -128,7 +143,7 @@ func (h *StandardHostHandler) Canon(u *url.URL) *url.URL {
 		res.User = nil
 	}
 
-	if h.LowerPathSegments > 0 {
+	if h.LowerPathSegments != 0 {
 		// Strip the prefix and trailing slash so that we can count the remaining path segments correctly.
 		path := strings.TrimRight(res.Path, "/")
 		prefix := ""
@@ -137,9 +152,22 @@ func (h *StandardHostHandler) Canon(u *url.URL) *url.URL {
 			path = strings.TrimPrefix(path, prefix)
 		}
 
-		// Split the remaining path into segments and lowercase the first N segments.
+		// Split the remaining path into segments.
 		segments := strings.Split(strings.TrimLeft(path, "/"), "/")
-		for i := 0; i < len(segments) && i < h.LowerPathSegments; i++ {
+		toLower := h.LowerPathSegments
+		if toLower < 0 {
+			// Convert the negative number to the number of segments to lowercase.
+			// For example, -1 means all but the last segment, which is equivalent to
+			// len(segments) - 1.
+			toLower = len(segments) + h.LowerPathSegments
+			if toLower < 0 {
+				// Ensure the number of segements to lower is not negative.
+				toLower = 0
+			}
+		}
+
+		// Lowercase the first N segments.
+		for i := 0; i < len(segments) && i < toLower; i++ {
 			segments[i] = strings.ToLower(segments[i])
 		}
 
@@ -171,27 +199,37 @@ var defaultHostHandler = &StandardHostHandler{
 	StripUser:         true,
 	HasDotGitSuffix:   true,
 	LowerPathSegments: 2,
-	PathSegments:      2,
+	MinPathSegments:   2,
+	MaxPathSegments:   2,
 }
 
 func init() {
 	// Register default handlers for well-known hosts.
 	RegisterHostHandler("github.com", defaultHostHandler)
-	RegisterHostHandler("gitlab.com", defaultHostHandler)
 	RegisterHostHandler("bitbucket.org", defaultHostHandler)
+
+	RegisterHostHandler("gitlab.com", &StandardHostHandler{
+		ForceScheme:       "https",
+		StripUser:         true,
+		HasDotGitSuffix:   true,
+		LowerPathSegments: math.MaxInt, // All path segments are lowercased.
+		MinPathSegments:   2,
+	})
 
 	RegisterHostHandler("gitee.com", &StandardHostHandler{
 		ForceScheme:       "https",
 		StripUser:         true,
 		HasDotGitSuffix:   true,
 		LowerPathSegments: 1,
-		PathSegments:      2,
+		MinPathSegments:   2,
+		MaxPathSegments:   2,
 	})
 	RegisterHostHandler("gitee.cn", &StandardHostHandler{
 		ForceScheme:       "https",
 		StripUser:         true,
 		HasDotGitSuffix:   true,
 		LowerPathSegments: 1,
-		PathSegments:      2,
+		MinPathSegments:   2,
+		MaxPathSegments:   2,
 	})
 }
