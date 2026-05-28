@@ -210,6 +210,27 @@ func TestProject(t *testing.T) {
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf("unmarshal input:\n(- got, + want):\n%s", diff)
 	}
+
+	inputAggregator, err := os.ReadFile("testdata/aggregator-1.0.0.xml")
+	if err != nil {
+		t.Fatalf("failed to read file: %v", err)
+	}
+	wantAggregator := Project{
+		ProjectKey: ProjectKey{
+			GroupID:    "com.example",
+			ArtifactID: "aggregator",
+			Version:    "1.0.0",
+		},
+		Packaging: "pom",
+		Modules:   []String{"module-1", "module-2"},
+	}
+	var gotAggregator Project
+	if err := xml.Unmarshal(inputAggregator, &gotAggregator); err != nil {
+		t.Fatalf("failed to unmarshal input: %v", err)
+	}
+	if diff := cmp.Diff(gotAggregator, wantAggregator); diff != "" {
+		t.Errorf("unmarshal aggregator input:\n(- got, + want):\n%s", diff)
+	}
 }
 
 func TestMergeParent(t *testing.T) {
