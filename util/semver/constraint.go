@@ -74,7 +74,7 @@ func (sys System) ParseConstraint(str string) (retC *Constraint, retErr error) {
 	// creating the empty set, which means the opposite.
 	lexStr := str
 	if lexStr == "" {
-		if sys == NuGet {
+		if sys == NuGet || sys == Maven {
 			return nil, fmt.Errorf("invalid empty constraint")
 		}
 		lexStr = ">=0.0.0"
