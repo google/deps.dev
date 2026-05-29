@@ -81,13 +81,13 @@ func TestMavenCanon(t *testing.T) {
 }
 
 var mavenConstraintErrorTests = []constraintErrorTest{
+	{"", "invalid empty constraint"},
 	{"[", "expected comma or closing bracket in `[`"},
 	{"()", "hard requirement must be closed on both ends in `()`"},
 	{")", "unexpected rbracket in `)`"},
 	{"(1.0)", "hard requirement must be closed on both ends in `(1.0)`"},
 	{"[1.0]]2.0]", "unexpected rbracket in `[1.0]]2.0]`"},
 	{"[1.0][2.0]", "unexpected lbracket in `[1.0][2.0]`"},
-	{"", "invalid empty constraint"},
 }
 
 func TestMavenConstraintError(t *testing.T) {
