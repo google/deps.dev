@@ -68,9 +68,10 @@ func isGitURL(url string) bool {
 // without the local file checking.
 //
 // Examples:
-//   isSCP("user@hostname:path/to/repo") == true
-//   isSCP("hostname:repo.git") == true
-//   isSCP("hostname/path/to/repo") == false
+//
+//     isSCP("user@hostname:path/to/repo") == true
+//     isSCP("hostname:repo.git") == true
+//     isSCP("hostname/path/to/repo") == false
 func isSCP(url string) bool {
 	colonPos := strings.Index(url, ":")
 	slashPos := strings.Index(url, "/")
