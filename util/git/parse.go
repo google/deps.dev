@@ -63,8 +63,14 @@ func isGitURL(url string) bool {
 }
 
 // isSCP checks if a url is SCP-like by checking if the colon appears before any
-// slash. This mimics the logic of the git source code in connect.c, but
+// slash. The function assumes that the isGitURL(url) == false, and url does not
+// have a scheme. This mimics the logic of the git source code in connect.c, but
 // without the local file checking.
+//
+// Examples:
+//   isSCP("user@hostname:path/to/repo") == true
+//   isSCP("hostname:repo.git") == true
+//   isSCP("hostname/path/to/repo") == false
 func isSCP(url string) bool {
 	colonPos := strings.Index(url, ":")
 	slashPos := strings.Index(url, "/")
@@ -119,14 +125,16 @@ func parseSCP(name string) (*url.URL, error) {
 // Both URL and SCP-like remote names are supported.
 //
 // Note that this function is intended to be used for processing open source git
-// repository data, not for private git repositories or git repositories that
-// are intended to be used.
+// repository data, not for private git repositories.
 //
 // Custom gitremote-helpers are explicitly rejected. Local file paths and
 // bundles are also rejected.
 func parse(name string) (*url.URL, error) {
 	// Reject any custom gitremote-helpers (https://git-scm.com/docs/gitremote-helpers)
 	// following the same logic as the git source code to ensure the same behavior.
+	// This check only excludes the `<transport>::<address>` syntax, not the
+	// URL-based syntax. URL-based custom gitremote-helpers are caught by the
+	// check below.
 	if helper, ok := gitRemoteHelper(name); ok {
 		return nil, fmt.Errorf("%w: custom transport %q", ErrInvalidRepo, helper)
 	}
@@ -155,11 +163,8 @@ func parse(name string) (*url.URL, error) {
 	// Remove any deprecated or unnecessary suffix or prefix, as these can be added
 	// from package manifests, or referencing the deprecated "git+ssh" or "ssh+git"
 	// schemes.
-	if strings.HasSuffix(scheme, "+git") {
-		scheme = scheme[:len(scheme)-4]
-	} else if strings.HasPrefix(scheme, "git+") {
-		scheme = scheme[4:]
-	}
+	scheme = strings.TrimPrefix(scheme, "git+")
+	scheme = strings.TrimSuffix(scheme, "+git")
 
 	// Explicitly reject the file scheme to ensure the error message is useful.
 	if scheme == "file" {
@@ -167,7 +172,9 @@ func parse(name string) (*url.URL, error) {
 	}
 
 	// Validate the scheme is a scheme that is supported natively by git. Open
-	// source repositories should not be using custom gitremote-helpers.
+	// source repositories should not be using custom gitremote-helpers. This
+	// check covers the `<transport>://<address>` form of custom
+	// gitremote-helpers.
 	if !slices.Contains(validGitRemoteSchemes, scheme) {
 		return nil, fmt.Errorf("%w: custom transport %q", ErrInvalidRepo, u.Scheme)
 	}
