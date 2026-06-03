@@ -62,6 +62,7 @@ type Project struct {
 
 	Licenses               []License              `xml:"licenses>license,omitempty"`
 	Developers             []Developer            `xml:"developers>developer,omitempty"`
+	Modules                []String               `xml:"modules>module,omitempty"`
 	SCM                    SCM                    `xml:"scm,omitempty"`
 	IssueManagement        IssueManagement        `xml:"issueManagement,omitempty"`
 	DistributionManagement DistributionManagement `xml:"distributionManagement,omitempty"`
@@ -303,6 +304,14 @@ func (p *Project) Interpolate() error {
 		}
 	}
 	p.Repositories = repos
+
+	var modules []String
+	for _, m := range p.Modules {
+		if ok := m.interpolate(properties); ok {
+			modules = append(modules, m)
+		}
+	}
+	p.Modules = modules
 
 	return nil
 }
