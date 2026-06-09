@@ -43,7 +43,7 @@ Map the incoming dependency list into a single JSON batch request object. Ensure
     {
       "packageKey": {
         "system": "PYPI",
-        "name": "requests",
+        "name": "requests"
       }
     }
   ]
@@ -63,12 +63,12 @@ curl -s -X POST https://api.deps.dev/v3alpha/findingsbatch \
           \"versionKey\": {
             \"system\": \"NPM\",
             \"name\": \"express\",
-            \"version\": \"4.17.1\",
+            \"version\": \"4.17.1\"
         }, 
         {
           \"packageKey\": {
             \"system\": \"PYPI\",
-            \"name\": \"requests\",
+            \"name\": \"requests\"
         },
         ...
    ]"
