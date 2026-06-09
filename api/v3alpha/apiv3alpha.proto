@@ -51,9 +51,29 @@ service Insights {
     };
   }
 
+  // GetFindings evaluates a specified package or version and returns
+  // findings which are relevant to safe dependency management.
+  rpc GetFindings(GetFindingsRequest) returns (Findings) {
+    option (google.api.http) = {
+      get: "/v3alpha/systems/{package_key.system}/packages/{package_key.name}:findings"
+      additional_bindings {
+        get: "/v3alpha/systems/{version_key.system}/packages/{version_key.name}/versions/{version_key.version}:findings"
+      }
+    };
+  }
+
+  // GetFindingsBatch performs GetFindings requests for a batch of
+  // packages/versions. Large result sets may be paginated.
+  rpc GetFindingsBatch(GetFindingsBatchRequest) returns (FindingsBatch) {
+    option (google.api.http) = {
+      post: "/v3alpha/findingsbatch"
+      body: "*"
+    };
+  }
+
   // GetRequirements returns the requirements for a given version in a
   // system-specific format. Requirements are currently available for
-  // Go, Maven, npm, NuGet, RubyGems, PyPI, and Cargo.
+  // Cargo, Go, Maven, npm, NuGet, PyPI, and RubyGems.
   //
   // Requirements are the dependency constraints specified by the version.
   rpc GetRequirements(GetRequirementsRequest) returns (Requirements) {
@@ -123,7 +143,8 @@ service Insights {
   // project and package versions.
   // At most 1500 package versions are returned. Mappings which were derived
   // from attestations are served first.
-  rpc GetProjectPackageVersions(GetProjectPackageVersionsRequest) returns (ProjectPackageVersions) {
+  rpc GetProjectPackageVersions(GetProjectPackageVersionsRequest)
+      returns (ProjectPackageVersions) {
     option (google.api.http) = {
       get: "/v3alpha/projects/{project_key.id}:packageversions"
     };
@@ -138,7 +159,8 @@ service Insights {
 
   // GetSimilarlyNamedPackages returns packages with names that are similar to
   // the requested package. This similarity relation is computed by deps.dev.
-  rpc GetSimilarlyNamedPackages(GetSimilarlyNamedPackagesRequest) returns (SimilarlyNamedPackages) {
+  rpc GetSimilarlyNamedPackages(GetSimilarlyNamedPackagesRequest)
+      returns (SimilarlyNamedPackages) {
     option (google.api.http) = {
       get: "/v3alpha/systems/{package_key.system}/packages/{package_key.name}:similarlyNamedPackages"
     };
@@ -149,7 +171,7 @@ service Insights {
   // request, it returns the artifacts that matched the hash.
   //
   // Querying by content hash is currently supported for npm, Cargo, Maven,
-  // NuGet, PyPI and RubyGems. It is typical for hash queries to return many
+  // NuGet, PyPI, and RubyGems. It is typical for hash queries to return many
   // results; hashes are matched against multiple release artifacts (such as
   // JAR files) that comprise package versions, and any given artifact may
   // appear in several package versions.
@@ -162,7 +184,8 @@ service Insights {
 
   // PurlLookup searches for a package or package version specified via
   // [purl](https://github.com/package-url/purl-spec),
-  // and returns the corresponding result from GetPackage or GetVersion as appropriate.
+  // and returns the corresponding result from GetPackage or GetVersion as
+  // appropriate.
   //
   // For a package lookup, the purl should be in the form
   //   `pkg:type/namespace/name`   for a namespaced package name, or
@@ -182,7 +205,8 @@ service Insights {
   //
   // Special characters in purls must be percent-encoded. This is described in
   // detail by the
-  // [purl spec](https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst).
+  // [purl
+  // spec](https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst).
   rpc PurlLookup(PurlLookupRequest) returns (PurlLookupResult) {
     option (google.api.http) = {
       get: "/v3alpha/purl/{purl}"
@@ -215,13 +239,14 @@ service Insights {
   // An image repository is identifier (eg. 'tensorflow') that refers to
   // a collection of images.
   //
-  // An OCI Chain ID is a hashed encoding of an ordered sequence of OCI
-  // layers. For further details see the [OCI Chain ID
+  // An OCI Chain ID is a hashed encoding of an ordered sequence of OCI layers.
+  // For further details see the [OCI Chain ID
   // spec](https://github.com/opencontainers/image-spec/blob/main/config.md#layer-chainid).
   // If an image contains empty layers, it is available from this endpoint
   // under two different chain IDs - one computed by including empty layers in
   // the calculation and one computed by excluding them.
-  rpc QueryContainerImages(QueryContainerImagesRequest) returns (QueryContainerImagesResult) {
+  rpc QueryContainerImages(QueryContainerImagesRequest)
+      returns (QueryContainerImagesResult) {
     option (google.api.http) = {
       get: "/v3alpha/querycontainerimages/{chain_id}"
     };
@@ -399,13 +424,17 @@ message Package {
 
     // If true, this version has been marked as deprecated.
     bool is_deprecated = 5;
+
+    // The reason why this version is deprecated.
+    string deprecated_reason = 6;
   }
 
   // The available versions of the package.
   repeated Version versions = 2;
 }
 
-// GetVersionRequest identifies a package version for which to return information.
+// GetVersionRequest identifies a package version for which to return
+// information.
 message GetVersionRequest {
   VersionKey version_key = 1;
 }
@@ -434,6 +463,9 @@ message Version {
 
   // If true, this version has been marked as deprecated.
   bool is_deprecated = 12;
+
+  // The reason why this version is deprecated.
+  string deprecated_reason = 17;
 
   // The licenses governing the use of this package version.
   //
@@ -519,6 +551,27 @@ message Version {
 
   // Some upstream identifiers used to refer to this package version.
   repeated UpstreamIdentifier upstream_identifiers = 11;
+
+  // A package cooldown is a security practice that mitigates supply chain
+  // attacks by delaying the installation of newly published package versions.
+  // This waiting period provides a critical time window for security
+  // researchers and automated tools to identify and flag potential malware or
+  // malicious code before the version is widely adopted.
+  message Cooldown {
+    google.protobuf.Timestamp end = 1;
+    string description = 2;  // Optional.
+  }
+  Cooldown cooldown = 15;  // May be nil.
+
+  message ProjectStatus {
+    string status = 1;
+    string reason = 2;
+  }
+  // Whether a project is actively maintained, deprecated, etc. This field is
+  // not set for any package version outside of the PyPI system. See
+  // https://packaging.python.org/en/latest/specifications/project-status-markers/#project-status-markers
+  // for more information.
+  ProjectStatus project_status = 16;
 }
 
 // GetVersionBatchRequest identifies a batch of versions for which to return
@@ -536,13 +589,13 @@ message GetVersionBatchRequest {
 // VersionBatch contains a batch of version information. If there is more
 // version information to be returned, a page token is included in the
 // response.
-message VersionBatch  {
+message VersionBatch {
   message Response {
-     // The uncanonicalized request.
-     GetVersionRequest request = 1;
-     // The version information for the request. If the version was not found,
-     // this field is empty.
-     Version version = 2;
+    // The uncanonicalized request.
+    GetVersionRequest request = 1;
+    // The version information for the request. If the version was not found,
+    // this field is empty.
+    Version version = 2;
   }
   // The Version information for this page.
   repeated Response responses = 1;
@@ -561,7 +614,7 @@ message GetRequirementsRequest {
 // specified by a package version. Only one of its fields will be set.
 message Requirements {
   message NuGet {
-     message DependencyGroup {
+    message DependencyGroup {
       // The target framework that this dependency group is for.
       string target_framework = 1;
 
@@ -571,12 +624,30 @@ message Requirements {
 
         // The requirement on the package.
         string requirement = 2;
+
+        string include = 3;
+        string exclude = 4;
       }
       // The requirements belonging to this dependency group.
       repeated Dependency dependencies = 2;
     }
     // The requirements grouped by target framework.
     repeated DependencyGroup dependency_groups = 1;
+
+    repeated string target_frameworks = 2;
+    bool development_dependency = 3;
+
+    message FrameworkAssembly {
+      string assembly_name = 1;
+      string target_framework = 2;
+    }
+    repeated FrameworkAssembly framework_assemblies = 4;
+
+    message FrameworkReference {
+      string name = 1;
+      string target_framework = 2;
+    }
+    repeated FrameworkReference framework_references = 5;
   }
   // The NuGet-specific representation of the version's requirements.
   //
@@ -611,6 +682,16 @@ message Requirements {
       // "true", in which case this field will contain the names of all the
       // dependencies from the "dependencies" field.
       repeated string bundle_dependencies = 5;
+      message PeerDependencyMetadata {
+        // The name of the package from the peerDependencies field.
+        string name = 1;
+        // Whether the connection is marked optional inside
+        // peerDependenciesMeta.
+        bool optional = 2;
+      }
+      // The "peerDependencyMetadata" field of a package.json. A list of peer
+      // dependency names that may be marked optional.
+      repeated PeerDependencyMetadata peer_dependency_metadata = 6;
     }
     message Bundle {
       // The path inside the tarball where this dependency was found.
@@ -632,6 +713,10 @@ message Requirements {
     // "node_modules" folder of the version's tarball, including nested
     // "node_modules".
     repeated Bundle bundled = 2;
+    // The operating systems that this package version can run on.
+    repeated string os = 3;
+    // The CPU architectures that this package version can run on.
+    repeated string cpu = 4;
   }
   // The npm-specific representation of the version's requirements.
   //
@@ -661,6 +746,20 @@ message Requirements {
       // names.
       // Exclusions may contain wildcards in both groupID and artifactID.
       repeated string exclusions = 7;
+
+      // The resolved instances of the above version/name fields. I.e. If the
+      // version field contained a Maven property, then the resolved version
+      // will have the actual property's value interpolated in.
+      string resolved_version = 8;
+      string resolved_name = 9;
+      // The origin of the dependency. Can be any of the following values:
+      // "" - declared in the current package's merged, effective POM. I.e. the
+      //      POM formed from merging all the ancestor POMs.
+      // "parent" - this dependency represents the parent package's POM.
+      // "management" - declared in a local or inherited `<dependencyManagement>`
+      // section. "import" - declared in another BOM POM in the
+      // `<dependencyManagement>` section.
+      string origin = 10;
     }
     message Property {
       // The name of the property.
@@ -679,6 +778,11 @@ message Requirements {
       string releases_enabled = 4;
       // Whether the repository is enabled for snapshot downloads.
       string snapshots_enabled = 5;
+
+      // The resolved instance of URL. I.e. If the URL contained a Maven
+      // property, then the resolved URL will have the actual property's value
+      // interpolated in.
+      string resolved_url = 6;
     }
     message Profile {
       message Activation {
@@ -744,7 +848,6 @@ message Requirements {
     repeated Repository repositories = 5;
     // The list of profiles.
     repeated Profile profiles = 6;
-    string registry = 7;
   }
   // The Maven-specific representation of the version's requirements.
   //
@@ -786,12 +889,40 @@ message Requirements {
   RubyGems rubygems = 4;
 
   message Go {
+    // Dependency represents a module requirement in a go.mod file.
+    // The requirement field contains the version query (e.g. "v1.2.3").
+    // See https://go.dev/ref/mod#go-mod-file-require
     message Dependency {
       string name = 1;
       string requirement = 2;
     }
+
     repeated Dependency direct_dependencies = 1;
     repeated Dependency indirect_dependencies = 2;
+    // Replace represents a replace directive in a go.mod file, which replaces
+    // the contents of a module with contents found elsewhere.
+    // See https://go.dev/ref/mod#go-mod-file-replace
+    repeated Replace replaces = 3;
+    message Replace {
+      // The module to be replaced. The version (in the requirement field) is
+      // optional. If omitted, *all* versions of the module are replaced.
+      Dependency src = 1;
+      // The replacement can either be another remote module (specifying name
+      // and version) or a path to a local module. Exactly one of replacement
+      // or local_path will be set.
+      Dependency replacement = 2;
+      // The path to a local directory containing the replacement module.
+      string local_path = 3;
+    }
+    // Excludes represents exclude directives in a go.mod file, which specify
+    // versions of a module that are ignored.
+    // See https://go.dev/ref/mod#go-mod-file-exclude.
+    //
+    // Note: Before Go 1.16, excluded versions resulted in the next higher
+    // available version being silently chosen and not committed to go.mod,
+    // leading to non-deterministic builds. From Go 1.16 onwards, the
+    // substituting dependency must be explicitly captured in go.mod.
+    repeated Dependency excludes = 4;
   }
   // The Go-specific representation of the version's requirements.
   //
@@ -975,7 +1106,8 @@ message GetCapabilitiesRequest {
   VersionKey version_key = 1;
 }
 
-// Capabilities holds identified capabilities and callpaths for a package version.
+// Capabilities holds identified capabilities and callpaths for a package
+// version.
 message Capabilities {
   // Capabilities stores the capabilities identified for the package.
   message Capability {
@@ -1130,13 +1262,13 @@ message GetProjectBatchRequest {
 // ProjectBatch contains a batch of project information. If there is more
 // project information to be returned, a page token is included in the
 // response.
-message ProjectBatch  {
+message ProjectBatch {
   message Response {
-     // The uncanonicalized request.
-     GetProjectRequest request = 1;
-     // The project information for the request. If the project was not found,
-     // this field is empty.
-     Project project = 2;
+    // The uncanonicalized request.
+    GetProjectRequest request = 1;
+    // The project information for the request. If the project was not found,
+    // this field is empty.
+    Project project = 2;
   }
   // The Project information for this page.
   repeated Response responses = 1;
@@ -1145,7 +1277,8 @@ message ProjectBatch  {
   string next_page_token = 2;
 }
 
-// ProjectRelationType specifies a relationship between a project and a package version.
+// ProjectRelationType specifies a relationship between a project and a package
+// version.
 enum ProjectRelationType {
   UNKNOWN_PROJECT_RELATION_TYPE = 0;
 
@@ -1160,7 +1293,8 @@ enum ProjectRelationType {
 enum ProjectRelationProvenance {
   UNKNOWN_PROJECT_RELATION_PROVENANCE = 0;
 
-  // There is a SLSA attestation that links this package version to this project.
+  // There is a SLSA attestation that links this package version to this
+  // project.
   SLSA_ATTESTATION = 1;
 
   // This project contains the package version (Go specific).
@@ -1236,7 +1370,7 @@ message Advisory {
 
 // GetSimilarlyNamedPackagesRequest identifies a package for which to return
 // similarly-named packages.
-message GetSimilarlyNamedPackagesRequest{
+message GetSimilarlyNamedPackagesRequest {
   PackageKey package_key = 1;
 }
 
@@ -1271,7 +1405,6 @@ message QueryRequest {
   VersionKey version_key = 2;
 }
 
-
 // QueryResult holds information about package versions matching the query.
 message QueryResult {
   message Result {
@@ -1279,10 +1412,11 @@ message QueryResult {
     Version version = 1;
 
     // An artifact is content associated with a package version, such as a JAR
-    // file. Currently supported for npm, Cargo, Maven, NuGet, PyPI and RubyGems.
+    // file. Currently supported for npm, Cargo, Maven, NuGet, PyPI and
+    // RubyGems.
     message Artifact {
-       // The origin of the artifact with this hash.
-       string url = 1;
+      // The origin of the artifact with this hash.
+      string url = 1;
     }
     // If a hash was specified in the request, artifacts describes the upstream
     // artifacts matching the hash.
@@ -1300,9 +1434,11 @@ message PurlLookupRequest {
 
 // PurlLookupResult holds information corresponding to the queried purl,
 // which may be either package, or package version.
-// Only one field will be populated, which depends on the form of the queried purl.
+// Only one field will be populated, which depends on the form of the queried
+// purl.
 message PurlLookupResult {
-  // Package result (as from GetPackage) for purls that do not include a version.
+  // Package result (as from GetPackage) for purls that do not include a
+  // version.
   Package package = 1;
   // Version result (as from GetVersion), for purls that include a version.
   Version version = 2;
@@ -1352,7 +1488,175 @@ message QueryContainerImagesResult {
     // An image repository (eg. 'tensorflow') referring to collection of
     // images.
     string repository = 1;
+
+    // The DockerHub-specific repository metadata. Only populated if this image
+    // is available on DockerHub.
+    DockerHubRepoMetadata docker_metadata = 3;
   }
   // The query results. At most 1000 results are returned.
   repeated Result results = 1;
+}
+
+message DockerHubRepoMetadata {
+  // The date the image's repository was registered.
+  google.protobuf.Timestamp date_registered = 1;
+  // The date the image's repository was last updated.
+  google.protobuf.Timestamp last_updated = 2;
+  // The number of stars.
+  int64 star_count = 3;
+  // The number of times an image has been pulled.
+  int64 pull_count = 4;
+  // Specifies if the image's repository is official, based on the registry.
+  // An image is considered official if it is present in
+  // https://github.com/docker-library/official-images.
+  bool is_official = 5;
+}
+
+// GetFindings identifies a package to get findings for.
+message GetFindingsRequest {
+  oneof key {
+    PackageKey package_key = 1;
+    VersionKey version_key = 2;
+  }
+}
+
+// Findings contains package and version findings which are relevant to
+// safe dependency management.
+message Findings {
+  // The package or version which was requested. The package and version name
+  // may differ from what was specified in the request, due to canonicalization.
+  oneof key {
+    PackageKey package_key = 1;
+    VersionKey version_key = 2;
+  }
+
+  // Findings for a particular package version.
+  message Version {
+    // The version these findings apply to. The package and version name may
+    // differ from what was specified in the request, due to canonicalization.
+    VersionKey version_key = 1;
+    // If true, this is the default version of the package: the version that is
+    // installed when no version is specified. The precise meaning of this is
+    // system-specific, but it is commonly the version with the greatest
+    // version number, ignoring pre-release versions.
+    bool is_default = 2;
+    // All findings associated with this package version, including all
+    // findings in package_findings.
+    repeated Finding findings = 3;
+    // The point in time until which this version is in cooldown.
+    google.protobuf.Timestamp cooldown_end = 4;
+  }
+  // A set of low risk versions recommended for use. May be empty.
+  repeated Version recommended_versions = 3;
+  // If a specific version was requested, findings that apply to that version.
+  // May be empty.
+  Version requested_version = 4;
+  // The version that is installed when no version is specified. The precise
+  // meaning of this is system-specific, but it is commonly the version with
+  // the greatest version number, ignoring pre-release versions.
+  Version default_version = 5;
+  // Findings which are package-scoped and apply to every version of this
+  // package. For example, if there is a MALICIOUS package finding, all
+  // versions in the package are malicious.
+  // Package-scoped findings are usually also included within the
+  // findings for each version.
+  repeated Finding package_findings = 6;
+}
+
+// Finding contains a single actionable finding.
+message Finding {
+  // The type of finding indicates what specific thing was found.
+  Type type = 1;
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    // The package or version was not found. If the package is not found within
+    // the specified ecosystem, or all versions have been deleted, this will be
+    // a package-scoped finding. If the specified version was not found but the
+    // package was, this will be a version-scoped finding.
+    NOT_FOUND = 1;
+    // The package or version has a malicious advisory.
+    MALICIOUS = 2;
+    // The package or version has been marked as deprecated.
+    DEPRECATED = 3;
+    // The package or version is in cooldown. This is a security practice that
+    // mitigates supply chain attacks by delaying the update of newly published
+    // package versions.
+    COOLDOWN = 4;
+    // The package has low usage.
+    LOW_USAGE = 5;
+    // This package or version is affected by critical vulnerabilities.
+    VULNERABLE = 6;
+    // This version remediates a security vulnerability.
+    REMEDIATION = 7;
+  }
+
+  // The risk level of the finding indicates how urgent it is to action.
+  Risk risk = 2;
+  enum Risk {
+    RISK_UNSPECIFIED = 0;
+    // This finding represents a critical security risk, and should be
+    // immediately actioned.
+    RISK_CRITICAL = 1;
+    // This finding represents a high security risk, and the relevant
+    // package or version should be avoided if possible.
+    RISK_HIGH = 2;
+    // This finding represents a potential security risk.
+    RISK_MEDIUM = 3;
+    // Currently unused but reserved for future use.
+    RISK_LOW = 4;
+    // This finding does not inherently convey a security risk and is
+    // informational only. Recommended treatment varies based on the type
+    // of the finding.
+    RISK_INFORMATIONAL = 5;
+  }
+
+  oneof context {
+    Deprecated deprecated_context = 3;
+    Cooldown cooldown_context = 4;
+    LowUsage low_usage_context = 5;
+  }
+
+  message Deprecated {
+    // A human-readable description of why the package/version was deprecated.
+    string reason = 1;
+  }
+
+  message Cooldown {
+    // The point in time until which this version is in cooldown.
+    google.protobuf.Timestamp end = 1;
+  }
+
+  message LowUsage {
+    // Packages with similar names that have higher usage.
+    repeated string alternative_packages = 1;
+  }
+}
+
+// GetFindingsBatchRequest identifies a batch of packages/versions for which to
+// return findings.
+message GetFindingsBatchRequest {
+  // The batch list of packages/versions to return findings for.
+  // Up to 5000 requests are allowed in a single batch.
+  repeated GetFindingsRequest requests = 1;
+  // If set, request the next page of the result set. It must be set to the
+  // page token provided by the previous findings batch response. All other
+  // request fields must be the same as in the initial request.
+  string page_token = 2;
+}
+
+// FindingsBatch contains a batch of findings information. If there is more
+// findings information to be returned, a page token is included in the
+// response.
+message FindingsBatch {
+  message Response {
+    // The uncanonicalized request.
+    GetFindingsRequest request = 1;
+    // The findings for the requested package/version.
+    Findings findings = 2;
+  }
+  // The findings for this page.
+  repeated Response responses = 1;
+  // If set, this batch is not the full result set. This page token
+  // may be used to fetch more results in a subsequent request.
+  string next_page_token = 2;
 }
