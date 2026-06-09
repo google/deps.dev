@@ -68,15 +68,15 @@ curl -s -X POST https://api.deps.dev/v3alpha/findingsbatch \
   -H 'Content-Type: application/json' \
   -d '{ "requests": [
         {
-          \"versionKey\": {
-            \"system\": \"NPM\",
-            \"name\": \"express\",
-            \"version\": \"4.17.1\"
+          "versionKey": {
+            "system": "NPM",
+            "name": "express",
+            "version": "4.17.1"
         }, 
         {
-          \"packageKey\": {
-            \"system\": \"PYPI\",
-            \"name\": \"requests\"
+          "packageKey": {
+            "system": "PYPI",
+            "name": "requests"
         },
         ...
    ]'
