@@ -44,7 +44,7 @@ service Insights {
 
   // GetRequirements returns the requirements for a given version in a
   // system-specific format. Requirements are currently available for
-  // Go, Maven, npm, NuGet, RubyGems, PyPI, and Cargo.
+  // Cargo, Go, Maven, npm, NuGet, PyPI, and RubyGems.
   //
   // Requirements are the dependency constraints specified by the version.
   rpc GetRequirements(GetRequirementsRequest) returns (Requirements) {
@@ -100,7 +100,7 @@ service Insights {
   // request, it returns the artifacts that matched the hash.
   //
   // Querying by content hash is currently supported for npm, Cargo, Maven,
-  // NuGet, PyPI and RubyGems. It is typical for hash queries to return many
+  // NuGet, PyPI, and RubyGems. It is typical for hash queries to return many
   // results; hashes are matched against multiple release artifacts (such as
   // JAR files) that comprise package versions, and any given artifact may
   // appear in several package versions.
@@ -260,6 +260,12 @@ message Package {
     // system-specific, but it is commonly the version with the greatest
     // version number, ignoring pre-release versions.
     bool is_default = 2;
+
+    // If true, this version has been marked as deprecated.
+    bool is_deprecated = 4;
+
+    // The reason why this version is deprecated.
+    string deprecated_reason = 5;
   }
 
   // The available versions of the package.
@@ -287,6 +293,12 @@ message Version {
   // system-specific, but it is commonly the version with the greatest version
   // number, ignoring pre-release versions.
   bool is_default = 2;
+
+  // If true, this version has been marked as deprecated.
+  bool is_deprecated = 12;
+
+  // The reason why this version is deprecated.
+  string deprecated_reason = 13;
 
   // The licenses governing the use of this package version.
   //
@@ -330,7 +342,7 @@ message Version {
   // URLs for the package management registries this package version is
   // available from.
   // Only set for systems that use a central repository for package
-  // distribution: Cargo, Maven, npm, NuGet, PyPI and RubyGems.
+  // distribution: Cargo, Maven, npm, NuGet, PyPI, and RubyGems.
   repeated string registries = 8;
 
   message Project {
@@ -344,6 +356,16 @@ message Version {
 
   // Projects that are related to this package version.
   repeated Project related_projects = 10;
+
+  message ProjectStatus {
+    string status = 1;
+    string reason = 2;
+  }
+  // Whether a project is actively maintained, deprecated, etc. This field is
+  // not set for any package version outside of the PyPI system. See
+  // https://packaging.python.org/en/latest/specifications/project-status-markers/#project-status-markers
+  // for more information.
+  ProjectStatus project_status = 11;
 }
 
 // GetRequirementsRequest identifies a version for which to return
@@ -366,12 +388,30 @@ message Requirements {
 
         // The requirement on the package.
         string requirement = 2;
+
+        string include = 3;
+        string exclude = 4;
       }
       // The requirements belonging to this dependency group.
       repeated Dependency dependencies = 2;
     }
     // The requirements grouped by target framework.
     repeated DependencyGroup dependency_groups = 1;
+
+    repeated string target_frameworks = 2;
+    bool development_dependency = 3;
+
+    message FrameworkAssembly {
+      string assembly_name = 1;
+      string target_framework = 2;
+    }
+    repeated FrameworkAssembly framework_assemblies = 4;
+
+    message FrameworkReference {
+      string name = 1;
+      string target_framework = 2;
+    }
+    repeated FrameworkReference framework_references = 5;
   }
   // The NuGet-specific representation of the version's requirements.
   //
@@ -406,6 +446,15 @@ message Requirements {
       // "true", in which case this field will contain the names of all the
       // dependencies from the "dependencies" field.
       repeated string bundle_dependencies = 5;
+      message PeerDependencyMetadata {
+        // The name of the package from the peerDependencies field.
+        string name = 1;
+        // Whether the connection is marked optional inside peerDependenciesMeta.
+        bool optional = 2;
+      }
+      // The "peerDependencyMetadata" field of a package.json. A list of peer
+      // dependency names that may be marked optional.
+      repeated PeerDependencyMetadata peer_dependency_metadata = 6;
     }
     message Bundle {
       // The path inside the tarball where this dependency was found.
@@ -427,6 +476,10 @@ message Requirements {
     // "node_modules" folder of the version's tarball, including nested
     // "node_modules".
     repeated Bundle bundled = 2;
+    // The operating systems that this package version can run on.
+    repeated string os = 3;
+    // The CPU architectures that this package version can run on.
+    repeated string cpu = 4;
   }
   // The npm-specific representation of the version's requirements.
   //
@@ -456,6 +509,19 @@ message Requirements {
       // names.
       // Exclusions may contain wildcards in both groupID and artifactID.
       repeated string exclusions = 7;
+
+      // The resolved instances of the above version/name fields. I.e. If the
+      // version field contained a Maven property, then the resolved version
+      // will have the actual property's value interpolated in.
+      string resolved_version = 8;
+      string resolved_name = 9;
+      // The origin of the dependency. Can be any of the following values:
+      // "" - declared in the current package's merged, effective POM. I.e. the
+      //      POM formed from merging all the ancestor POMs.
+      // "parent" - this dependency represents the parent package's POM.
+      // "management" - declared in a local or inherited `<dependencyManagement>` section.
+      // "import" - declared in another BOM POM in the `<dependencyManagement>` section.
+      string origin = 10;
     }
     message Property {
       // The name of the property.
@@ -474,6 +540,11 @@ message Requirements {
       string releases_enabled = 4;
       // Whether the repository is enabled for snapshot downloads.
       string snapshots_enabled = 5;
+
+      // The resolved instance of URL. I.e. If the URL contained a Maven
+      // property, then the resolved URL will have the actual property's value
+      // interpolated in.
+      string resolved_url = 6;
     }
     message Profile {
       message Activation {
@@ -539,7 +610,6 @@ message Requirements {
     repeated Repository repositories = 5;
     // The list of profiles.
     repeated Profile profiles = 6;
-    string registry = 7;
   }
   // The Maven-specific representation of the version's requirements.
   //
@@ -581,12 +651,40 @@ message Requirements {
   RubyGems rubygems = 4;
 
   message Go {
+    // Dependency represents a module requirement in a go.mod file.
+    // The requirement field contains the version query (e.g. "v1.2.3").
+    // See https://go.dev/ref/mod#go-mod-file-require
     message Dependency {
       string name = 1;
       string requirement = 2;
     }
+
     repeated Dependency direct_dependencies = 1;
     repeated Dependency indirect_dependencies = 2;
+    // Replace represents a replace directive in a go.mod file, which replaces
+    // the contents of a module with contents found elsewhere.
+    // See https://go.dev/ref/mod#go-mod-file-replace
+    repeated Replace replaces = 3;
+    message Replace {
+      // The module to be replaced. The version (in the requirement field) is
+      // optional. If omitted, *all* versions of the module are replaced.
+      Dependency src = 1;
+      // The replacement can either be another remote module (specifying name
+      // and version) or a path to a local module. Exactly one of replacement
+      // or local_path will be set.
+      Dependency replacement = 2;
+      // The path to a local directory containing the replacement module.
+      string local_path = 3;
+    }
+    // Excludes represents exclude directives in a go.mod file, which specify
+    // versions of a module that are ignored.
+    // See https://go.dev/ref/mod#go-mod-file-exclude.
+    //
+    // Note: Before Go 1.16, excluded versions resulted in the next higher
+    // available version being silently chosen and not committed to go.mod,
+    // leading to non-deterministic builds. From Go 1.16 onwards, the
+    // substituting dependency must be explicitly captured in go.mod.
+    repeated Dependency excludes = 4;
   }
   // The Go-specific representation of the version's requirements.
   //
