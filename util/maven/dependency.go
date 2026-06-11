@@ -118,7 +118,9 @@ func (p *Project) ProcessDependencies(getDependencyManagement func(String, Strin
 				continue
 			}
 			dk := dep.Key()
-			if _, ok := m[dk]; !ok {
+			if _, ok := m[dk]; !ok && dep.Version != "" {
+				// Only add dependency management when it is not in the map and
+				// the version is not empty.
 				m[dk] = dep
 				keys = append(keys, dk)
 			}
