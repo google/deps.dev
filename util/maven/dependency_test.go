@@ -46,6 +46,13 @@ func TestProcessDependencies(t *testing.T) {
 			GroupID:    "org.aaa",
 			ArtifactID: "dep",
 			Version:    "5.0.0",
+		}, {
+			GroupID:    "org.empty",
+			ArtifactID: "dep",
+		}, {
+			GroupID:    "org.empty",
+			ArtifactID: "dep",
+			Version:    "1.2.3",
 		}},
 		DependencyManagement: DependencyManagement{
 			Dependencies: []Dependency{{
@@ -133,6 +140,11 @@ func TestProcessDependencies(t *testing.T) {
 			GroupID:    "org.eee",
 			ArtifactID: "dep",
 			Version:    "5.0.0",
+			Type:       "jar",
+		}, {
+			GroupID:    "org.empty",
+			ArtifactID: "dep",
+			Version:    "1.2.3",
 			Type:       "jar",
 		}},
 		DependencyManagement: DependencyManagement{

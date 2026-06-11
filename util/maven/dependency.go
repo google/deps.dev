@@ -131,9 +131,13 @@ func (p *Project) ProcessDependencies(getDependencyManagement func(String, Strin
 	depKeys := make([]DependencyKey, 0, len(p.Dependencies))
 	for _, dep := range p.Dependencies {
 		dk := dep.Key()
-		if _, ok := deps[dk]; !ok {
+		if existing, ok := deps[dk]; !ok {
 			deps[dk] = dep
 			depKeys = append(depKeys, dk)
+		} else if existing.Version == "" && dep.Version != "" {
+			// Update the version when it is empty.
+			existing.Version = dep.Version
+			deps[dk] = existing
 		}
 	}
 	depManagement := make(map[DependencyKey]Dependency, len(p.DependencyManagement.Dependencies))
