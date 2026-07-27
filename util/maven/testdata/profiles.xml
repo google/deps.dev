@@ -51,6 +51,10 @@
                     <version>${def.version}</version>
                 </dependency>
             </dependencies>
+            <modules>
+                <module>module-a</module>
+                <module>module-b</module>
+            </modules>
         </profile>
         <profile>
             <id>my-profile-2</id>

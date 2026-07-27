@@ -27,6 +27,7 @@ type Profile struct {
 	ID                   String               `xml:"id,omitempty"`
 	Activation           Activation           `xml:"activation,omitempty"`
 	Properties           Properties           `xml:"properties,omitempty"`
+	Modules              []String             `xml:"modules>module,omitempty"`
 	DependencyManagement DependencyManagement `xml:"dependencyManagement,omitempty"`
 	Dependencies         []Dependency         `xml:"dependencies>dependency,omitempty"`
 	Repositories         []Repository         `xml:"repositories>repository,omitempty"`
@@ -201,6 +202,7 @@ func (p *Project) MergeProfiles(jdk string, os ActivationOS) (err error) {
 		p.DependencyManagement.merge(prof.DependencyManagement)
 		p.Dependencies = append(p.Dependencies, prof.Dependencies...)
 		p.Repositories = append(p.Repositories, prof.Repositories...)
+		p.Modules = append(p.Modules, prof.Modules...)
 	}
 	return
 }
