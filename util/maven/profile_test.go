@@ -62,6 +62,10 @@ func TestProfile(t *testing.T) {
 			ArtifactID: "def",
 			Version:    "${def.version}",
 		}},
+		Modules: []String{
+			"module-a",
+			"module-b",
+		},
 	}, {
 		ID: "my-profile-2",
 		Activation: Activation{
@@ -362,6 +366,7 @@ func TestMergeProfiles(t *testing.T) {
 				{Name: "abc.version", Value: "1.0.0"},
 			},
 		},
+		Modules: []String{"default-module"},
 		Profiles: []Profile{{
 			// Not activated
 			Activation: Activation{
@@ -378,6 +383,7 @@ func TestMergeProfiles(t *testing.T) {
 					{Name: "abc.version", Value: "9.9.9"},
 				},
 			},
+			Modules: []String{"module-not-activated"},
 		}, {
 			// Activated
 			Activation: Activation{
@@ -395,6 +401,7 @@ func TestMergeProfiles(t *testing.T) {
 					{Name: "abc.version", Value: "2.0.0"},
 				},
 			},
+			Modules: []String{"module-activated-1", "module-activated-2"},
 		}, {
 			// Activated
 			Activation: Activation{
@@ -419,6 +426,7 @@ func TestMergeProfiles(t *testing.T) {
 					{Name: "abc.version", Value: "3.0.0"},
 				},
 			},
+			Modules: []String{"module-activated-3"},
 		}},
 	}
 	proj.MergeProfiles(JDKProfileActivation, OSProfileActivation)
@@ -447,6 +455,7 @@ func TestMergeProfiles(t *testing.T) {
 				{Name: "abc.version", Value: "3.0.0"},
 			},
 		},
+		Modules: []String{"default-module", "module-activated-1", "module-activated-2", "module-activated-3"},
 	}
 	proj.Profiles = nil
 	if diff := cmp.Diff(proj, want); diff != "" {
