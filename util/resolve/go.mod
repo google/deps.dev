@@ -15,13 +15,13 @@ require (
 	deps.dev/util/semver v0.0.0-20241230231135-52b7655a522f
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
 	github.com/google/go-cmp v0.7.0
-	google.golang.org/grpc v1.83.0
+	google.golang.org/grpc v1.83.2
 )
 
 require (
-	golang.org/x/net v0.55.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/net v0.58.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
+	google.golang.org/protobuf v1.36.12 // indirect
 )
