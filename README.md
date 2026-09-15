@@ -81,6 +81,7 @@ Note that these are community built tools and unsupported by the core deps.dev m
 - [`edoardottt/depsdev`](https://github.com/edoardottt/depsdev) CLI client (and Golang module) for deps.dev API.
 - [`safedep/vet`](https://github.com/safedep/vet) CLI tool for policy driven vetting of open source dependencies
   using deps.dev API as a data source.
+- [dependency-management-data](https://dmd.tanna.dev), a CLI tool for gaining insight into dependencies in use in repositories, which uses `deps.dev` for a number of insights into public dependencies.
 
 ## Data
 
