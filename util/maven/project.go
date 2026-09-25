@@ -329,3 +329,17 @@ func (p *Project) InterpolateRepositories() error {
 
 	return nil
 }
+
+// InterpolateDependencies resolves placeholders in dependencies metadata with best effort.
+func (p *Project) InterpolateDependencies() error {
+	properties, err := p.propertyMap()
+	if err != nil {
+		return err
+	}
+
+	for i := range p.Dependencies {
+		p.Dependencies[i].interpolate(properties)
+	}
+
+	return nil
+}
