@@ -895,3 +895,64 @@ func TestInterpolateRepositories(t *testing.T) {
 		t.Errorf("interpolate repositories then interpolate:\n(-got, +want):\n%s", diff)
 	}
 }
+
+func TestInterpolateDependencies(t *testing.T) {
+	proj := Project{
+		ProjectKey: ProjectKey{
+			GroupID:    "com.example",
+			ArtifactID: "basic",
+			Version:    "1.2.3",
+		},
+		Properties: Properties{
+			Properties: []Property{
+				{Name: "dep.version", Value: "1.0.0"},
+			},
+		},
+		Dependencies: []Dependency{{
+			GroupID:    "org.example",
+			ArtifactID: "valid-property-version",
+			Version:    "${dep.version}",
+		}, {
+			GroupID:    "org.example",
+			ArtifactID: "invalid-property-version",
+			Version:    "${invalid.version}",
+		}, {
+			GroupID:    "org.example",
+			ArtifactID: "hardcoded-version",
+			Version:    "3.0.0",
+		}},
+	}
+
+	want := Project{
+		ProjectKey: ProjectKey{
+			GroupID:    "com.example",
+			ArtifactID: "basic",
+			Version:    "1.2.3",
+		},
+		Properties: Properties{
+			Properties: []Property{
+				{Name: "dep.version", Value: "1.0.0"},
+			},
+		},
+		Dependencies: []Dependency{{
+			GroupID:    "org.example",
+			ArtifactID: "valid-property-version",
+			Version:    "1.0.0",
+		}, {
+			GroupID:    "org.example",
+			ArtifactID: "invalid-property-version",
+			Version:    "${invalid.version}",
+		}, {
+			GroupID:    "org.example",
+			ArtifactID: "hardcoded-version",
+			Version:    "3.0.0",
+		}},
+	}
+
+	if err := proj.InterpolateDependencies(); err != nil {
+		t.Fatalf("InterpolateDependencies() err = %v, want nil", err)
+	}
+	if diff := cmp.Diff(proj, want); diff != "" {
+		t.Errorf("interpolate dependencies:\n(-got, +want):\n%s", diff)
+	}
+}
