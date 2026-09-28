@@ -526,9 +526,12 @@ func (p *versionParser) version() (*Version, error) {
 		// NuGet allows for the metadata part to start and end with an
 		// asterisk.
 		r = p.lex.next()
-		if r != eof {
+		if r == '-' {
 			p.isPrerelease = true
 			r = p.metadata(&p.pre, false, "pre-release")
+			if len(p.pre) == 0 {
+				return nil, p.lex.err
+			}
 			l := p.pre[len(p.pre)-1]
 			if l[len(l)-1] != '*' {
 				p.lex.setErr("missing asterisk at end of prerelease")

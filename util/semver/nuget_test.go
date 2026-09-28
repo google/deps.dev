@@ -74,6 +74,8 @@ var nugetVersionParseTests = []versionParseTest{
 	v("1.*.*", "version has multiple wildcards in `1.*.*`", ""),
 	v("1.0.0*-alpha", "missing asterisk at end of prerelease in `1.0.0*-alpha`", ""),
 	v("1.0.0-a*a*", "invalid text in version string in `1.0.0-a*a*`", ""),
+	v("1*.", "invalid text in version string in `1*.`", ""),
+	v("1*-", "empty pre-release metadata in `1*-`", ""),
 }
 
 func TestNuGetVersionParse(t *testing.T) {
