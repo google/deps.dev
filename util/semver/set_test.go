@@ -147,6 +147,9 @@ func TestUnion(t *testing.T) {
 		// prerelease.
 		{strs("<1.2.3"), strs("<=1.2.3"), "{[0.0.0-0:1.2.3),[0.0.0-0:1.2.3]}"},
 		{strs("<=1.2.3"), strs("<1.2.3"), "{[0.0.0-0:1.2.3),[0.0.0-0:1.2.3]}"},
+
+		// A span that cannot be merged must not be dropped when a later one can.
+		{strs("[1.0.0:2.0.0]"), strs("[1.5.0-a:3.0.0]", "[1.8.0:2.5.0]"), "{[1.0.0:2.0.0],[1.5.0-a:3.0.0],[1.8.0:2.5.0]}"},
 	}
 	for _, test := range tests {
 		set1 := Set{DefaultSystem, spans(t, test.s1...)}

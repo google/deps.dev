@@ -119,7 +119,11 @@ func canon(s []span) ([]span, error) {
 			continue
 		}
 		allEmpty = false
-		// Merge as many as possible into this element.
+		// Merge as many as possible into this element. Only a contiguous run
+		// starting at i+1 can be merged: i is advanced once per merged element
+		// so the outer loop skips exactly those. Stop at the first element that
+		// cannot be merged; skipping past it would drop it from the output (and
+		// previously made this loop O(n^2)).
 		for j := i + 1; j < len(s); j++ {
 			next := s[j]
 			if !this.max.equal(next.min) { // If equal, we can merge unless both are open (handled below)
@@ -134,17 +138,17 @@ func canon(s []span) ([]span, error) {
 						break
 					}
 				} else {
-					continue // Too difficult for now, but may be covered by another span. TODO?
+					break // Too difficult for now. TODO?
 				}
 			}
 			// Max equals min, but don't merge if both open.
 			if this.maxOpen && next.minOpen {
-				continue
+				break
 			}
 			// Merging prereleases and non-preleases is tricky, so avoid it.
 			// Three tests to make.
 			if !equalPrerelease(this.min, this.max) || !equalPrerelease(this.min, next.min) || !equalPrerelease(this.min, next.max) {
-				continue
+				break
 			}
 			// We'll process the element now, so on the next outer loop, skip it.
 			i++
