@@ -51,7 +51,5 @@ func canon(repo *url.URL) *url.URL {
 		u.User = url.User(u.User.Username())
 	}
 
-	u.Path = strings.TrimRight(u.Path, "/")
-
 	return &u
 }

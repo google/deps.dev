@@ -12,8 +12,12 @@ func TestGetHostHandler(t *testing.T) {
 	hostHandlers = nil
 
 	h1 := &StandardHostHandler{}
+	h2 := &StandardHostHandler{}
+	h3 := &StandardHostHandler{}
 
 	RegisterHostHandler("example.com", h1)
+	RegisterHostHandler(".other.com", h2)
+	RegisterHostHandler("special.other.com", h3)
 
 	tests := []struct {
 		host string
@@ -22,6 +26,9 @@ func TestGetHostHandler(t *testing.T) {
 		{"example.com", h1},
 		{"foo.example.com", noop},
 		{"other.com", noop},
+		{"foo.other.com", h2},
+		{"bar.foo.other.com", h2},
+		{"special.other.com", h3},
 	}
 
 	for _, tt := range tests {
@@ -180,9 +187,33 @@ func TestStandardHostHandler_Canon(t *testing.T) {
 			want:    "https://example.com/foo/bar.git",
 		},
 		{
+			name:    "add .git suffix when input has trailing slash",
+			handler: StandardHostHandler{HasDotGitSuffix: true},
+			url:     "https://example.com/foo/bar/",
+			want:    "https://example.com/foo/bar.git",
+		},
+		{
+			name:    "keep .git suffix when input has trailing slash",
+			handler: StandardHostHandler{HasDotGitSuffix: true},
+			url:     "https://example.com/foo/bar.git/",
+			want:    "https://example.com/foo/bar.git",
+		},
+		{
+			name:    "add .git suffix and keep trailing slash",
+			handler: StandardHostHandler{HasDotGitSuffix: true, HasTrailingSlash: true},
+			url:     "https://example.com/foo/bar/",
+			want:    "https://example.com/foo/bar.git/",
+		},
+		{
 			name:    "has dot git suffix (remove)",
 			handler: StandardHostHandler{HasDotGitSuffix: false},
 			url:     "https://example.com/foo/bar.git",
+			want:    "https://example.com/foo/bar",
+		},
+		{
+			name:    "remove .git suffix when input has trailing slash",
+			handler: StandardHostHandler{HasDotGitSuffix: false},
+			url:     "https://example.com/foo/bar.git/",
 			want:    "https://example.com/foo/bar",
 		},
 		{

@@ -54,7 +54,7 @@ func TestParseRepo(t *testing.T) {
 			wantErr: ErrInvalidRepo, // defaultHostHandler requires 2 segments
 		},
 		{
-			name:       "trailing slash",
+			name:       "googlesource trailing slash",
 			input:      "https://chromium.googlesource.com/chromium/src.git/",
 			wantCanon:  "https://chromium.googlesource.com/chromium/src.git",
 			wantParsed: "https://chromium.googlesource.com/chromium/src.git/",
