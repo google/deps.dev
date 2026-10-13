@@ -152,7 +152,8 @@ func (h *StandardHostHandler) Canon(u *url.URL) *url.URL {
 	}
 
 	// Always strip trailing slashes first so segment counting and .git suffix
-	// handling operate on the path without trailing slashes.
+	// handling operate on the path without trailing slashes. If h.HasTrailingSlash
+	// is true, a trailing slash will be re-added at the end.
 	res.Path = strings.TrimRight(res.Path, "/")
 
 	if h.LowerPathSegments != 0 {
