@@ -69,7 +69,7 @@ func (r *Repo) ID() string {
 		host = "[" + host + "]"
 	}
 
-	path := strings.TrimSuffix(u.EscapedPath(), "/")
+	path := strings.TrimRight(u.EscapedPath(), "/")
 	path = strings.TrimSuffix(path, ".git")
 
 	return host + path

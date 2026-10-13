@@ -59,6 +59,12 @@ func TestParseRepo(t *testing.T) {
 			wantCanon:  "https://chromium.googlesource.com/chromium/src.git",
 			wantParsed: "https://chromium.googlesource.com/chromium/src.git/",
 		},
+		{
+			name:       "googlesource preserves path case",
+			input:      "https://android.googlesource.com/platform/packages/apps/Settings",
+			wantCanon:  "https://android.googlesource.com/platform/packages/apps/Settings.git",
+			wantParsed: "https://android.googlesource.com/platform/packages/apps/Settings",
+		},
 	}
 
 	for _, tt := range tests {
@@ -121,9 +127,14 @@ func TestRepo_ID(t *testing.T) {
 			want:  "github.com/user/repo",
 		},
 		{
-			name:  ".git and trailing slash",
+			name:  "googlesource .git and trailing slash",
 			input: "https://chromium.googlesource.com/chromium/src.git/",
 			want:  "chromium.googlesource.com/chromium/src",
+		},
+		{
+			name:  "unregistered host .git and trailing slash",
+			input: "https://example.com/user/repo.git/",
+			want:  "example.com/user/repo",
 		},
 	}
 

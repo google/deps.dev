@@ -242,10 +242,9 @@ func init() {
 	})
 
 	RegisterHostHandler(".googlesource.com", &StandardHostHandler{
-		ForceScheme:       "https",
-		StripUser:         true,
-		HasDotGitSuffix:   true,
-		LowerPathSegments: math.MaxInt, // All path segments are lowercased.
-		MinPathSegments:   1,
+		ForceScheme:     "https",
+		StripUser:       true,
+		HasDotGitSuffix: true,
+		MinPathSegments: 1,
 	})
 }
