@@ -18,22 +18,25 @@ type HostHandler interface {
 }
 
 var hostHandlers []struct {
-	exactHost string
-	handler   HostHandler
+	host    string
+	handler HostHandler
 }
 
 // RegisterHostHandler allows for the registration of a host handler
-// that is triggered when the host of a URL exactly matches the given host,
+// that is triggered when the host of a URL matches the given host,
 // ignoring case.
 //
+// If host starts with a ".", it will be matched as a domain suffix.
+// Exact host matches take precedence over suffix matches.
+//
 // This method is not thread-safe, and is expected to be called from init().
-func RegisterHostHandler(exactHost string, handler HostHandler) {
+func RegisterHostHandler(host string, handler HostHandler) {
 	hostHandlers = append(hostHandlers, struct {
-		exactHost string
-		handler   HostHandler
+		host    string
+		handler HostHandler
 	}{
-		exactHost: exactHost,
-		handler:   handler,
+		host:    strings.ToLower(host),
+		handler: handler,
 	})
 }
 
@@ -41,7 +44,12 @@ func RegisterHostHandler(exactHost string, handler HostHandler) {
 func getHostHandler(host string) HostHandler {
 	host = strings.ToLower(host)
 	for _, h := range hostHandlers {
-		if h.exactHost == host {
+		if h.host == host {
+			return h.handler
+		}
+	}
+	for _, h := range hostHandlers {
+		if strings.HasPrefix(h.host, ".") && strings.HasSuffix(host, h.host) {
 			return h.handler
 		}
 	}
@@ -143,9 +151,14 @@ func (h *StandardHostHandler) Canon(u *url.URL) *url.URL {
 		res.User = nil
 	}
 
+	// Always strip trailing slashes first so segment counting and .git suffix
+	// handling operate on the path without trailing slashes. If h.HasTrailingSlash
+	// is true, a trailing slash will be re-added at the end.
+	res.Path = strings.TrimRight(res.Path, "/")
+
 	if h.LowerPathSegments != 0 {
-		// Strip the prefix and trailing slash so that we can count the remaining path segments correctly.
-		path := strings.TrimRight(res.Path, "/")
+		// Strip the prefix so that we can count the remaining path segments correctly.
+		path := res.Path
 		prefix := ""
 		if h.PathPrefix != "" {
 			prefix = "/" + strings.Trim(h.PathPrefix, "/")
@@ -184,11 +197,7 @@ func (h *StandardHostHandler) Canon(u *url.URL) *url.URL {
 	}
 
 	if h.HasTrailingSlash {
-		if !strings.HasSuffix(res.Path, "/") {
-			res.Path += "/"
-		}
-	} else {
-		res.Path = strings.TrimSuffix(res.Path, "/")
+		res.Path += "/"
 	}
 
 	return &res
@@ -231,5 +240,12 @@ func init() {
 		LowerPathSegments: 1,
 		MinPathSegments:   2,
 		MaxPathSegments:   2,
+	})
+
+	RegisterHostHandler(".googlesource.com", &StandardHostHandler{
+		ForceScheme:     "https",
+		StripUser:       true,
+		HasDotGitSuffix: true,
+		MinPathSegments: 1,
 	})
 }

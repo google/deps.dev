@@ -53,6 +53,18 @@ func TestParseRepo(t *testing.T) {
 			input:   "https://github.com/only-one",
 			wantErr: ErrInvalidRepo, // defaultHostHandler requires 2 segments
 		},
+		{
+			name:       "googlesource trailing slash",
+			input:      "https://chromium.googlesource.com/chromium/src.git/",
+			wantCanon:  "https://chromium.googlesource.com/chromium/src.git",
+			wantParsed: "https://chromium.googlesource.com/chromium/src.git/",
+		},
+		{
+			name:       "googlesource preserves path case",
+			input:      "https://android.googlesource.com/platform/packages/apps/Settings",
+			wantCanon:  "https://android.googlesource.com/platform/packages/apps/Settings.git",
+			wantParsed: "https://android.googlesource.com/platform/packages/apps/Settings",
+		},
 	}
 
 	for _, tt := range tests {
@@ -113,6 +125,16 @@ func TestRepo_ID(t *testing.T) {
 			name:  "trailing slash",
 			input: "https://github.com/user/repo/",
 			want:  "github.com/user/repo",
+		},
+		{
+			name:  "googlesource .git and trailing slash",
+			input: "https://chromium.googlesource.com/chromium/src.git/",
+			want:  "chromium.googlesource.com/chromium/src",
+		},
+		{
+			name:  "unregistered host .git and trailing slash",
+			input: "https://example.com/user/repo.git/",
+			want:  "example.com/user/repo",
 		},
 	}
 
