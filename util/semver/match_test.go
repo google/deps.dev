@@ -177,6 +177,8 @@ var matchTests = []matchTest{
 	// Fixed bugs.
 	// Union did not check maxOpen for both pieces when maxes lined up.
 	{D | N, "<1.0.0 || 1.0.0", u(all0, m("1.0.0"))},
+	// canon dropped a span it could not merge when a later span did merge.
+	{D | N, ">=1.0.0 || >=2.0.0-rc || >=2.1.0", u(all1, m("2.0.0-rc 2.0.0-rc.1 2.0.0-rc.2"), all2, all3, all4)},
 
 	// PyPI uses == for equality.
 	{P, "==0.1.0", m("0.1.0")},
