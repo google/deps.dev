@@ -592,7 +592,7 @@ func pep44CompareLocal(pl, ql string) int {
 		n = qn
 	}
 	var pElem, qElem string
-	for i := 0; i < pn; i++ {
+	for i := 0; i < n; i++ {
 		pElem, pl = pep440LocalElem(pl)
 		qElem, ql = pep440LocalElem(ql)
 		if s := p440compareLocalElem(pElem, qElem); s != 0 {
