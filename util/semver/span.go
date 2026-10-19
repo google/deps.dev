@@ -135,6 +135,9 @@ func newSpan(min *Version, minOpen bool, max *Version, maxOpen bool) (span, erro
 	max.build = ""
 	switch {
 	case min.equal(max):
+		if minOpen || maxOpen {
+			return span{rank: empty}, nil
+		}
 		return span{
 			minOpen: minOpen,
 			maxOpen: maxOpen,
