@@ -45,7 +45,7 @@ func (s *String) merge(s2 String) {
 }
 
 func (s *String) interpolate(dictionary map[string]string) bool {
-	result, ok := interpolating(string(*s), dictionary, make(map[string]bool))
+	result, ok := interpolateString(string(*s), dictionary)
 	*s = String(result)
 	return ok
 }
@@ -76,7 +76,7 @@ func (tb *TruthyBool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error
 }
 
 func (tb *TruthyBool) interpolate(dictionary map[string]string) bool {
-	result, ok := interpolating(string(*tb), dictionary, make(map[string]bool))
+	result, ok := interpolateString(string(*tb), dictionary)
 	*tb = TruthyBool(result)
 	return ok
 }
@@ -114,7 +114,7 @@ func (fb *FalsyBool) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error 
 }
 
 func (fb *FalsyBool) interpolate(dictionary map[string]string) bool {
-	result, ok := interpolating(string(*fb), dictionary, make(map[string]bool))
+	result, ok := interpolateString(string(*fb), dictionary)
 	*fb = FalsyBool(result)
 	return ok
 }
@@ -123,45 +123,94 @@ func (fb *FalsyBool) Boolean() bool {
 	return *fb == "true"
 }
 
-// interpolating resolves all property placeholders in s with their
-// values defined in dictionary.
-// resolving stores the key strings being resolved, it is used to detect cycles.
-func interpolating(s string, dictionary map[string]string, resolving map[string]bool) (string, bool) {
-	resolved := true
-	var dst strings.Builder
-	for {
-		i := strings.Index(s, "${")
-		if i < 0 {
-			break
-		}
-		j := strings.Index(s[i:], "}")
-		if j < 0 {
-			break
-		}
-		dst.WriteString(s[:i])
-		s = s[i:]
-		key := s[2:j]
-		if exist, ok := resolving[key]; ok && exist {
-			// A cycle of keys detected.
-			resolved = false
-			break
-		}
-		// Interpolation starts.
-		resolving[key] = true
-		if value, ok := dictionary[key]; ok {
-			// Try to resolve the value.  If resolved, write the new value.
-			if value, ok = interpolating(value, dictionary, resolving); !ok {
+const (
+	maxInterpolateSteps = 128
+	maxInterpolateBytes = 64 << 10 // 64 KiB
+)
+
+// interpolateString resolves all property placeholders in raw with their values
+// defined in dictionary, bounding total substitutions and output length to
+// prevent exponential expansion.
+func interpolateString(raw string, dictionary map[string]string) (string, bool) {
+	i := strings.Index(raw, "${")
+	if i < 0 || !strings.Contains(raw[i+2:], "}") {
+		return raw, true
+	}
+
+	resolving := make(map[string]bool)
+	steps := 0
+	exceeded := false
+
+	var resolve func(string) (string, bool)
+	resolve = func(s string) (string, bool) {
+		resolved := true
+		var dst strings.Builder
+		for {
+			i := strings.Index(s, "${")
+			if i < 0 {
+				break
+			}
+			j := strings.Index(s[i:], "}")
+			if j < 0 {
+				break
+			}
+			if i > maxInterpolateBytes-dst.Len() {
+				exceeded = true
+				return "", false
+			}
+			dst.WriteString(s[:i])
+			s = s[i:]
+			key := s[2:j]
+			if resolving[key] {
+				// A cycle of keys detected.
+				resolved = false
+				break
+			}
+			steps++
+			if steps > maxInterpolateSteps {
+				exceeded = true
+				return "", false
+			}
+			if value, ok := dictionary[key]; ok {
+				// Try to resolve the value. If resolved, write the new value.
+				resolving[key] = true
+				value, ok = resolve(value)
+				delete(resolving, key)
+				if exceeded {
+					return "", false
+				}
+				if !ok {
+					resolved = false
+				}
+				if len(value) > maxInterpolateBytes-dst.Len() {
+					exceeded = true
+					return "", false
+				}
+				dst.WriteString(value)
+			} else {
+				if j+1 > maxInterpolateBytes-dst.Len() {
+					exceeded = true
+					return "", false
+				}
+				dst.WriteString(s[:j+1])
 				resolved = false
 			}
-			dst.WriteString(value)
-		} else {
-			dst.WriteString(s[:j+1])
-			resolved = false
+			s = s[j+1:]
 		}
-		// Resolution finishes.
-		resolving[key] = false
-		s = s[j+1:]
+		if len(s) > maxInterpolateBytes-dst.Len() {
+			exceeded = true
+			return "", false
+		}
+		if dst.Len() == 0 {
+			return s, resolved
+		}
+		dst.WriteString(s)
+		return dst.String(), resolved
 	}
-	dst.WriteString(s)
-	return dst.String(), resolved
+
+	result, ok := resolve(raw)
+	if exceeded {
+		return raw, false
+	}
+	return result, ok
 }
