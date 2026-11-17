@@ -17,6 +17,7 @@ package maven
 import (
 	"encoding/xml"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -145,5 +146,150 @@ func TestInterpolateString(t *testing.T) {
 		if test.got != test.want || ok != test.resolved {
 			t.Errorf("resolve(%s): got %s %t, want %s %t", test.s, test.got, ok, test.want, test.resolved)
 		}
+	}
+}
+
+func TestInterpolateStringLimits(t *testing.T) {
+	flatDict := make(map[string]string, 64)
+	var flatInput strings.Builder
+	for i := range 64 {
+		fmt.Fprintf(&flatInput, "${k%d}", i)
+		flatDict[fmt.Sprintf("k%d", i)] = "v"
+	}
+
+	chainDict := func(depth int, leaf string) map[string]string {
+		d := make(map[string]string, depth+1)
+		d["valid"] = "ok"
+		for i := range depth - 1 {
+			d[fmt.Sprintf("p%d", i)] = fmt.Sprintf("${p%d}", i+1)
+		}
+		d[fmt.Sprintf("p%d", depth-1)] = leaf
+		return d
+	}
+
+	expDict := func(levels int, leaf string) map[string]string {
+		d := make(map[string]string, levels+1)
+		for i := range levels {
+			d[fmt.Sprintf("p%d", i)] = fmt.Sprintf("${p%d}${p%d}", i+1, i+1)
+		}
+		d[fmt.Sprintf("p%d", levels)] = leaf
+		return d
+	}
+
+	maxStepsOver := String(strings.Repeat("${v}", maxInterpolateSteps+1))
+	prefixOver := String(strings.Repeat("A", maxInterpolateBytes+1) + "${v}")
+	unknownOver := String(strings.Repeat("A", maxInterpolateBytes-2) + "${unknown}")
+	suffixOver := String("${v}" + strings.Repeat("A", maxInterpolateBytes))
+
+	tests := []struct {
+		name   string
+		dict   map[string]string
+		input  String
+		want   String
+		wantOK bool
+	}{
+		{
+			name:   "many_distinct_flat_properties",
+			dict:   flatDict,
+			input:  String(flatInput.String()),
+			want:   String(strings.Repeat("v", 64)),
+			wantOK: true,
+		},
+		{
+			name:   "linear_chain_at_max_steps",
+			dict:   chainDict(maxInterpolateSteps, "leaf"),
+			input:  "${p0}",
+			want:   "leaf",
+			wantOK: true,
+		},
+		{
+			name:   "step_limit_exceeded_rolls_back_partial_writes",
+			dict:   chainDict(maxInterpolateSteps, "leaf"),
+			input:  "${valid}-${p0}",
+			want:   "${valid}-${p0}",
+			wantOK: false,
+		},
+		{
+			name:   "at_max_steps",
+			dict:   map[string]string{"v": "a"},
+			input:  String(strings.Repeat("${v}", maxInterpolateSteps)),
+			want:   String(strings.Repeat("a", maxInterpolateSteps)),
+			wantOK: true,
+		},
+		{
+			name:   "step_limit_exceeded",
+			dict:   map[string]string{"v": "a"},
+			input:  maxStepsOver,
+			want:   maxStepsOver,
+			wantOK: false,
+		},
+		{
+			name:   "exponential_non_empty",
+			dict:   expDict(40, "X"),
+			input:  "${p0}",
+			want:   "${p0}",
+			wantOK: false,
+		},
+		{
+			name:   "exponential_empty_leaf",
+			dict:   expDict(25, ""),
+			input:  "${p0}",
+			want:   "${p0}",
+			wantOK: false,
+		},
+		{
+			name: "at_max_output_size",
+			dict: map[string]string{
+				"chunk": strings.Repeat("A", maxInterpolateBytes/16),
+				"exact": strings.Repeat("${chunk}", 16),
+			},
+			input:  "${exact}",
+			want:   String(strings.Repeat("A", maxInterpolateBytes)),
+			wantOK: true,
+		},
+		{
+			name: "output_size_exceeded_by_value",
+			dict: map[string]string{
+				"chunk": strings.Repeat("A", maxInterpolateBytes/16),
+				"big":   strings.Repeat("${chunk}", 17),
+			},
+			input:  "${big}",
+			want:   "${big}",
+			wantOK: false,
+		},
+		{
+			name:   "output_size_exceeded_by_prefix",
+			dict:   map[string]string{"v": "B"},
+			input:  prefixOver,
+			want:   prefixOver,
+			wantOK: false,
+		},
+		{
+			name:   "output_size_exceeded_by_unknown",
+			dict:   nil,
+			input:  unknownOver,
+			want:   unknownOver,
+			wantOK: false,
+		},
+		{
+			name:   "output_size_exceeded_by_suffix",
+			dict:   map[string]string{"v": "B"},
+			input:  suffixOver,
+			want:   suffixOver,
+			wantOK: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.input
+			gotOK := got.interpolate(tc.dict)
+			if got != tc.want || gotOK != tc.wantOK {
+				t.Errorf("interpolate() = (len=%d, ok=%t), want (len=%d, ok=%t)", len(got), gotOK, len(tc.want), tc.wantOK)
+				if len(got) <= 128 && len(tc.want) <= 128 {
+					t.Errorf("got %q, want %q", got, tc.want)
+				}
+			}
+		})
 	}
 }
