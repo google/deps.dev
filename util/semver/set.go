@@ -16,6 +16,7 @@ package semver
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -110,65 +111,120 @@ func canon(s []span) ([]span, error) {
 		}
 		return false
 	})
-	allEmpty := true
-	// Merge overlapping/adjoining elements.
-	out := s[:0]
-	for i := 0; i < len(s); i++ {
-		this := s[i]
-		if this.rank == empty {
-			continue
-		}
-		allEmpty = false
-		// Merge as many as possible into this element.
-		for j := i + 1; j < len(s); j++ {
-			next := s[j]
-			if !this.max.equal(next.min) { // If equal, we can merge unless both are open (handled below)
-				if len(this.max.pre) == 0 {
-					maxPlusOne := this.max.copy()
-					err := maxPlusOne.inc()
-					if err != nil {
-						return nil, err
-					}
-					if maxPlusOne.lessThan(next.min) {
-						// There is a gap; cannot merge.
-						break
-					}
-				} else {
-					continue // Too difficult for now, but may be covered by another span. TODO?
-				}
-			}
-			// Max equals min, but don't merge if both open.
-			if this.maxOpen && next.minOpen {
-				continue
-			}
-			// Merging prereleases and non-preleases is tricky, so avoid it.
-			// Three tests to make.
-			if !equalPrerelease(this.min, this.max) || !equalPrerelease(this.min, next.min) || !equalPrerelease(this.min, next.max) {
-				continue
-			}
-			// We'll process the element now, so on the next outer loop, skip it.
-			i++
-			if next.rank == empty {
-				continue
-			}
-			if next.max.lessThanOrEqual(this.max) {
-				// Already covered; just close the end correctly.
-				if this.max.equal(next.max) {
-					this.maxOpen = this.maxOpen && next.maxOpen
-				}
-				continue
-			}
-			// Merge. We know that the maxes aren't equal, so it's a span.
-			this.rank = vector
-			this.max = next.max
-			this.maxOpen = next.maxOpen
-		}
-		out = append(out, this)
+	// Spans are merged in place: each span merged into an earlier one is
+	// emptied, so the rest stay sorted. Spans whose ends have different
+	// prerelease tags (e.g. [1.5.0-a:3.0.0]) are tricky to merge correctly, so
+	// they are left alone.
+	if err := mergeNormalSpans(s); err != nil {
+		return nil, err
 	}
-	if allEmpty {
+	if err := mergePrereleaseSpans(s); err != nil {
+		return nil, err
+	}
+	out := slices.DeleteFunc(s, func(sp span) bool { return sp.rank == empty })
+	if len(out) == 0 {
+		// Every span was empty. Keep one, because a Set with no spans matches
+		// every non-prerelease version (see matchVersion).
 		return s[:1], nil
 	}
 	return out, nil
+}
+
+// mergeNormalSpans merges overlapping and adjoining normal (prerelease-free)
+// spans in the sorted slice s, emptying each span merged into an earlier one.
+// Other spans between them in s (e.g. prereleases) don't prevent merging.
+func mergeNormalSpans(s []span) error {
+	// acc is the most recent normal span not merged into an earlier one. Spans
+	// are only tried against acc, never an older span, so an older span can't
+	// be extended past one it rejected: e.g. [1.0.0:2.0.0) absorbing
+	// [2.0.1:4.0.0] across (2.0.0:3.0.0] would wrongly include 2.0.0 (see
+	// TestUnion).
+	acc := -1
+	for i, next := range s {
+		if next.rank == empty || len(next.min.pre) > 0 || len(next.max.pre) > 0 {
+			continue
+		}
+		if acc >= 0 {
+			merged, err := tryMergeSpan(&s[acc], next)
+			if err != nil {
+				return err
+			}
+			if merged {
+				s[i] = span{}
+				continue
+			}
+		}
+		acc = i
+	}
+	return nil
+}
+
+// mergePrereleaseSpans merges runs of consecutive spans in the sorted slice s
+// whose ends share a prerelease tag (e.g. [1.2.3-a:1.2.∞-a]), emptying each
+// span merged into an earlier one. These merges can be lossy (see
+// span.contains), so any other span in between ends a run.
+func mergePrereleaseSpans(s []span) error {
+	// acc is the span to merge into, or -1 if the previous span ended a run.
+	acc := -1
+	for i, next := range s {
+		if next.rank == empty || len(next.min.pre) == 0 || !equalPrerelease(next.min, next.max) {
+			acc = -1
+			continue
+		}
+		if acc >= 0 {
+			merged, err := tryMergeSpan(&s[acc], next)
+			if err != nil {
+				return err
+			}
+			if merged {
+				s[i] = span{}
+				continue
+			}
+		}
+		acc = i
+	}
+	return nil
+}
+
+// tryMergeSpan attempts to merge next into this, assuming both spans are non-empty,
+// have homogeneous prerelease tags within each span, and are ordered by (min, !minOpen).
+// It reports whether next was absorbed into this.
+func tryMergeSpan(this *span, next span) (bool, error) {
+	if !equalPrerelease(this.min, next.min) {
+		return false, nil
+	}
+	if !this.max.equal(next.min) { // If equal, we can merge unless both are open (handled below)
+		if len(this.max.pre) == 0 {
+			maxPlusOne := this.max.copy()
+			if err := maxPlusOne.inc(); err != nil {
+				return false, err
+			}
+			if maxPlusOne.lessThan(next.min) {
+				// There is a gap; cannot merge.
+				return false, nil
+			}
+		} else {
+			return false, nil // Too difficult for now. TODO?
+		}
+	}
+	// Don't merge if both ends are open: if this.max equals next.min, that
+	// version is in neither span. This also refuses spans that overlap, such as
+	// [1.0.0:5.0.0) and (2.0.0:3.0.0], which is conservative but safe.
+	if this.maxOpen && next.minOpen {
+		return false, nil
+	}
+	if next.max.lessThanOrEqual(this.max) {
+		// Already covered; just close the end correctly.
+		if this.max.equal(next.max) {
+			this.maxOpen = this.maxOpen && next.maxOpen
+		}
+		return true, nil
+	}
+	// Merge. We know that the maxes aren't equal, so it's a span.
+	this.rank = vector
+	this.max = next.max
+	this.maxOpen = next.maxOpen
+	return true, nil
 }
 
 // sysOfSpan returns the System of the versions in the spans. This requires unpacking
