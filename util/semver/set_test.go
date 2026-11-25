@@ -147,6 +147,19 @@ func TestUnion(t *testing.T) {
 		// prerelease.
 		{strs("<1.2.3"), strs("<=1.2.3"), "{[0.0.0-0:1.2.3),[0.0.0-0:1.2.3]}"},
 		{strs("<=1.2.3"), strs("<1.2.3"), "{[0.0.0-0:1.2.3),[0.0.0-0:1.2.3]}"},
+
+		// A span that cannot be merged must not be dropped when a later one can.
+		{strs("[1.0.0:2.0.0]"), strs("[1.5.0-a:3.0.0]", "[1.8.0:2.5.0]"), "{[1.0.0:2.5.0],[1.5.0-a:3.0.0]}"},
+		// Spans merge into the most recent normal span. Merging [2.0.1:4.0.0]
+		// into [1.0.0:2.0.0) instead would falsely include 2.0.0.
+		{strs("[1.0.0:2.0.0)"), strs("(2.0.0:3.0.0]", "[2.0.1:4.0.0]"), "{[1.0.0:2.0.0),(2.0.0:4.0.0]}"},
+		// (2.0.0:3.0.0] can't merge into [1.0.0:5.0.0) because both ends are open
+		// (see tryMergeSpan), so it is kept and (2.5.0:4.0.0] merges into it.
+		{strs("[1.0.0:5.0.0)"), strs("(2.0.0:3.0.0]", "(2.5.0:4.0.0]"), "{[1.0.0:5.0.0),(2.0.0:4.0.0]}"},
+		// Prerelease spans only merge with their immediate neighbours (see
+		// mergePrereleaseSpans), so a normal span in between keeps them apart.
+		{strs("[1.0.0-a:2.0.0-a]"), strs("[2.0.0-a:3.0.0-a]"), "{[1.0.0-a:3.0.0-a]}"},
+		{strs("[1.0.0-a:2.0.0-a]", "[2.0.0-a:3.0.0-a]"), strs("[1.5.0:1.8.0]"), "{[1.0.0-a:2.0.0-a],[1.5.0:1.8.0],[2.0.0-a:3.0.0-a]}"},
 	}
 	for _, test := range tests {
 		set1 := Set{DefaultSystem, spans(t, test.s1...)}
