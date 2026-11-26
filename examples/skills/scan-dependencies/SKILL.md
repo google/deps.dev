@@ -66,20 +66,23 @@ Execute the HTTP POST query using curl.
 echo "Scanning dependencies for safety..."
 curl -s -X POST https://api.deps.dev/v3alpha/findingsbatch \
   -H 'Content-Type: application/json' \
-  -d '{ "requests": [
-        {
-          "versionKey": {
-            "system": "NPM",
-            "name": "express",
-            "version": "4.17.1"
-        }, 
-        {
-          "packageKey": {
-            "system": "PYPI",
-            "name": "requests"
-        },
-        ...
-   ]'
+  -d '{
+    "requests": [
+      {
+        "versionKey": {
+          "system": "NPM",
+          "name": "express",
+          "version": "4.17.1"
+        }
+      },
+      {
+        "packageKey": {
+          "system": "PYPI",
+          "name": "requests"
+        }
+      }
+    ]
+  }'
 ```
 
 Note that just because a dependency doesn't show up in this list, that doesn't
