@@ -1,6 +1,6 @@
 module deps.dev/util/resolve
 
-go 1.25.0
+go 1.26.0
 
 replace (
 	deps.dev/util/maven => ../maven
@@ -15,13 +15,13 @@ require (
 	deps.dev/util/semver v0.0.0-20241230231135-52b7655a522f
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
 	github.com/google/go-cmp v0.7.0
-	google.golang.org/grpc v1.84.0
+	google.golang.org/grpc v1.85.0
 )
 
 require (
-	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
